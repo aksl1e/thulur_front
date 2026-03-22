@@ -157,14 +157,20 @@ internal fun fallbackThulurTypography(): ThulurTypography {
 
 @Composable
 private fun rememberLoraFontFamily(): FontFamily {
-    // The variable file exposes the non-italic Lora weight range available on Google Fonts (400-700).
+    // Lora only ships 400-700 in normal style, so out-of-range weights are registered
+    // against the same variable file and will resolve to the nearest available instance.
+    val thin = Font(Res.font.lora_variable, weight = FontWeight.Thin)
+    val extraLight = Font(Res.font.lora_variable, weight = FontWeight.ExtraLight)
+    val light = Font(Res.font.lora_variable, weight = FontWeight.Light)
     val regular = Font(Res.font.lora_variable, weight = FontWeight.Normal)
     val medium = Font(Res.font.lora_variable, weight = FontWeight.Medium)
     val semiBold = Font(Res.font.lora_variable, weight = FontWeight.SemiBold)
     val bold = Font(Res.font.lora_variable, weight = FontWeight.Bold)
+    val extraBold = Font(Res.font.lora_variable, weight = FontWeight.ExtraBold)
+    val black = Font(Res.font.lora_variable, weight = FontWeight.Black)
 
-    return remember(regular, medium, semiBold, bold) {
-        FontFamily(regular, medium, semiBold, bold)
+    return remember(thin, extraLight, light, regular, medium, semiBold, bold, extraBold, black) {
+        FontFamily(thin, extraLight, light, regular, medium, semiBold, bold, extraBold, black)
     }
 }
 
