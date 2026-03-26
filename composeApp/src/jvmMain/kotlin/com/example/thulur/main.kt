@@ -7,7 +7,7 @@ import com.example.thulur.presentation.theme.ThemeMode
 fun main() = application {
     Window(
         onCloseRequest = ::exitApplication,
-        title = "thulur",
+        title = "",
     ) {
         App(mode = ThemeMode.Dark)
     }
