@@ -11,6 +11,16 @@ private val LocalThulurTypography = staticCompositionLocalOf { fallbackThulurTyp
 object ThulurTheme {
     val Colors: ThulurColors = DefaultThulurColors
 
+    val SemanticColors: ThulurSemanticColors
+        @Composable
+        @ReadOnlyComposable
+        get() = rememberThulurSemanticColors()
+
+    val SemanticTypography: ThulurSemanticTypography
+        @Composable
+        @ReadOnlyComposable
+        get() = rememberThulurSemanticTypography()
+
     val Typography: ThulurTypography
         @Composable
         @ReadOnlyComposable

@@ -27,8 +27,18 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.thulur.domain.model.MainFeedArticle
 import com.example.thulur.domain.model.MainFeedThread
+import com.example.thulur.presentation.composables.ThulurAppBar
+import com.example.thulur.presentation.composables.TopicsViewMode
 import com.example.thulur.presentation.theme.ThemeMode
 import com.example.thulur.presentation.theme.ThulurTheme
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.todayIn
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -39,7 +49,10 @@ fun MainFeedRoute(
 
     MainFeedScreen(
         uiState = uiState,
-        onRetry = viewModel::refresh,
+        onRetry = viewModel::retry,
+        onBackClick = viewModel::onBackClick,
+        onForwardClick = viewModel::onForwardClick,
+        onTopicsViewModeChange = viewModel::onTopicsViewModeChange,
     )
 }
 
@@ -47,39 +60,68 @@ fun MainFeedRoute(
 fun MainFeedScreen(
     uiState: MainFeedUiState,
     onRetry: () -> Unit,
+    onBackClick: () -> Unit,
+    onForwardClick: () -> Unit,
+    onTopicsViewModeChange: (TopicsViewMode) -> Unit,
 ) {
     val colors = mainFeedColors()
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val title = uiState.selectedDay.toTitleAppBarLabel(today = today)
+    val backLabel = uiState.selectedDay
+        .minus(1, DateTimeUnit.DAY)
+        .toNavigationAppBarLabel(today = today)
+    val forwardDay = uiState.selectedDay.plus(1, DateTimeUnit.DAY)
+    val forwardLabel = if (uiState.selectedDay < today) {
+        forwardDay.toNavigationAppBarLabel(today = today)
+    } else {
+        null
+    }
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(colors.surface)
             .safeContentPadding()
-            .padding(24.dp),
     ) {
-        when (uiState) {
-            MainFeedUiState.Loading -> MainFeedStatusCard(
-                title = "Loading Main Feed",
-                body = "Requesting daily_feed from Thulur API.",
-                colors = colors,
-            )
+        ThulurAppBar(
+            title = title,
+            backLabel = backLabel,
+            onBackClick = onBackClick,
+            forwardLabel = forwardLabel,
+            onForwardClick = onForwardClick.takeIf { forwardLabel != null },
+            topicsViewMode = uiState.topicsViewMode,
+            onTopicsViewModeChange = onTopicsViewModeChange,
+            onSettingsClick = {},
+        )
 
-            MainFeedUiState.Empty -> MainFeedStatusCard(
-                title = "Main Feed Is Empty",
-                body = "The backend returned an empty list. This is expected while the database is still empty.",
-                colors = colors,
-            )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            when (val contentState = uiState.contentState) {
+                MainFeedContentState.Loading -> MainFeedStatusCard(
+                    title = "Loading Main Feed",
+                    body = "Requesting daily_feed from Thulur API.",
+                    colors = colors,
+                )
 
-            is MainFeedUiState.Error -> MainFeedErrorCard(
-                message = uiState.message,
-                colors = colors,
-                onRetry = onRetry,
-            )
+                MainFeedContentState.Empty -> MainFeedStatusCard(
+                    title = "Main Feed Is Empty",
+                    body = "The backend returned an empty list. This is expected while the database is still empty.",
+                    colors = colors,
+                )
 
-            is MainFeedUiState.Success -> MainFeedSuccessContent(
-                threads = uiState.threads,
-                colors = colors,
-            )
+                is MainFeedContentState.Error -> MainFeedErrorCard(
+                    message = contentState.message,
+                    colors = colors,
+                    onRetry = onRetry,
+                )
+
+                is MainFeedContentState.Success -> MainFeedSuccessContent(
+                    threads = contentState.threads,
+                    colors = colors,
+                )
+            }
         }
     }
 }
@@ -364,4 +406,35 @@ private fun mainFeedColors(): MainFeedColors {
             importantChipContent = colors.primary.s100,
         )
     }
+}
+
+private fun LocalDate.toTitleAppBarLabel(today: LocalDate): String {
+    val yesterday = today.minus(1, DateTimeUnit.DAY)
+
+    return when (this) {
+        today -> "Today"
+        yesterday -> "Yesterday"
+        else -> toShortDateLabel()
+    }
+}
+
+private fun LocalDate.toNavigationAppBarLabel(today: LocalDate): String {
+    val yesterday = today.minus(1, DateTimeUnit.DAY)
+
+    return when (this) {
+        yesterday -> "Yesterday"
+        today -> "Today"
+        else -> toShortDateLabel()
+    }
+}
+
+private fun LocalDate.toShortDateLabel(): String {
+    val shortYear = (year % 100).toString().padStart(2, '0')
+    val month = month.name
+        .take(3)
+        .lowercase()
+        .replaceFirstChar(Char::uppercaseChar)
+    val day = day.toString().padStart(2, '0')
+
+    return "$day/$month/$shortYear"
 }

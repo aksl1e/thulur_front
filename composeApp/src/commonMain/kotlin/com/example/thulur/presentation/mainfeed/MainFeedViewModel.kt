@@ -3,48 +3,99 @@ package com.example.thulur.presentation.mainfeed
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.thulur.domain.usecase.GetMainFeedUseCase
+import com.example.thulur.presentation.composables.TopicsViewMode
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.todayIn
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 /**
- * Shared Compose ViewModel driving the technical Main Feed screen.
+ * Shared Compose ViewModel driving the Main Feed screen.
  */
+@OptIn(ExperimentalTime::class)
 class MainFeedViewModel(
     private val getMainFeedUseCase: GetMainFeedUseCase,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow<MainFeedUiState>(MainFeedUiState.Loading)
+    private val initialDay = currentDay()
+    private var loadJob: Job? = null
+
+    private val _uiState = MutableStateFlow(
+        MainFeedUiState(
+            selectedDay = initialDay,
+        ),
+    )
     val uiState: StateFlow<MainFeedUiState> = _uiState.asStateFlow()
 
     init {
-        refresh()
+        loadDay(initialDay)
     }
 
-    /**
-     * Reloads the Main Feed.
-     */
-    fun refresh(day: LocalDate? = null) {
-        viewModelScope.launch {
-            _uiState.value = MainFeedUiState.Loading
+    fun onBackClick() {
+        loadDay(_uiState.value.selectedDay.minus(1, DateTimeUnit.DAY))
+    }
 
-            _uiState.value = runCatching {
-                getMainFeedUseCase(day = day)
-            }.fold(
-                onSuccess = { threads ->
-                    if (threads.isEmpty()) {
-                        MainFeedUiState.Empty
-                    } else {
-                        MainFeedUiState.Success(threads)
-                    }
-                },
-                onFailure = { throwable ->
-                    MainFeedUiState.Error(
-                        message = throwable.message ?: "Failed to load Main Feed.",
-                    )
-                },
-            )
+    fun onForwardClick() {
+        val selectedDay = _uiState.value.selectedDay
+        val today = currentDay()
+        if (selectedDay >= today) return
+
+        loadDay(selectedDay.plus(1, DateTimeUnit.DAY))
+    }
+
+    fun retry() {
+        loadDay(_uiState.value.selectedDay)
+    }
+
+    fun onTopicsViewModeChange(viewMode: TopicsViewMode) {
+        _uiState.update { state ->
+            state.copy(topicsViewMode = viewMode)
         }
     }
+
+    private fun loadDay(day: LocalDate) {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
+            _uiState.update { state ->
+                state.copy(
+                    selectedDay = day,
+                    contentState = MainFeedContentState.Loading,
+                )
+            }
+
+            val contentState = try {
+                val threads = getMainFeedUseCase(day = day)
+                if (threads.isEmpty()) {
+                    MainFeedContentState.Empty
+                } else {
+                    MainFeedContentState.Success(threads)
+                }
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (throwable: Throwable) {
+                MainFeedContentState.Error(
+                    message = throwable.message ?: "Failed to load Main Feed.",
+                )
+            }
+
+            _uiState.update { state ->
+                state.copy(
+                    selectedDay = day,
+                    contentState = contentState,
+                )
+            }
+        }
+    }
+
+    private fun currentDay(): LocalDate = Clock.System.todayIn(TimeZone.currentSystemDefault())
 }
