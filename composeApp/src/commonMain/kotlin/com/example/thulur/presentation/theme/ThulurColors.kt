@@ -1,4 +1,4 @@
-package com.example.thulur_front.theme
+package com.example.thulur.presentation.theme
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
