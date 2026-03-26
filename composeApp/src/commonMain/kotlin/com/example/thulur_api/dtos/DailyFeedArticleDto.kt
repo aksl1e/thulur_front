@@ -1,0 +1,48 @@
+package com.example.thulur_api.dtos
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+/**
+ * Raw daily feed article payload returned by the backend.
+ */
+@Serializable
+data class DailyFeedArticleDto(
+    /** Article's id. */
+    @SerialName("article_id")
+    val articleId: String,
+    /** Feed's id. */
+    @SerialName("feed_id")
+    val feedId: String,
+    /** Article's title. */
+    @SerialName("title")
+    val title: String,
+    /** Article's url. */
+    @SerialName("url")
+    val url: String,
+    /** Article's publication date from RSS. */
+    @SerialName("published")
+    val published: String?,
+    /**
+     * Raw quality score in the range [0.0, 1.0].
+     *
+     * The UI later maps it to Trash / Default / Important.
+     */
+    @SerialName("quality_score")
+    val qualityScore: Double,
+    /** Shows whether the article is new or not. */
+    @SerialName("novelty")
+    val novelty: Boolean,
+    /** Summary version intended for backend logic, not for display. */
+    @SerialName("novelty_summary")
+    val noveltySummary: String?,
+    /** Summary version intended for UI display. */
+    @SerialName("display_summary")
+    val displaySummary: String?,
+    /** Flag showing whether the article was read. */
+    @SerialName("is_read")
+    val isRead: Boolean,
+    /** Flag showing whether the article was suggested. */
+    @SerialName("is_suggestion")
+    val isSuggestion: Boolean,
+)
