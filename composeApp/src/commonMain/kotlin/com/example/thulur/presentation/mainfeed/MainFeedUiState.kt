@@ -10,6 +10,7 @@ import kotlinx.datetime.LocalDate
 data class MainFeedUiState(
     val selectedDay: LocalDate,
     val topicsViewMode: TopicsViewMode = TopicsViewMode.TopicsAndArticles,
+    val articleVisibilityByThreadId: Map<String, Boolean> = emptyMap(),
     val contentState: MainFeedContentState = MainFeedContentState.Loading,
 )
 
@@ -25,4 +26,9 @@ sealed interface MainFeedContentState {
     data class Error(
         val message: String,
     ) : MainFeedContentState
+}
+
+internal fun TopicsViewMode.defaultArticlesVisible(): Boolean = when (this) {
+    TopicsViewMode.TopicsAndArticles -> true
+    TopicsViewMode.TopicsOnly -> false
 }

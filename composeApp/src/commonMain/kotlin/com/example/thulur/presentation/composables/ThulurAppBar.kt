@@ -1,7 +1,12 @@
 package com.example.thulur.presentation.composables
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -33,7 +38,6 @@ import com.example.thulur.presentation.theme.ThulurDesignScale
 import com.example.thulur.presentation.theme.ProvideThulurDesignScale
 import com.example.thulur.presentation.theme.ThemeMode
 import com.example.thulur.presentation.theme.ThulurTheme
-import com.example.thulur.presentation.theme.rememberThulurAppBarSemanticColors
 import com.example.thulur.presentation.theme.thulurDp
 
 @Composable
@@ -48,7 +52,7 @@ fun ThulurAppBar(
     onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = rememberThulurAppBarSemanticColors()
+    val colors = ThulurTheme.SemanticColors.appBar
     val typography = ThulurTheme.SemanticTypography
     val appBarHeight = 100.thulurDp()
     val backAreaWidth = 225.thulurDp()
@@ -78,6 +82,7 @@ fun ThulurAppBar(
                 modifier = Modifier.fillMaxHeight(),
                 colorRole = ThulurColorRole.Slate,
                 useContainerStates = false,
+                stateColorsOverride = colors.backButton,
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Outlined.ArrowCircleLeft,
@@ -113,6 +118,7 @@ fun ThulurAppBar(
                         onClick = onForwardClick,
                         colorRole = ThulurColorRole.Slate,
                         useContainerStates = false,
+                        stateColorsOverride = colors.forwardButton,
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Outlined.ArrowCircleRight,
@@ -135,6 +141,19 @@ fun ThulurAppBar(
                     horizontalArrangement = Arrangement.spacedBy(actionSpacing),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    val settingsInteractionSource = remember { MutableInteractionSource() }
+                    val isSettingsHovered by settingsInteractionSource.collectIsHoveredAsState()
+                    val isSettingsPressed by settingsInteractionSource.collectIsPressedAsState()
+                    val settingsColors = when {
+                        isSettingsPressed -> colors.settingsButton.pressed
+                        isSettingsHovered -> colors.settingsButton.hovered
+                        else -> colors.settingsButton.rest
+                    }
+                    val settingsTint by animateColorAsState(
+                        targetValue = settingsColors.contentColor,
+                        label = "thulurAppBarSettingsTint",
+                    )
+
                     TopicsSwitch(
                         selected = topicsViewMode,
                         onSelect = onTopicsViewModeChange,
@@ -143,13 +162,18 @@ fun ThulurAppBar(
                     Box(
                         modifier = Modifier
                             .size(32.thulurDp())
-                            .clickable(onClick = onSettingsClick),
+                            .hoverable(interactionSource = settingsInteractionSource)
+                            .clickable(
+                                interactionSource = settingsInteractionSource,
+                                indication = null,
+                                onClick = onSettingsClick,
+                            ),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Settings,
                             contentDescription = "Settings",
-                            tint = colors.settingsTint,
+                            tint = settingsTint,
                             modifier = Modifier.size(32.thulurDp()),
                         )
                     }

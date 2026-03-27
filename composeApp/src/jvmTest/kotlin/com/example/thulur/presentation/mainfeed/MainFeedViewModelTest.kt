@@ -75,6 +75,7 @@ class MainFeedViewModelTest {
         assertEquals(
             MainFeedUiState(
                 selectedDay = today,
+                articleVisibilityByThreadId = visibleArticlesMap("thread-1" to true),
                 contentState = MainFeedContentState.Success(threads),
             ),
             viewModel.uiState.value,
@@ -209,7 +210,75 @@ class MainFeedViewModelTest {
         viewModel.onTopicsViewModeChange(TopicsViewMode.TopicsOnly)
 
         assertEquals(TopicsViewMode.TopicsOnly, viewModel.uiState.value.topicsViewMode)
+        assertEquals(
+            visibleArticlesMap("thread-1" to false),
+            viewModel.uiState.value.articleVisibilityByThreadId,
+        )
         assertEquals(listOf<LocalDate?>(today), repository.requestedDays)
+    }
+
+    @Test
+    fun `thread visibility toggle overrides current per thread state`() = runTest {
+        val repository = TrackingRepository(
+            result = Result.success<List<MainFeedThread>>(listOf(sampleThread())),
+        )
+        val viewModel = MainFeedViewModel(
+            getMainFeedUseCase = GetMainFeedUseCase(repository),
+        )
+
+        advanceUntilIdle()
+        viewModel.onTopicsViewModeChange(TopicsViewMode.TopicsOnly)
+        viewModel.onThreadArticlesVisibilityToggle("thread-1")
+
+        assertEquals(
+            visibleArticlesMap("thread-1" to true),
+            viewModel.uiState.value.articleVisibilityByThreadId,
+        )
+    }
+
+    @Test
+    fun `global topics switch overwrites mixed per thread visibility`() = runTest {
+        val repository = TrackingRepository(
+            result = Result.success<List<MainFeedThread>>(listOf(sampleThread("thread-1"), sampleThread("thread-2"))),
+        )
+        val viewModel = MainFeedViewModel(
+            getMainFeedUseCase = GetMainFeedUseCase(repository),
+        )
+
+        advanceUntilIdle()
+        viewModel.onThreadArticlesVisibilityToggle("thread-1")
+        viewModel.onTopicsViewModeChange(TopicsViewMode.TopicsOnly)
+        assertEquals(
+            visibleArticlesMap("thread-1" to false, "thread-2" to false),
+            viewModel.uiState.value.articleVisibilityByThreadId,
+        )
+
+        viewModel.onTopicsViewModeChange(TopicsViewMode.TopicsAndArticles)
+        assertEquals(
+            visibleArticlesMap("thread-1" to true, "thread-2" to true),
+            viewModel.uiState.value.articleVisibilityByThreadId,
+        )
+    }
+
+    @Test
+    fun `loading a new day resets article visibility according to current topics mode`() = runTest {
+        val repository = TrackingRepository(
+            result = Result.success<List<MainFeedThread>>(listOf(sampleThread("thread-1"), sampleThread("thread-2"))),
+        )
+        val viewModel = MainFeedViewModel(
+            getMainFeedUseCase = GetMainFeedUseCase(repository),
+        )
+
+        advanceUntilIdle()
+        viewModel.onThreadArticlesVisibilityToggle("thread-1")
+        viewModel.onTopicsViewModeChange(TopicsViewMode.TopicsOnly)
+        viewModel.onBackClick()
+        advanceUntilIdle()
+
+        assertEquals(
+            visibleArticlesMap("thread-1" to false, "thread-2" to false),
+            viewModel.uiState.value.articleVisibilityByThreadId,
+        )
     }
 }
 
@@ -224,8 +293,8 @@ private class TrackingRepository(
     }
 }
 
-private fun sampleThread() = MainFeedThread(
-    id = "thread-1",
+private fun sampleThread(id: String = "thread-1") = MainFeedThread(
+    id = id,
     name = "Thread 1",
     topicId = null,
     topicName = null,
@@ -234,3 +303,5 @@ private fun sampleThread() = MainFeedThread(
     summary = null,
     articles = emptyList(),
 )
+
+private fun visibleArticlesMap(vararg entries: Pair<String, Boolean>): Map<String, Boolean> = mapOf(*entries)

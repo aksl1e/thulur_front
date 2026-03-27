@@ -3,17 +3,16 @@ package com.example.thulur.presentation.composables
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
@@ -27,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.LocalContentColor
@@ -36,11 +36,18 @@ import com.example.thulur.presentation.theme.ThulurColorRole
 import com.example.thulur.presentation.theme.ThulurDesignScale
 import com.example.thulur.presentation.theme.ProvideThulurDesignScale
 import com.example.thulur.presentation.theme.ThulurTextButtonSemanticColors
+import com.example.thulur.presentation.theme.ThulurTextButtonStateSemanticColors
 import com.example.thulur.presentation.theme.ThemeMode
 import com.example.thulur.presentation.theme.ThulurTheme
 import com.example.thulur.presentation.theme.rememberThulurTextButtonSemanticColors
+import com.example.thulur.presentation.theme.thulurDp
 
 typealias ThulurTextButtonColors = ThulurTextButtonSemanticColors
+
+enum class ThulurTextButtonContentDirection {
+    Horizontal,
+    Vertical,
+}
 
 object ThulurTextButtonDefaults {
     @Composable
@@ -50,15 +57,15 @@ object ThulurTextButtonDefaults {
         enabled: Boolean,
         isHovered: Boolean,
         isPressed: Boolean,
-        isFocused: Boolean,
         useContainerStates: Boolean,
+        stateColorsOverride: ThulurTextButtonStateSemanticColors? = null,
     ): ThulurTextButtonColors = rememberThulurTextButtonSemanticColors(
         colorRole = colorRole,
         enabled = enabled,
         isHovered = isHovered,
         isPressed = isPressed,
-        isFocused = isFocused,
         useContainerStates = useContainerStates,
+        stateColorsOverride = stateColorsOverride,
     )
 }
 
@@ -71,23 +78,28 @@ fun ThulurTextButton(
     colorRole: ThulurColorRole = ThulurColorRole.Primary,
     useContainerStates: Boolean = true,
     leadingIcon: (@Composable () -> Unit)? = null,
+    supportingText: String? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     textStyle: TextStyle = ThulurTheme.Typography.bodyLarge,
+    supportingTextStyle: TextStyle? = null,
     shape: Shape = RoundedCornerShape(999.dp),
-    contentPadding: PaddingValues = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-    spacing: Dp = 8.dp,
+    contentPadding: PaddingValues = PaddingValues(15.thulurDp()),
+    spacing: Dp = 8.thulurDp(),
+    contentDirection: ThulurTextButtonContentDirection = ThulurTextButtonContentDirection.Horizontal,
+    contentHorizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
+    stateColorsOverride: ThulurTextButtonStateSemanticColors? = null,
 ) {
     val isHovered by interactionSource.collectIsHoveredAsState()
     val isPressed by interactionSource.collectIsPressedAsState()
-    val isFocused by interactionSource.collectIsFocusedAsState()
     val colors = ThulurTextButtonDefaults.colors(
         colorRole = colorRole,
         enabled = enabled,
         isHovered = isHovered,
         isPressed = isPressed,
-        isFocused = isFocused,
         useContainerStates = useContainerStates,
+        stateColorsOverride = stateColorsOverride,
     )
+    val resolvedSupportingTextStyle = supportingTextStyle ?: textStyle
 
     val animatedContainerColor by animateColorAsState(
         targetValue = colors.containerColor,
@@ -99,15 +111,12 @@ fun ThulurTextButton(
     )
 
     CompositionLocalProvider(LocalContentColor provides animatedContentColor) {
-        Row(
+        Box(
             modifier = modifier
+                .wrapContentSize()
                 .clip(shape)
                 .background(animatedContainerColor)
                 .hoverable(
-                    enabled = enabled,
-                    interactionSource = interactionSource,
-                )
-                .focusable(
                     enabled = enabled,
                     interactionSource = interactionSource,
                 )
@@ -118,16 +127,77 @@ fun ThulurTextButton(
                     onClick = onClick,
                 )
                 .padding(contentPadding),
-            horizontalArrangement = Arrangement.spacedBy(spacing),
-            verticalAlignment = Alignment.CenterVertically,
+            contentAlignment = Alignment.Center,
         ) {
-            leadingIcon?.invoke()
-            BasicText(
-                text = text,
-                style = textStyle.copy(color = animatedContentColor),
-            )
+            when (contentDirection) {
+                ThulurTextButtonContentDirection.Horizontal -> {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(spacing),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        leadingIcon?.invoke()
+                        if (supportingText != null) {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(spacing),
+                            ) {
+                                BasicText(
+                                    text = text,
+                                    style = textStyle.copy(color = animatedContentColor),
+                                )
+                                BasicText(
+                                    text = supportingText,
+                                    style = resolvedSupportingTextStyle.copy(color = animatedContentColor),
+                                )
+                            }
+                        } else {
+                            BasicText(
+                                text = text,
+                                style = textStyle.copy(color = animatedContentColor),
+                            )
+                        }
+                    }
+                }
+
+                ThulurTextButtonContentDirection.Vertical -> {
+                    val textAlign = contentHorizontalAlignment.toTextAlign()
+
+                    Column(
+                        horizontalAlignment = contentHorizontalAlignment,
+                        verticalArrangement = Arrangement.spacedBy(spacing),
+                    ) {
+                        leadingIcon?.invoke()
+                        Column(
+                            horizontalAlignment = contentHorizontalAlignment,
+                            verticalArrangement = Arrangement.spacedBy(spacing),
+                        ) {
+                            BasicText(
+                                text = text,
+                                style = textStyle.copy(
+                                    color = animatedContentColor,
+                                    textAlign = textAlign,
+                                ),
+                            )
+                            supportingText?.let {
+                                BasicText(
+                                    text = it,
+                                    style = resolvedSupportingTextStyle.copy(
+                                        color = animatedContentColor,
+                                        textAlign = textAlign,
+                                    ),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
+}
+
+private fun Alignment.Horizontal.toTextAlign(): TextAlign = when (this) {
+    Alignment.Start -> TextAlign.Start
+    Alignment.End -> TextAlign.End
+    else -> TextAlign.Center
 }
 
 @Preview
@@ -145,7 +215,6 @@ private fun ThulurTextButtonPreview() {
                     onClick = {},
                     colorRole = ThulurColorRole.Slate,
                     useContainerStates = false,
-                    modifier = Modifier.defaultMinSize(minWidth = 140.dp),
                 )
             }
         }

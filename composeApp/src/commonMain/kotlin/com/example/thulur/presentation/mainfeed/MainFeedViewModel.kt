@@ -59,7 +59,30 @@ class MainFeedViewModel(
 
     fun onTopicsViewModeChange(viewMode: TopicsViewMode) {
         _uiState.update { state ->
-            state.copy(topicsViewMode = viewMode)
+            val articleVisibilityByThreadId = when (val contentState = state.contentState) {
+                is MainFeedContentState.Success -> contentState.threads.associate { thread ->
+                    thread.id to viewMode.defaultArticlesVisible()
+                }
+
+                MainFeedContentState.Empty,
+                MainFeedContentState.Loading,
+                is MainFeedContentState.Error -> emptyMap()
+            }
+
+            state.copy(
+                topicsViewMode = viewMode,
+                articleVisibilityByThreadId = articleVisibilityByThreadId,
+            )
+        }
+    }
+
+    fun onThreadArticlesVisibilityToggle(threadId: String) {
+        _uiState.update { state ->
+            val currentValue = state.articleVisibilityByThreadId[threadId]
+                ?: state.topicsViewMode.defaultArticlesVisible()
+            state.copy(
+                articleVisibilityByThreadId = state.articleVisibilityByThreadId + (threadId to !currentValue),
+            )
         }
     }
 
@@ -69,6 +92,7 @@ class MainFeedViewModel(
             _uiState.update { state ->
                 state.copy(
                     selectedDay = day,
+                    articleVisibilityByThreadId = emptyMap(),
                     contentState = MainFeedContentState.Loading,
                 )
             }
@@ -89,8 +113,19 @@ class MainFeedViewModel(
             }
 
             _uiState.update { state ->
+                val articleVisibilityByThreadId = when (contentState) {
+                    is MainFeedContentState.Success -> contentState.threads.associate { thread ->
+                        thread.id to state.topicsViewMode.defaultArticlesVisible()
+                    }
+
+                    MainFeedContentState.Empty,
+                    MainFeedContentState.Loading,
+                    is MainFeedContentState.Error -> emptyMap()
+                }
+
                 state.copy(
                     selectedDay = day,
+                    articleVisibilityByThreadId = articleVisibilityByThreadId,
                     contentState = contentState,
                 )
             }

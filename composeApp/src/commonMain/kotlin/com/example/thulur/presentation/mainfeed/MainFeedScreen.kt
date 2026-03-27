@@ -7,38 +7,47 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.material.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ArrowCircleLeft
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.thulur.domain.model.MainFeedArticle
 import com.example.thulur.domain.model.MainFeedThread
 import com.example.thulur.presentation.composables.ThulurAppBar
+import com.example.thulur.presentation.composables.ThulurChatFab
+import com.example.thulur.presentation.composables.ThulurTextButton
+import com.example.thulur.presentation.composables.ThulurTextButtonContentDirection
+import com.example.thulur.presentation.composables.ThulurThreadItem
 import com.example.thulur.presentation.composables.TopicsViewMode
 import com.example.thulur.presentation.theme.ThemeMode
+import com.example.thulur.presentation.theme.ThulurColorRole
 import com.example.thulur.presentation.theme.ThulurTheme
+import com.example.thulur.presentation.theme.thulurDp
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -53,6 +62,7 @@ fun MainFeedRoute(
         onBackClick = viewModel::onBackClick,
         onForwardClick = viewModel::onForwardClick,
         onTopicsViewModeChange = viewModel::onTopicsViewModeChange,
+        onThreadArticlesVisibilityToggle = viewModel::onThreadArticlesVisibilityToggle,
     )
 }
 
@@ -63,6 +73,7 @@ fun MainFeedScreen(
     onBackClick: () -> Unit,
     onForwardClick: () -> Unit,
     onTopicsViewModeChange: (TopicsViewMode) -> Unit,
+    onThreadArticlesVisibilityToggle: (String) -> Unit,
 ) {
     val colors = mainFeedColors()
     val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
@@ -71,6 +82,10 @@ fun MainFeedScreen(
         .minus(1, DateTimeUnit.DAY)
         .toNavigationAppBarLabel(today = today)
     val forwardDay = uiState.selectedDay.plus(1, DateTimeUnit.DAY)
+    val leftRailWidth = 225.thulurDp()
+    val contentStartPadding = 30.thulurDp()
+    val fabBottomPadding = 30.thulurDp()
+    val fabBottomInset = 110.thulurDp()
     val forwardLabel = if (uiState.selectedDay < today) {
         forwardDay.toNavigationAppBarLabel(today = today)
     } else {
@@ -95,33 +110,76 @@ fun MainFeedScreen(
         )
 
         Box(
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = Modifier.fillMaxSize()
         ) {
+            Box(
+                modifier = Modifier
+                    .width(leftRailWidth)
+                    .fillMaxHeight()
+                    .background(ThulurTheme.SemanticColors.appBar.containerColor),
+            )
+
             when (val contentState = uiState.contentState) {
                 MainFeedContentState.Loading -> MainFeedStatusCard(
                     title = "Loading Main Feed",
                     body = "Requesting daily_feed from Thulur API.",
                     colors = colors,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = leftRailWidth + contentStartPadding,
+                            top = contentStartPadding,
+                            end = contentStartPadding,
+                            bottom = fabBottomInset,
+                        ),
                 )
 
                 MainFeedContentState.Empty -> MainFeedStatusCard(
                     title = "Main Feed Is Empty",
                     body = "The backend returned an empty list. This is expected while the database is still empty.",
                     colors = colors,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = leftRailWidth + contentStartPadding,
+                            top = contentStartPadding,
+                            end = contentStartPadding,
+                            bottom = fabBottomInset,
+                        ),
                 )
 
                 is MainFeedContentState.Error -> MainFeedErrorCard(
                     message = contentState.message,
                     colors = colors,
                     onRetry = onRetry,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = leftRailWidth + contentStartPadding,
+                            top = contentStartPadding,
+                            end = contentStartPadding,
+                            bottom = fabBottomInset,
+                        ),
                 )
 
                 is MainFeedContentState.Success -> MainFeedSuccessContent(
+                    topicsViewMode = uiState.topicsViewMode,
+                    articleVisibilityByThreadId = uiState.articleVisibilityByThreadId,
                     threads = contentState.threads,
-                    colors = colors,
+                    onThreadArticlesVisibilityToggle = onThreadArticlesVisibilityToggle,
+                    leadingLaneWidth = leftRailWidth,
+                    contentStartPadding = contentStartPadding,
+                    fabBottomInset = fabBottomInset,
                 )
             }
+
+            ThulurChatFab(
+                text = "Discuss",
+                onClick = {},
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = fabBottomPadding),
+            )
         }
     }
 }
@@ -131,12 +189,11 @@ private fun MainFeedStatusCard(
     title: String,
     body: String,
     colors: MainFeedColors,
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(28.dp))
-            .background(colors.surfaceContainer)
+        modifier = modifier
+            .background(colors.surfaceContainer, RoundedCornerShape(28.dp))
             .border(1.dp, colors.outline, RoundedCornerShape(28.dp))
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -157,12 +214,11 @@ private fun MainFeedErrorCard(
     message: String,
     colors: MainFeedColors,
     onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(28.dp))
-            .background(colors.surfaceContainer)
+        modifier = modifier
+            .background(colors.surfaceContainer, RoundedCornerShape(28.dp))
             .border(1.dp, colors.outline, RoundedCornerShape(28.dp))
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -186,8 +242,7 @@ private fun RetryButton(
 ) {
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(colors.accent)
+            .background(colors.accent, RoundedCornerShape(999.dp))
             .clickable(onClick = onRetry)
             .padding(horizontal = 18.dp, vertical = 10.dp),
     ) {
@@ -200,170 +255,78 @@ private fun RetryButton(
 
 @Composable
 private fun MainFeedSuccessContent(
+    topicsViewMode: TopicsViewMode,
+    articleVisibilityByThreadId: Map<String, Boolean>,
     threads: List<MainFeedThread>,
-    colors: MainFeedColors,
+    onThreadArticlesVisibilityToggle: (String) -> Unit,
+    leadingLaneWidth: androidx.compose.ui.unit.Dp,
+    contentStartPadding: androidx.compose.ui.unit.Dp,
+    fabBottomInset: androidx.compose.ui.unit.Dp,
 ) {
+    val typography = ThulurTheme.SemanticTypography
+    val moreArticlesColors = ThulurTheme.SemanticColors.threadItem.moreArticlesButton
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(20.dp),
-        contentPadding = PaddingValues(bottom = 24.dp),
+        contentPadding = PaddingValues(
+            top = contentStartPadding,
+            bottom = fabBottomInset,
+        ),
     ) {
-        item {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                BasicText(
-                    text = "Main Feed",
-                    style = ThulurTheme.Typography.displaySmall.copy(color = colors.onSurface),
-                )
-                BasicText(
-                    text = "Technical vertical-slice rendering of daily_feed.",
-                    style = ThulurTheme.Typography.bodyLarge.copy(color = colors.onSurfaceVariant),
-                )
-            }
-        }
-
         items(threads, key = { it.id }) { thread ->
-            MainFeedThreadCard(thread = thread, colors = colors)
-        }
-    }
-}
+            val areArticlesVisible = articleVisibilityByThreadId[thread.id]
+                ?: topicsViewMode.defaultArticlesVisible()
+            val moreArticlesLabel = thread.firstSeen?.toMoreArticlesDateLabel()
 
-@Composable
-private fun MainFeedThreadCard(
-    thread: MainFeedThread,
-    colors: MainFeedColors,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(28.dp))
-            .background(colors.surfaceContainer)
-            .border(1.dp, colors.outline, RoundedCornerShape(28.dp))
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            BasicText(
-                text = thread.name,
-                style = ThulurTheme.Typography.headlineMedium.copy(color = colors.onSurface),
-            )
-
-            val topicLine = buildString {
-                append("Topic: ")
-                append(thread.topicName ?: "No topic")
-                thread.firstSeen?.let {
-                    append(" • First seen: ")
-                    append(it.toString())
-                }
-            }
-
-            BasicText(
-                text = topicLine,
-                style = ThulurTheme.Typography.labelLarge.copy(color = colors.accent),
-            )
-
-            thread.summary?.takeIf { it.isNotBlank() }?.let { summary ->
-                BasicText(
-                    text = summary,
-                    style = ThulurTheme.Typography.bodyLarge.copy(color = colors.onSurfaceVariant),
-                )
-            }
-        }
-
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            thread.articles.forEach { article ->
-                MainFeedArticleCard(article = article, colors = colors)
-            }
-        }
-    }
-}
-
-@Composable
-private fun MainFeedArticleCard(
-    article: MainFeedArticle,
-    colors: MainFeedColors,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(22.dp))
-            .background(colors.surfaceContainerHigh)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        BasicText(
-            text = article.title,
-            style = ThulurTheme.Typography.titleLarge.copy(color = colors.onSurface),
-        )
-
-        article.displaySummary?.takeIf { it.isNotBlank() }?.let { summary ->
-            BasicText(
-                text = summary,
-                style = ThulurTheme.Typography.bodyMedium.copy(color = colors.onSurfaceVariant),
+            ThulurThreadItem(
+                title = thread.name,
+                summary = thread.summary,
+                onShowWholeSubjectClick = {},
+                onToggleArticlesClick = { onThreadArticlesVisibilityToggle(thread.id) },
+                areArticlesVisible = areArticlesVisible,
+                articles = thread.articles.map { article -> article.toThulurThreadArticleData() },
+                leadingLaneWidth = leadingLaneWidth,
+                contentStartPadding = contentStartPadding,
+                articlesLeadingContent = if (areArticlesVisible && moreArticlesLabel != null) {
+                    {
+                        ThulurTextButton(
+                            text = "More articles",
+                            supportingText = moreArticlesLabel,
+                            onClick = {},
+                            colorRole = ThulurColorRole.Slate,
+                            useContainerStates = false,
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.ArrowCircleLeft,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.thulurDp()),
+                                )
+                            },
+                            contentDirection = ThulurTextButtonContentDirection.Vertical,
+                            contentHorizontalAlignment = Alignment.End,
+                            textStyle = typography.threadItemControl,
+                            supportingTextStyle = typography.threadItemControl,
+                            spacing = 5.thulurDp(),
+                            stateColorsOverride = moreArticlesColors,
+                        )
+                    }
+                } else {
+                    null
+                },
             )
         }
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            QualityChip(quality = article.quality, colors = colors)
-            BasicText(
-                text = article.published ?: "No publish date",
-                style = ThulurTheme.Typography.labelMedium.copy(color = colors.onSurfaceVariant),
-            )
-            BasicText(
-                text = if (article.isRead) "Read" else "Unread",
-                style = ThulurTheme.Typography.labelMedium.copy(color = colors.onSurfaceVariant),
-            )
-            if (article.isSuggestion) {
-                BasicText(
-                    text = "Suggested",
-                    style = ThulurTheme.Typography.labelMedium.copy(color = colors.accent),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun QualityChip(
-    quality: MainFeedArticle.ArticleQuality,
-    colors: MainFeedColors,
-) {
-    val (background, content) = when (quality) {
-        MainFeedArticle.ArticleQuality.Trash -> colors.trashChipBackground to colors.trashChipContent
-        MainFeedArticle.ArticleQuality.Default -> colors.defaultChipBackground to colors.defaultChipContent
-        MainFeedArticle.ArticleQuality.Important -> colors.importantChipBackground to colors.importantChipContent
-    }
-
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(background)
-            .padding(horizontal = 10.dp, vertical = 6.dp),
-    ) {
-        BasicText(
-            text = quality.name,
-            style = ThulurTheme.Typography.labelMedium.copy(color = content),
-        )
     }
 }
 
 private data class MainFeedColors(
     val surface: Color,
     val surfaceContainer: Color,
-    val surfaceContainerHigh: Color,
     val onSurface: Color,
     val onSurfaceVariant: Color,
     val outline: Color,
     val accent: Color,
     val onAccent: Color,
-    val trashChipBackground: Color,
-    val trashChipContent: Color,
-    val defaultChipBackground: Color,
-    val defaultChipContent: Color,
-    val importantChipBackground: Color,
-    val importantChipContent: Color,
 )
 
 @Composable
@@ -375,35 +338,21 @@ private fun mainFeedColors(): MainFeedColors {
         ThemeMode.Light -> MainFeedColors(
             surface = colors.slate.s50,
             surfaceContainer = colors.slate.s100,
-            surfaceContainerHigh = colors.primary.s300A08,
             onSurface = colors.slate.s900,
             onSurfaceVariant = colors.slate.s700,
             outline = colors.slate.s300,
             accent = colors.primary.s500,
             onAccent = colors.slate.s50,
-            trashChipBackground = colors.error.s100,
-            trashChipContent = colors.error.s700,
-            defaultChipBackground = colors.slate.s300A10,
-            defaultChipContent = colors.slate.s700,
-            importantChipBackground = colors.primary.s100,
-            importantChipContent = colors.primary.s700,
         )
 
         ThemeMode.Dark -> MainFeedColors(
             surface = colors.slate.s950,
             surfaceContainer = colors.slate.s900,
-            surfaceContainerHigh = colors.slate.s300A08,
             onSurface = colors.slate.s50,
             onSurfaceVariant = colors.slate.s300,
             outline = colors.slate.s700,
             accent = colors.primary.s500,
             onAccent = colors.slate.s50,
-            trashChipBackground = colors.error.s900,
-            trashChipContent = colors.error.s100,
-            defaultChipBackground = colors.slate.s700,
-            defaultChipContent = colors.slate.s50,
-            importantChipBackground = colors.primary.s900,
-            importantChipContent = colors.primary.s100,
         )
     }
 }
@@ -438,3 +387,5 @@ private fun LocalDate.toShortDateLabel(): String {
 
     return "$day/$month/$shortYear"
 }
+
+private fun LocalDate.toMoreArticlesDateLabel(): String = toShortDateLabel()

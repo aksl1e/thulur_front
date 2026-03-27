@@ -9,6 +9,6 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         title = "",
     ) {
-        App(mode = ThemeMode.Dark)
+        App(mode = ThemeMode.Light)
     }
 }

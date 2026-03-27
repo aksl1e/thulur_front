@@ -53,9 +53,11 @@ object ThulurSegmentedSwitchDefaults {
     fun colors(
         colorRole: ThulurColorRole,
         enabled: Boolean,
+        colorsOverride: ThulurSegmentedSwitchSemanticColors? = null,
     ): ThulurSegmentedSwitchColors = rememberThulurSegmentedSwitchSemanticColors(
         colorRole = colorRole,
         enabled = enabled,
+        colorsOverride = colorsOverride,
     )
 }
 
@@ -69,6 +71,7 @@ fun <T> ThulurSegmentedSwitch(
     colorRole: ThulurColorRole = ThulurColorRole.Primary,
     optionLabel: (T) -> String,
     textStyle: TextStyle = ThulurTheme.Typography.bodyLarge,
+    colorsOverride: ThulurSegmentedSwitchSemanticColors? = null,
     cornerRadius: Dp = 25.thulurDp(),
     horizontalItemPadding: Dp = 16.thulurDp(),
     verticalItemPadding: Dp = 0.dp,
@@ -80,6 +83,7 @@ fun <T> ThulurSegmentedSwitch(
     val colors = ThulurSegmentedSwitchDefaults.colors(
         colorRole = colorRole,
         enabled = enabled,
+        colorsOverride = colorsOverride,
     )
     val containerHeight = remember { mutableStateOf(0.dp) }
     val shape = remember(cornerRadius) { RoundedCornerShape(cornerRadius) }
