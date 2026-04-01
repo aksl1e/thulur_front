@@ -400,7 +400,7 @@ fun rememberThulurArticleItemSemanticColors(): ThulurArticleItemSemanticColors {
                 textColor = slate.s950,
                 imageContainerColor = slate.s300,
                 imageLabelColor = slate.s500,
-                outlineColor = slate.s950,
+                outlineColor = slate.s950A30,
             ),
         )
 
@@ -425,7 +425,7 @@ fun rememberThulurArticleItemSemanticColors(): ThulurArticleItemSemanticColors {
                 textColor = slate.s50,
                 imageContainerColor = slate.s700,
                 imageLabelColor = slate.s500,
-                outlineColor = slate.s50,
+                outlineColor = slate.s50A30,
             ),
         )
     }
@@ -488,7 +488,7 @@ fun rememberThulurChatFabSemanticColors(): ThulurChatFabSemanticColors {
 
         ThemeMode.Dark -> ThulurChatFabSemanticColors(
             containerColor = primary.s500,
-            contentColor = slate.s950,
+            contentColor = slate.s50,
         )
     }
 }
