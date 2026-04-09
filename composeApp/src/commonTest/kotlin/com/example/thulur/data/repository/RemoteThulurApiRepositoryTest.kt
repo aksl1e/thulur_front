@@ -5,11 +5,15 @@ import com.example.thulur.domain.session.CurrentUserProvider
 import com.example.thulur_api.ThulurApi
 import com.example.thulur_api.dtos.DailyFeedArticleDto
 import com.example.thulur_api.dtos.DailyFeedThreadDto
+import com.example.thulur_api.dtos.auth.AuthStatusDto
+import com.example.thulur_api.dtos.auth.AuthenticationOptionsDto
+import com.example.thulur_api.dtos.auth.RegistrationOptionsDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
+import kotlinx.serialization.json.JsonObject
 
 class RemoteThulurApiRepositoryTest {
     @Test
@@ -94,6 +98,22 @@ private class FakeThulurApi(
         userId: String,
         day: LocalDate?,
     ): List<DailyFeedThreadDto> = threads
+
+    override suspend fun beginRegistration(email: String): RegistrationOptionsDto =
+        error("Not used in this test")
+
+    override suspend fun finishRegistration(
+        email: String,
+        credential: JsonObject,
+    ): AuthStatusDto = error("Not used in this test")
+
+    override suspend fun beginLogin(email: String): AuthenticationOptionsDto =
+        error("Not used in this test")
+
+    override suspend fun finishLogin(
+        email: String,
+        credential: JsonObject,
+    ): AuthStatusDto = error("Not used in this test")
 }
 
 private class FakeCurrentUserProvider : CurrentUserProvider {
