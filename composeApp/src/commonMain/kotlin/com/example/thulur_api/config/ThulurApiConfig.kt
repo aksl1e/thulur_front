@@ -9,5 +9,5 @@ data class ThulurApiConfig(
      *
      * TODO: update API base URL/configuration when environment setup is finalized.
      */
-    val baseUrl: String = "http://localhost:8001",
+    val baseUrl: String = "http://localhost:8002",
 )

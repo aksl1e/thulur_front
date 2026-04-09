@@ -10,6 +10,6 @@ class DevCurrentUserProvider : CurrentUserProvider {
 
     private companion object {
         // TODO: update after auth completion.
-        const val DEV_USER_ID: String = "ff78144c-872e-41f7-89c5-d6cef0c63450"
+        const val DEV_USER_ID: String = "a1274e96-c7ad-42b6-af46-c5d5a21f3cc2"
     }
 }
