@@ -2,17 +2,13 @@ package com.example.thulur_api
 
 import com.example.thulur_api.config.ThulurApiConfig
 import com.example.thulur_api.dtos.DailyFeedThreadDto
-import com.example.thulur_api.dtos.auth.AuthStatusDto
-import com.example.thulur_api.dtos.auth.AuthenticationOptionsDto
-import com.example.thulur_api.dtos.auth.RegistrationOptionsDto
-import com.example.thulur_api.methods.auth.LoginBeginMethod
-import com.example.thulur_api.methods.auth.LoginFinishMethod
-import com.example.thulur_api.methods.auth.RegisterBeginMethod
-import com.example.thulur_api.methods.auth.RegisterFinishMethod
+import com.example.thulur_api.dtos.auth.AuthTokenDto
+import com.example.thulur_api.methods.auth.DesktopAuthExchangeMethod
+import com.example.thulur_api.methods.auth.DesktopLoginPageUrlMethod
+import com.example.thulur_api.methods.auth.DesktopRegistrationPageUrlMethod
 import com.example.thulur_api.methods.daily_feed.DailyFeedMethod
 import io.ktor.client.HttpClient
 import kotlinx.datetime.LocalDate
-import kotlinx.serialization.json.JsonObject
 
 /**
  * Public transport boundary for all backend methods used by the app.
@@ -23,42 +19,31 @@ import kotlinx.serialization.json.JsonObject
  */
 interface ThulurApi {
     /**
-     * Returns the raw daily feed payload for the given user.
+     * Returns the raw daily feed payload for the bearer-authenticated user.
      *
-     * @param userId Backend user identifier used in the endpoint path.
      * @param day Optional day filter. When `null`, the backend resolves it to the current day.
      * @return Raw thread/article DTOs exactly as needed by the app data layer.
      */
     suspend fun getDailyFeed(
-        userId: String,
         day: LocalDate? = null,
     ): List<DailyFeedThreadDto>
 
-    /**
-     * Requests WebAuthn registration options for the given email.
-     */
-    suspend fun beginRegistration(email: String): RegistrationOptionsDto
-
-    /**
-     * Finishes WebAuthn registration with the credential returned by the platform.
-     */
-    suspend fun finishRegistration(
+    fun desktopRegistrationPageUrl(
         email: String,
-        credential: JsonObject,
-    ): AuthStatusDto
+        callbackUrl: String,
+        state: String,
+    ): String
 
-    /**
-     * Requests WebAuthn authentication options for the given email.
-     */
-    suspend fun beginLogin(email: String): AuthenticationOptionsDto
-
-    /**
-     * Finishes WebAuthn login with the credential returned by the platform.
-     */
-    suspend fun finishLogin(
+    fun desktopLoginPageUrl(
         email: String,
-        credential: JsonObject,
-    ): AuthStatusDto
+        callbackUrl: String,
+        state: String,
+    ): String
+
+    suspend fun exchangeAuthCode(
+        code: String,
+        state: String,
+    ): AuthTokenDto
 }
 
 /**
@@ -68,19 +53,13 @@ class RemoteThulurApi(
     httpClient: HttpClient,
     config: ThulurApiConfig,
 ) : ThulurApi {
-    private val registerBeginMethod = RegisterBeginMethod(
-        httpClient = httpClient,
+    private val desktopRegistrationPageUrlMethod = DesktopRegistrationPageUrlMethod(
         config = config,
     )
-    private val registerFinishMethod = RegisterFinishMethod(
-        httpClient = httpClient,
+    private val desktopLoginPageUrlMethod = DesktopLoginPageUrlMethod(
         config = config,
     )
-    private val loginBeginMethod = LoginBeginMethod(
-        httpClient = httpClient,
-        config = config,
-    )
-    private val loginFinishMethod = LoginFinishMethod(
+    private val desktopAuthExchangeMethod = DesktopAuthExchangeMethod(
         httpClient = httpClient,
         config = config,
     )
@@ -90,32 +69,36 @@ class RemoteThulurApi(
     )
 
     override suspend fun getDailyFeed(
-        userId: String,
         day: LocalDate?,
     ): List<DailyFeedThreadDto> = dailyFeedMethod.execute(
-        userId = userId,
         day = day,
     )
 
-    override suspend fun beginRegistration(email: String): RegistrationOptionsDto =
-        registerBeginMethod.execute(email = email)
-
-    override suspend fun finishRegistration(
+    override fun desktopRegistrationPageUrl(
         email: String,
-        credential: JsonObject,
-    ): AuthStatusDto = registerFinishMethod.execute(
+        callbackUrl: String,
+        state: String,
+    ): String = desktopRegistrationPageUrlMethod.execute(
         email = email,
-        credential = credential,
+        callbackUrl = callbackUrl,
+        state = state,
     )
 
-    override suspend fun beginLogin(email: String): AuthenticationOptionsDto =
-        loginBeginMethod.execute(email = email)
-
-    override suspend fun finishLogin(
+    override fun desktopLoginPageUrl(
         email: String,
-        credential: JsonObject,
-    ): AuthStatusDto = loginFinishMethod.execute(
+        callbackUrl: String,
+        state: String,
+    ): String = desktopLoginPageUrlMethod.execute(
         email = email,
-        credential = credential,
+        callbackUrl = callbackUrl,
+        state = state,
+    )
+
+    override suspend fun exchangeAuthCode(
+        code: String,
+        state: String,
+    ): AuthTokenDto = desktopAuthExchangeMethod.execute(
+        code = code,
+        state = state,
     )
 }

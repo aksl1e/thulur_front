@@ -10,26 +10,24 @@ import io.ktor.client.request.url
 import kotlinx.datetime.LocalDate
 
 /**
- * Encapsulates the `/users/{user_id}/daily_feed` transport call.
+ * Encapsulates the `/users/me/daily_feed` transport call.
  */
 internal class DailyFeedMethod(
     private val httpClient: HttpClient,
     private val config: ThulurApiConfig,
 ) {
     /**
-     * Requests the daily feed for the provided user.
+     * Requests the daily feed for the bearer-authenticated user.
      *
-     * @param userId Backend user identifier used by the endpoint path.
      * @param day Optional day filter in `YYYY-MM-DD` format. When `null`,
      * the backend uses its default "today" behavior.
      * @return Raw backend response as a list of [DailyFeedThreadDto].
      */
     suspend fun execute(
-        userId: String,
         day: LocalDate? = null,
     ): List<DailyFeedThreadDto> = httpClient
         .get {
-            url("${config.baseUrl}/users/$userId/daily_feed")
+            url("${config.baseUrl}/users/me/daily_feed")
             day?.let { parameter("day", it.toString()) }
         }
         .body()

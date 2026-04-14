@@ -18,12 +18,10 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
 import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 
 /**
  * Shared Compose ViewModel driving the Main Feed screen.
  */
-@OptIn(ExperimentalTime::class)
 class MainFeedViewModel(
     private val getMainFeedUseCase: GetMainFeedUseCase,
 ) : ViewModel() {

@@ -3,7 +3,6 @@ package com.example.thulur.data.repository
 import com.example.thulur.domain.model.MainFeedArticle
 import com.example.thulur.domain.model.MainFeedThread
 import com.example.thulur.domain.repository.ThulurApiRepository
-import com.example.thulur.domain.session.CurrentUserProvider
 import com.example.thulur_api.ThulurApi
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDate.Companion.parse
@@ -13,13 +12,10 @@ import kotlinx.datetime.LocalDate.Companion.parse
  */
 class RemoteThulurApiRepository(
     private val thulurApi: ThulurApi,
-    private val currentUserProvider: CurrentUserProvider,
 ) : ThulurApiRepository {
     override suspend fun getMainFeed(day: LocalDate?): List<MainFeedThread> {
-        val userId = currentUserProvider.currentUserId()
-
         return thulurApi
-            .getDailyFeed(userId = userId, day = day)
+            .getDailyFeed(day = day)
             .map { threadDto ->
                 MainFeedThread(
                     id = threadDto.threadId,

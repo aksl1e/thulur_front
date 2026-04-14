@@ -47,8 +47,9 @@ class DailyFeedMethodTest {
         DailyFeedMethod(
             httpClient = client,
             config = ThulurApiConfig(),
-        ).execute(userId = "user-id")
+        ).execute()
 
+        assertEquals("/users/me/daily_feed", capturedRequest?.url?.encodedPath)
         assertNull(capturedRequest?.url?.parameters?.get("day"))
     }
 
@@ -80,10 +81,10 @@ class DailyFeedMethodTest {
             httpClient = client,
             config = ThulurApiConfig(),
         ).execute(
-            userId = "user-id",
             day = LocalDate(2026, 3, 23),
         )
 
+        assertEquals("/users/me/daily_feed", capturedRequest?.url?.encodedPath)
         assertEquals("2026-03-23", capturedRequest?.url?.parameters?.get("day"))
     }
 
@@ -140,7 +141,7 @@ class DailyFeedMethodTest {
         val response = DailyFeedMethod(
             httpClient = client,
             config = ThulurApiConfig(),
-        ).execute(userId = "user-id")
+        ).execute()
 
         assertEquals(1, response.size)
         assertEquals(1, response.first().articles.size)

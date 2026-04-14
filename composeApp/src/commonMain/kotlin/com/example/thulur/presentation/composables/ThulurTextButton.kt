@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
@@ -82,7 +81,7 @@ fun ThulurTextButton(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     textStyle: TextStyle = ThulurTheme.Typography.bodyLarge,
     supportingTextStyle: TextStyle? = null,
-    shape: Shape = RoundedCornerShape(999.dp),
+    shape: Shape = RoundedCornerShape(0.dp),
     contentPadding: PaddingValues = PaddingValues(15.thulurDp()),
     spacing: Dp = 8.thulurDp(),
     contentDirection: ThulurTextButtonContentDirection = ThulurTextButtonContentDirection.Horizontal,
@@ -113,7 +112,6 @@ fun ThulurTextButton(
     CompositionLocalProvider(LocalContentColor provides animatedContentColor) {
         Box(
             modifier = modifier
-                .wrapContentSize()
                 .clip(shape)
                 .background(animatedContainerColor)
                 .hoverable(

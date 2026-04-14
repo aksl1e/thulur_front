@@ -1,19 +1,15 @@
 package com.example.thulur.data.repository
 
 import com.example.thulur.domain.model.MainFeedArticle
-import com.example.thulur.domain.session.CurrentUserProvider
 import com.example.thulur_api.ThulurApi
 import com.example.thulur_api.dtos.DailyFeedArticleDto
 import com.example.thulur_api.dtos.DailyFeedThreadDto
-import com.example.thulur_api.dtos.auth.AuthStatusDto
-import com.example.thulur_api.dtos.auth.AuthenticationOptionsDto
-import com.example.thulur_api.dtos.auth.RegistrationOptionsDto
+import com.example.thulur_api.dtos.auth.AuthTokenDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
-import kotlinx.serialization.json.JsonObject
 
 class RemoteThulurApiRepositoryTest {
     @Test
@@ -37,7 +33,6 @@ class RemoteThulurApiRepositoryTest {
                     ),
                 ),
             ),
-            currentUserProvider = FakeCurrentUserProvider(),
         )
 
         val thread = repository.getMainFeed().single()
@@ -65,7 +60,6 @@ class RemoteThulurApiRepositoryTest {
                     ),
                 ),
             ),
-            currentUserProvider = FakeCurrentUserProvider(),
         )
 
         val thread = repository.getMainFeed().single()
@@ -95,27 +89,24 @@ private class FakeThulurApi(
     private val threads: List<DailyFeedThreadDto>,
 ) : ThulurApi {
     override suspend fun getDailyFeed(
-        userId: String,
         day: LocalDate?,
     ): List<DailyFeedThreadDto> = threads
 
-    override suspend fun beginRegistration(email: String): RegistrationOptionsDto =
-        error("Not used in this test")
-
-    override suspend fun finishRegistration(
+    override fun desktopRegistrationPageUrl(
         email: String,
-        credential: JsonObject,
-    ): AuthStatusDto = error("Not used in this test")
+        callbackUrl: String,
+        state: String,
+    ): String = error("Not used in this test")
 
-    override suspend fun beginLogin(email: String): AuthenticationOptionsDto =
-        error("Not used in this test")
-
-    override suspend fun finishLogin(
+    override fun desktopLoginPageUrl(
         email: String,
-        credential: JsonObject,
-    ): AuthStatusDto = error("Not used in this test")
-}
+        callbackUrl: String,
+        state: String,
+    ): String = error("Not used in this test")
 
-private class FakeCurrentUserProvider : CurrentUserProvider {
-    override fun currentUserId(): String = "user-id"
+    override suspend fun exchangeAuthCode(
+        code: String,
+        state: String,
+    ): AuthTokenDto =
+        error("Not used in this test")
 }

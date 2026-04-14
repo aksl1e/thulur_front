@@ -11,6 +11,7 @@ kotlinx-serialization = "1.9.0"
 ktor = "3.4.1"
 material3 = "1.10.0-alpha05"
 composeMaterialIconsExtended = "1.7.3"
+credentialSecureStorage = "1.0.3"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -40,6 +41,7 @@ ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negoti
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+credential-secure-storage = { module = "com.microsoft:credential-secure-storage", version.ref = "credentialSecureStorage" }
 
 [plugins]
 composeHotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "composeHotReload" }

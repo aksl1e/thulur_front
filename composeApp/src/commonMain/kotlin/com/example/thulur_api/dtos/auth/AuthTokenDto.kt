@@ -4,10 +4,10 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Minimal auth completion response returned by the backend.
+ * Successful desktop auth exchange payload used by the app.
  */
 @Serializable
-data class AuthStatusDto(
-    @SerialName("status")
-    val status: String,
+data class AuthTokenDto(
+    @SerialName("token")
+    val token: String,
 )

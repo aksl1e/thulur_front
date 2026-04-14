@@ -15,6 +15,7 @@ data class ThulurShadeScale(
     val s50A30: Color = Color.Unspecified,
     val s300A08: Color = Color.Unspecified,
     val s300A10: Color = Color.Unspecified,
+    val s700A10: Color = Color.Unspecified,
     val s950A30: Color = Color.Unspecified,
 )
 
@@ -77,6 +78,7 @@ internal val DefaultThulurColors = ThulurColors(
         s50A30 = Color(0x4DF8FAFC),
         s300A08 = Color(0x14CBD5E1),
         s300A10 = Color(0x1ACBD5E1),
+        s700A10 = Color(0x1A334155),
         s950A30 = Color(0x4D020617),
     ),
 )
