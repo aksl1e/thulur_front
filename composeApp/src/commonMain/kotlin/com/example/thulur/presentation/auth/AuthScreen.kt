@@ -25,7 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.thulur.presentation.composables.ThulurTextButton
+import com.example.thulur.presentation.composables.ThulurButton
 import com.example.thulur.presentation.composables.ThulurTextField
 import com.example.thulur.presentation.root.RootLoadingScreen
 import com.example.thulur.presentation.theme.ProvideThulurDesignScale
@@ -142,7 +142,7 @@ fun AuthScreen(
                         stateColorsOverride = colors.emailField,
                     )
 
-                    ThulurTextButton(
+                    ThulurButton(
                         text = "Continue with Passkey",
                         onClick = onContinueClick,
                         modifier = Modifier.fillMaxWidth(),
@@ -165,7 +165,7 @@ fun AuthScreen(
                 }
             }
 
-            ThulurTextButton(
+            ThulurButton(
                 text = "Trouble signing in?",
                 onClick = onTroubleSigningInClick,
                 enabled = !uiState.isSubmitting,

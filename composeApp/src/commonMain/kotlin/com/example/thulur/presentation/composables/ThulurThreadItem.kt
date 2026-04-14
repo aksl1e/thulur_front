@@ -15,6 +15,10 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
@@ -24,11 +28,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.painterResource
 import com.example.thulur.presentation.theme.ThulurDesignScale
 import com.example.thulur.presentation.theme.ProvideThulurDesignScale
 import com.example.thulur.presentation.theme.ThemeMode
 import com.example.thulur.presentation.theme.ThulurTheme
 import com.example.thulur.presentation.theme.thulurDp
+import thulur_front.composeapp.generated.resources.Res
+import thulur_front.composeapp.generated.resources.ic_book_marked
 
 data class ThulurThreadArticleData(
     val id: String,
@@ -90,19 +97,37 @@ fun ThulurThreadItem(
                     horizontalArrangement = Arrangement.spacedBy(controlSpacing),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    ThulurTextButton(
-                        text = "Show whole subject",
+                    ThulurButton(
                         onClick = onShowWholeSubjectClick,
-                        textStyle = typography.threadItemControl,
-                        shape = RoundedCornerShape(10.thulurDp()),
+                        leadingIcon = {
+                            Icon(
+                                painter = painterResource(Res.drawable.ic_book_marked),
+                                contentDescription = null,
+                                modifier = Modifier.width(30.thulurDp()).height(30.thulurDp()),
+                            )
+                        },
+                        shape = RoundedCornerShape(1000.thulurDp()),
                         stateColorsOverride = colors.showWholeSubjectButton,
+                        contentDescription = "Show whole subject",
+                        tooltipText = "Show whole subject",
                     )
-                    ThulurTextButton(
-                        text = if (areArticlesVisible) "Hide Articles" else "Show Articles",
+                    ThulurButton(
                         onClick = onToggleArticlesClick,
-                        textStyle = typography.threadItemControl,
-                        shape = RoundedCornerShape(10.thulurDp()),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = if (areArticlesVisible) {
+                                    Icons.Outlined.KeyboardArrowUp
+                                } else {
+                                    Icons.Outlined.KeyboardArrowDown
+                                },
+                                contentDescription = null,
+                                modifier = Modifier.width(30.thulurDp()).height(30.thulurDp()),
+                            )
+                        },
+                        shape = RoundedCornerShape(1000.thulurDp()),
                         stateColorsOverride = colors.toggleArticlesButton,
+                        contentDescription = if (areArticlesVisible) "Hide Articles" else "Show Articles",
+                        tooltipText = if (areArticlesVisible) "Hide Articles" else "Show Articles",
                     )
                 }
             }
