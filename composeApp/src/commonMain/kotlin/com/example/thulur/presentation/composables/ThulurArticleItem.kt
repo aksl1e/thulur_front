@@ -1,6 +1,7 @@
 package com.example.thulur.presentation.composables
 
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -64,13 +66,16 @@ fun ThulurArticleItem(
     val imageShape = RoundedCornerShape(10.thulurDp())
     val isHovered by interactionSource.collectIsHoveredAsState()
     val isPressed by interactionSource.collectIsPressedAsState()
-    val containerColor by animateColorAsState(
-        targetValue = when {
-            isPressed -> ThulurTheme.SemanticColors.articleItem.interaction.pressedContainerColor
-            isHovered -> ThulurTheme.SemanticColors.articleItem.interaction.hoveredContainerColor
-            else -> ThulurTheme.SemanticColors.articleItem.interaction.restContainerColor
-        },
-        label = "thulurArticleItemContainerColor",
+    val interactionColors = ThulurTheme.SemanticColors.articleItem.interaction
+    val hoveredOverlayAlpha by animateFloatAsState(
+        targetValue = if (isHovered && !isPressed) 1f else 0f,
+        animationSpec = tween(durationMillis = 120),
+        label = "thulurArticleItemHoveredOverlayAlpha",
+    )
+    val pressedOverlayAlpha by animateFloatAsState(
+        targetValue = if (isPressed) 1f else 0f,
+        animationSpec = tween(durationMillis = 120),
+        label = "thulurArticleItemPressedOverlayAlpha",
     )
     val titleStyle = when (variant) {
         ThulurArticleItemVariant.Important -> typography.articleItemImportantTitle
@@ -83,12 +88,11 @@ fun ThulurArticleItem(
         ThulurArticleItemVariant.Default -> typography.articleItemSummary
     }
 
-    Column(
+    Box(
         modifier = modifier
             .width(variant.width())
             .fillMaxHeight()
             .clip(containerShape)
-            .background(containerColor)
             .hoverable(
                 interactionSource = interactionSource,
             )
@@ -107,56 +111,84 @@ fun ThulurArticleItem(
                 } else {
                     Modifier
                 }
-            )
-            .padding(20.thulurDp()),
-        verticalArrangement = Arrangement.spacedBy(15.thulurDp()),
+            ),
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(135.thulurDp())
-                .clip(imageShape)
-                .background(colors.imageContainerColor),
-                contentAlignment = Alignment.Center,
-        ) {
-            BasicText(
-                text = imageLabel,
-                style = typography.articleItemImageLabel.copy(color = colors.imageLabelColor),
-            )
-        }
+                .matchParentSize()
+                .background(interactionColors.restContainerColor),
+        )
+
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(
+                    interactionColors.hoveredContainerColor.copy(alpha = hoveredOverlayAlpha),
+                ),
+        )
+
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(
+                    interactionColors.pressedContainerColor.copy(alpha = pressedOverlayAlpha),
+                ),
+        )
 
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(),
-            verticalArrangement = Arrangement.SpaceBetween,
+                .fillMaxSize()
+                .padding(20.thulurDp()),
+            verticalArrangement = Arrangement.spacedBy(15.thulurDp()),
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 5.thulurDp()),
-                verticalArrangement = Arrangement.spacedBy(15.thulurDp()),
+                    .height(135.thulurDp())
+                    .clip(imageShape)
+                    .background(colors.imageContainerColor),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 BasicText(
-                    text = title,
-                    style = titleStyle.copy(color = colors.textColor),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                BasicText(
-                    text = summary.orEmpty(),
-                    style = summaryStyle.copy(color = colors.textColor),
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
+                    text = imageLabel,
+                    style = typography.articleItemImageLabel.copy(color = colors.imageLabelColor),
                 )
             }
 
-            ArticleItemBottomRow(
-                sourceLabel = sourceLabel,
-                dateText = dateText,
-                timeText = timeText,
-                showDate = showDate,
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 5.thulurDp()),
+                    verticalArrangement = Arrangement.spacedBy(15.thulurDp()),
+                ) {
+                    BasicText(
+                        text = title,
+                        style = titleStyle.copy(color = colors.textColor),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    BasicText(
+                        text = summary.orEmpty(),
+                        style = summaryStyle.copy(color = colors.textColor),
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+
+                ArticleItemBottomRow(
+                    sourceLabel = sourceLabel,
+                    dateText = dateText,
+                    timeText = timeText,
+                    showDate = showDate,
+                )
+            }
         }
     }
 }

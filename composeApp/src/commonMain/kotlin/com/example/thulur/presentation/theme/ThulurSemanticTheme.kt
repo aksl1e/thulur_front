@@ -340,15 +340,15 @@ fun rememberThulurThreadItemSemanticColors(): ThulurThreadItemSemanticColors {
             moreArticlesButton = ThulurTextButtonStateSemanticColors(
                 rest = ThulurTextButtonSemanticColors(
                     containerColor = Color.Transparent,
-                    contentColor = slate.s700,
+                    contentColor = slate.s500,
                 ),
                 hovered = ThulurTextButtonSemanticColors(
                     containerColor = Color.Transparent,
-                    contentColor = slate.s900,
+                    contentColor = slate.s700,
                 ),
                 pressed = ThulurTextButtonSemanticColors(
                     containerColor = Color.Transparent,
-                    contentColor = slate.s950,
+                    contentColor = slate.s900,
                 ),
                 disabled = ThulurTextButtonSemanticColors(
                     containerColor = Color.Transparent,
@@ -877,7 +877,6 @@ fun rememberThulurSemanticTypography(): ThulurSemanticTypography = ThulurSemanti
         lineHeight = 32.thulurSp(),
     ),
     appBarTitle = ThulurTheme.Typography.headlineLarge.copy(
-        fontFamily = ThulurTheme.Typography.bodyLarge.fontFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 36.thulurSp(),
         lineHeight = 42.thulurSp(),
