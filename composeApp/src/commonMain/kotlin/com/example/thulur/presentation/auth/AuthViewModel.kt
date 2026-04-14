@@ -2,8 +2,6 @@ package com.example.thulur.presentation.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.thulur.domain.auth.PasskeyAuthenticationErrorCode
-import com.example.thulur.domain.auth.PasskeyAuthenticationException
 import com.example.thulur.domain.auth.PasskeyAuthenticator
 import com.example.thulur.domain.session.CurrentSessionProvider
 import kotlinx.coroutines.CancellationException
@@ -53,15 +51,7 @@ class AuthViewModel(
             }
 
             try {
-                val token = try {
-                    passkeyAuthenticator.login(email = email)
-                } catch (exception: PasskeyAuthenticationException) {
-                    if (exception.code == PasskeyAuthenticationErrorCode.UserNotFound) {
-                        passkeyAuthenticator.register(email = email)
-                    } else {
-                        throw exception
-                    }
-                }
+                val token = passkeyAuthenticator.login(email = email)
 
                 if (token.isBlank()) {
                     error("Authentication finished without a valid token.")
