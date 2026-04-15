@@ -52,7 +52,8 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun MainFeedRoute(
-    viewModel: MainFeedViewModel = koinViewModel(),
+    sessionInstanceId: Int,
+    viewModel: MainFeedViewModel = koinViewModel(key = mainFeedViewModelKey(sessionInstanceId)),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -65,6 +66,9 @@ fun MainFeedRoute(
         onThreadArticlesVisibilityToggle = viewModel::onThreadArticlesVisibilityToggle,
     )
 }
+
+internal fun mainFeedViewModelKey(sessionInstanceId: Int): String =
+    "main-feed-session-$sessionInstanceId"
 
 @Composable
 fun MainFeedScreen(

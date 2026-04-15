@@ -13,9 +13,9 @@ fun AppRootRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    when (uiState) {
+    when (val state = uiState) {
         AppRootUiState.Loading -> RootLoadingScreen()
         AppRootUiState.Unauthenticated -> AuthRoute()
-        AppRootUiState.Authenticated -> MainFeedRoute()
+        is AppRootUiState.Authenticated -> MainFeedRoute(sessionInstanceId = state.sessionInstanceId)
     }
 }

@@ -5,8 +5,15 @@ import kotlinx.coroutines.flow.StateFlow
 /**
  * Provides the temporary app session used by authenticated transport calls.
  */
+data class CurrentSession(
+    val token: String,
+    val instanceId: Int,
+)
+
 interface CurrentSessionProvider {
-    val tokenFlow: StateFlow<String?>
+    val sessionFlow: StateFlow<CurrentSession?>
+
+    fun currentSession(): CurrentSession?
 
     fun currentToken(): String?
 

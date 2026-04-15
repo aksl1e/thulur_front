@@ -1,7 +1,11 @@
 package com.example.thulur.presentation.root
 
-enum class AppRootUiState {
-    Loading,
-    Unauthenticated,
-    Authenticated,
+sealed interface AppRootUiState {
+    data object Loading : AppRootUiState
+
+    data object Unauthenticated : AppRootUiState
+
+    data class Authenticated(
+        val sessionInstanceId: Int,
+    ) : AppRootUiState
 }

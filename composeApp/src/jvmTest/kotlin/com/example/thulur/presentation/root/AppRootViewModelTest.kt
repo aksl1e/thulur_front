@@ -51,7 +51,7 @@ class AppRootViewModelTest {
 
         advanceUntilIdle()
 
-        assertEquals(AppRootUiState.Authenticated, viewModel.uiState.value)
+        assertEquals(AppRootUiState.Authenticated(sessionInstanceId = 1), viewModel.uiState.value)
     }
 
     @Test
@@ -64,5 +64,52 @@ class AppRootViewModelTest {
         advanceUntilIdle()
 
         assertEquals(AppRootUiState.Unauthenticated, viewModel.uiState.value)
+    }
+
+    @Test
+    fun `increments session instance id when user authenticates again after logout`() = runTest {
+        val sessionProvider = CurrentSessionProviderImpl(InMemorySecureTokenStore(initialToken = "token-1"))
+        val viewModel = AppRootViewModel(sessionProvider)
+        advanceUntilIdle()
+
+        assertEquals(AppRootUiState.Authenticated(sessionInstanceId = 1), viewModel.uiState.value)
+
+        sessionProvider.clearToken()
+        advanceUntilIdle()
+        assertEquals(AppRootUiState.Unauthenticated, viewModel.uiState.value)
+
+        sessionProvider.updateToken("token-2")
+        advanceUntilIdle()
+
+        assertEquals(AppRootUiState.Authenticated(sessionInstanceId = 2), viewModel.uiState.value)
+    }
+
+    @Test
+    fun `does not increment session instance id when token changes inside active session`() = runTest {
+        val sessionProvider = CurrentSessionProviderImpl(InMemorySecureTokenStore(initialToken = "token-1"))
+        val viewModel = AppRootViewModel(sessionProvider)
+        advanceUntilIdle()
+
+        sessionProvider.updateToken("token-2")
+        advanceUntilIdle()
+
+        assertEquals(AppRootUiState.Authenticated(sessionInstanceId = 1), viewModel.uiState.value)
+    }
+
+    @Test
+    fun `reads session instance id from current session provider`() = runTest {
+        val sessionProvider = CurrentSessionProviderImpl(InMemorySecureTokenStore())
+        val viewModel = AppRootViewModel(sessionProvider)
+        advanceUntilIdle()
+
+        sessionProvider.updateToken("token-1")
+        advanceUntilIdle()
+        assertEquals(AppRootUiState.Authenticated(sessionInstanceId = 1), viewModel.uiState.value)
+
+        sessionProvider.clearToken()
+        sessionProvider.updateToken("token-2")
+        advanceUntilIdle()
+
+        assertEquals(AppRootUiState.Authenticated(sessionInstanceId = 2), viewModel.uiState.value)
     }
 }
