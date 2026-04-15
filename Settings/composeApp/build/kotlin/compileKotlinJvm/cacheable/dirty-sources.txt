@@ -1,0 +1,12 @@
+C:\Users\krystek\Documents\studia\Zespolowe\Settings\composeApp\src\commonMain\kotlin\com\example\thulur\presentation\theme\ThulurSemanticTheme.kt
+C:\Users\krystek\Documents\studia\Zespolowe\Settings\composeApp\src\commonMain\kotlin\com\example\thulur\presentation\theme\ThemeMode.kt
+C:\Users\krystek\Documents\studia\Zespolowe\Settings\composeApp\src\commonMain\kotlin\com\example\thulur\presentation\theme\ThulurTheme.kt
+C:\Users\krystek\Documents\studia\Zespolowe\Settings\composeApp\src\jvmMain\kotlin\com\example\thulur\theme\ThulurDesignScale.jvm.kt
+C:\Users\krystek\Documents\studia\Zespolowe\Settings\composeApp\src\commonMain\kotlin\com\example\thulur\presentation\theme\ThulurColorRole.kt
+C:\Users\krystek\Documents\studia\Zespolowe\Settings\composeApp\src\commonMain\kotlin\com\example\thulur\presentation\theme\ThulurColors.kt
+C:\Users\krystek\Documents\studia\Zespolowe\Settings\composeApp\src\jvmMain\kotlin\com\example\thulur_api.client\DesktopHttpClientEngineFactor.jvm.kt
+C:\Users\krystek\Documents\studia\Zespolowe\Settings\composeApp\src\jvmMain\kotlin\com\example\thulur\main.kt
+C:\Users\krystek\Documents\studia\Zespolowe\Settings\composeApp\src\commonMain\kotlin\com\example\thulur\presentation\composables\ThulurAppBar.kt
+C:\Users\krystek\Documents\studia\Zespolowe\Settings\composeApp\src\commonMain\kotlin\com\example\thulur\presentation\theme\ThulurTopography.kt
+C:\Users\krystek\Documents\studia\Zespolowe\Settings\composeApp\src\commonMain\kotlin\com\example\thulur\presentation\theme\ThulurDesignScale.kt
+C:\Users\krystek\Documents\studia\Zespolowe\Settings\composeApp\src\commonMain\kotlin\com\example\thulur\App.kt
