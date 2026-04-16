@@ -3,9 +3,10 @@ package com.example.thulur_api
 import com.example.thulur_api.config.ThulurApiConfig
 import com.example.thulur_api.dtos.DailyFeedThreadDto
 import com.example.thulur_api.dtos.auth.AuthTokenDto
+import com.example.thulur_api.dtos.auth.DesktopAuthMode
+import com.example.thulur_api.dtos.auth.DesktopAuthStartDto
 import com.example.thulur_api.methods.auth.DesktopAuthExchangeMethod
-import com.example.thulur_api.methods.auth.DesktopLoginPageUrlMethod
-import com.example.thulur_api.methods.auth.DesktopRegistrationPageUrlMethod
+import com.example.thulur_api.methods.auth.DesktopAuthStartMethod
 import com.example.thulur_api.methods.daily_feed.DailyFeedMethod
 import io.ktor.client.HttpClient
 import kotlinx.datetime.LocalDate
@@ -28,21 +29,18 @@ interface ThulurApi {
         day: LocalDate? = null,
     ): List<DailyFeedThreadDto>
 
-    fun desktopRegistrationPageUrl(
+    suspend fun startDesktopAuth(
         email: String,
+        mode: DesktopAuthMode,
         callbackUrl: String,
         state: String,
-    ): String
-
-    fun desktopLoginPageUrl(
-        email: String,
-        callbackUrl: String,
-        state: String,
-    ): String
+    ): DesktopAuthStartDto
 
     suspend fun exchangeAuthCode(
         code: String,
         state: String,
+        deviceName: String? = null,
+        platform: String? = null,
     ): AuthTokenDto
 }
 
@@ -53,10 +51,8 @@ class RemoteThulurApi(
     httpClient: HttpClient,
     config: ThulurApiConfig,
 ) : ThulurApi {
-    private val desktopRegistrationPageUrlMethod = DesktopRegistrationPageUrlMethod(
-        config = config,
-    )
-    private val desktopLoginPageUrlMethod = DesktopLoginPageUrlMethod(
+    private val desktopAuthStartMethod = DesktopAuthStartMethod(
+        httpClient = httpClient,
         config = config,
     )
     private val desktopAuthExchangeMethod = DesktopAuthExchangeMethod(
@@ -74,22 +70,14 @@ class RemoteThulurApi(
         day = day,
     )
 
-    override fun desktopRegistrationPageUrl(
+    override suspend fun startDesktopAuth(
         email: String,
+        mode: DesktopAuthMode,
         callbackUrl: String,
         state: String,
-    ): String = desktopRegistrationPageUrlMethod.execute(
+    ): DesktopAuthStartDto = desktopAuthStartMethod.execute(
         email = email,
-        callbackUrl = callbackUrl,
-        state = state,
-    )
-
-    override fun desktopLoginPageUrl(
-        email: String,
-        callbackUrl: String,
-        state: String,
-    ): String = desktopLoginPageUrlMethod.execute(
-        email = email,
+        mode = mode,
         callbackUrl = callbackUrl,
         state = state,
     )
@@ -97,8 +85,12 @@ class RemoteThulurApi(
     override suspend fun exchangeAuthCode(
         code: String,
         state: String,
+        deviceName: String?,
+        platform: String?,
     ): AuthTokenDto = desktopAuthExchangeMethod.execute(
         code = code,
         state = state,
+        deviceName = deviceName,
+        platform = platform,
     )
 }

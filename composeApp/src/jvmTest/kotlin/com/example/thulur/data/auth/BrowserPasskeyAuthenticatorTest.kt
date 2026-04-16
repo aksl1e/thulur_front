@@ -5,13 +5,14 @@ import com.example.thulur.domain.auth.PasskeyAuthenticationException
 import com.example.thulur_api.ThulurApi
 import com.example.thulur_api.dtos.DailyFeedThreadDto
 import com.example.thulur_api.dtos.auth.AuthTokenDto
+import com.example.thulur_api.dtos.auth.DesktopAuthMode
+import com.example.thulur_api.dtos.auth.DesktopAuthStartDto
 import java.net.HttpURLConnection
 import java.net.URI
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
@@ -36,10 +37,14 @@ class BrowserPasskeyAuthenticatorTest {
             authenticator.login("hello@example.com")
         }
 
-        launcher.awaitUri()
+        val launchedUri = launcher.awaitUri()
+        assertEquals("http://localhost:8002/auth/flow/login-flow", launchedUri.toString())
+        assertFalse(launchedUri.toString().contains("hello@example.com"))
         httpGet("${api.loginCallbackUrl}?code=code-1&state=state-1")
 
         assertEquals("login-token", login.await())
+        assertEquals(DesktopAuthMode.Login, api.startedMode)
+        assertEquals("hello@example.com", api.startedEmail)
         assertEquals("code-1", api.exchangedCode)
         assertEquals("state-1", api.exchangedState)
     }
@@ -113,10 +118,14 @@ class BrowserPasskeyAuthenticatorTest {
             authenticator.register("hello@example.com")
         }
 
-        launcher.awaitUri()
+        val launchedUri = launcher.awaitUri()
+        assertEquals("http://localhost:8002/auth/flow/register-flow", launchedUri.toString())
+        assertFalse(launchedUri.toString().contains("hello@example.com"))
         httpGet("${api.registrationCallbackUrl}?code=register-code&state=state-1")
 
         assertEquals("register-token", registration.await())
+        assertEquals(DesktopAuthMode.Register, api.startedMode)
+        assertEquals("hello@example.com", api.startedEmail)
         assertEquals("register-code", api.exchangedCode)
         assertEquals("state-1", api.exchangedState)
     }
@@ -137,6 +146,10 @@ private class CapturingBrowserLauncher : BrowserLauncher {
 private class FakeDesktopAuthApi(
     private val exchangeToken: String,
 ) : ThulurApi {
+    var startedEmail: String? = null
+        private set
+    var startedMode: DesktopAuthMode? = null
+        private set
     lateinit var loginCallbackUrl: String
         private set
     lateinit var registrationCallbackUrl: String
@@ -150,27 +163,32 @@ private class FakeDesktopAuthApi(
         day: LocalDate?,
     ): List<DailyFeedThreadDto> = error("Not used in this test")
 
-    override fun desktopRegistrationPageUrl(
+    override suspend fun startDesktopAuth(
         email: String,
+        mode: DesktopAuthMode,
         callbackUrl: String,
         state: String,
-    ): String {
-        registrationCallbackUrl = callbackUrl
-        return "http://localhost:8002/auth/register?email=${email.urlEncode()}&state=${state.urlEncode()}"
-    }
+    ): DesktopAuthStartDto {
+        startedEmail = email
+        startedMode = mode
+        when (mode) {
+            DesktopAuthMode.Login -> loginCallbackUrl = callbackUrl
+            DesktopAuthMode.Register -> registrationCallbackUrl = callbackUrl
+        }
 
-    override fun desktopLoginPageUrl(
-        email: String,
-        callbackUrl: String,
-        state: String,
-    ): String {
-        loginCallbackUrl = callbackUrl
-        return "http://localhost:8002/auth/login?email=${email.urlEncode()}&state=${state.urlEncode()}"
+        return DesktopAuthStartDto(
+            browserUrl = when (mode) {
+                DesktopAuthMode.Login -> "http://localhost:8002/auth/flow/login-flow"
+                DesktopAuthMode.Register -> "http://localhost:8002/auth/flow/register-flow"
+            },
+        )
     }
 
     override suspend fun exchangeAuthCode(
         code: String,
         state: String,
+        deviceName: String?,
+        platform: String?,
     ): AuthTokenDto {
         exchangedCode = code
         exchangedState = state
@@ -192,6 +210,3 @@ private fun httpGet(
     }
     return stream.bufferedReader().use { it.readText() }
 }
-
-private fun String.urlEncode(): String =
-    URLEncoder.encode(this, StandardCharsets.UTF_8)

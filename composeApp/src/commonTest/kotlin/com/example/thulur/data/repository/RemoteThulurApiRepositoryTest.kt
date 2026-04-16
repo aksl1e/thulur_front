@@ -5,6 +5,8 @@ import com.example.thulur_api.ThulurApi
 import com.example.thulur_api.dtos.DailyFeedArticleDto
 import com.example.thulur_api.dtos.DailyFeedThreadDto
 import com.example.thulur_api.dtos.auth.AuthTokenDto
+import com.example.thulur_api.dtos.auth.DesktopAuthMode
+import com.example.thulur_api.dtos.auth.DesktopAuthStartDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -92,21 +94,18 @@ private class FakeThulurApi(
         day: LocalDate?,
     ): List<DailyFeedThreadDto> = threads
 
-    override fun desktopRegistrationPageUrl(
+    override suspend fun startDesktopAuth(
         email: String,
+        mode: DesktopAuthMode,
         callbackUrl: String,
         state: String,
-    ): String = error("Not used in this test")
-
-    override fun desktopLoginPageUrl(
-        email: String,
-        callbackUrl: String,
-        state: String,
-    ): String = error("Not used in this test")
+    ): DesktopAuthStartDto = error("Not used in this test")
 
     override suspend fun exchangeAuthCode(
         code: String,
         state: String,
+        deviceName: String?,
+        platform: String?,
     ): AuthTokenDto =
         error("Not used in this test")
 }

@@ -4,6 +4,7 @@ import com.example.thulur.domain.auth.PasskeyAuthenticationErrorCode
 import com.example.thulur.domain.auth.PasskeyAuthenticationException
 import com.example.thulur.domain.auth.PasskeyAuthenticator
 import com.example.thulur_api.ThulurApi
+import com.example.thulur_api.dtos.auth.DesktopAuthMode
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpServer
 import java.awt.Desktop
@@ -66,22 +67,18 @@ internal class BrowserPasskeyAuthenticator(
                 null,
                 null,
             ).toString()
-            val pageUrl = when (flow) {
-                DesktopAuthFlow.Login -> thulurApi.desktopLoginPageUrl(
-                    email = email,
-                    callbackUrl = callbackUrl,
-                    state = state,
-                )
-
-                DesktopAuthFlow.Registration -> thulurApi.desktopRegistrationPageUrl(
-                    email = email,
-                    callbackUrl = callbackUrl,
-                    state = state,
-                )
-            }
+            val browserUrl = thulurApi.startDesktopAuth(
+                email = email,
+                mode = when (flow) {
+                    DesktopAuthFlow.Login -> DesktopAuthMode.Login
+                    DesktopAuthFlow.Registration -> DesktopAuthMode.Register
+                },
+                callbackUrl = callbackUrl,
+                state = state,
+            ).browserUrl
 
             try {
-                browserLauncher.open(URI(pageUrl))
+                browserLauncher.open(URI(browserUrl))
             } catch (throwable: Throwable) {
                 throw PasskeyAuthenticationException(
                     message = "Could not open browser for passkey sign-in.",
