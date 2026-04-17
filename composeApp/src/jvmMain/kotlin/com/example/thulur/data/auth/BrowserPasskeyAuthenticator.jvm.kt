@@ -145,9 +145,9 @@ internal class BrowserPasskeyAuthenticator(
                         code = PasskeyAuthenticationErrorCode.InvalidState,
                     ),
                 )
-                exchange.sendText(
+                exchange.sendHtml(
                     statusCode = HTTP_BAD_REQUEST,
-                    text = "Authentication state did not match. Return to Thulur and try again.",
+                    html = CALLBACK_ERROR_HTML,
                 )
                 return
             }
@@ -170,9 +170,9 @@ internal class BrowserPasskeyAuthenticator(
                     cause = throwable,
                 ),
             )
-            exchange.sendText(
+            exchange.sendHtml(
                 statusCode = HTTP_SERVER_ERROR,
-                text = "Authentication callback failed.",
+                html = CALLBACK_ERROR_HTML,
             )
         } finally {
             exchange.close()
@@ -264,6 +264,32 @@ internal class BrowserPasskeyAuthenticator(
         <div class="card">
           <h2>You're signed in.</h2>
           <p>You can close this tab and return to Thulur.</p>
+        </div>
+        </body></html>
+    """.trimIndent()
+        val CALLBACK_ERROR_HTML = """
+        <!DOCTYPE html>
+        <html><head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>Thulur</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Lora:wght@600&family=Public+Sans:wght@400;500&display=swap');
+          :root { --error: #EF4444; --slate: #64748B; }
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body { font-family: 'Public Sans', system-ui, sans-serif; background: #F8FAFC;
+                 min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+          .card { background: #fff; border-radius: 16px; padding: 48px 40px; text-align: center;
+                  width: 100%; max-width: 400px;
+                  box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.08); }
+          h2 { font-family: 'Lora', serif; font-weight: 600; font-size: 22px;
+               color: var(--error); margin-bottom: 12px; }
+          p { font-size: 14px; font-weight: 500; color: var(--slate); }
+        </style>
+        </head><body>
+        <div class="card">
+          <h2>Something went wrong.</h2>
+          <p>Return to Thulur and try again.</p>
         </div>
         </body></html>
     """.trimIndent()
