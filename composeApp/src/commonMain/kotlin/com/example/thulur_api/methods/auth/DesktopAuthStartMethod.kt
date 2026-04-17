@@ -1,7 +1,8 @@
 package com.example.thulur_api.methods.auth
 
 import com.example.thulur_api.config.ThulurApiConfig
-import com.example.thulur_api.dtos.auth.AuthTokenDto
+import com.example.thulur_api.dtos.auth.DesktopAuthMode
+import com.example.thulur_api.dtos.auth.DesktopAuthStartDto
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
@@ -13,27 +14,27 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Exchanges the one-time desktop auth callback code for an app bearer token.
+ * Starts a backend-hosted desktop auth flow and returns an opaque browser URL.
  */
-internal class DesktopAuthExchangeMethod(
+internal class DesktopAuthStartMethod(
     private val httpClient: HttpClient,
     private val config: ThulurApiConfig,
 ) {
     suspend fun execute(
-        code: String,
+        email: String,
+        mode: DesktopAuthMode,
+        callbackUrl: String,
         state: String,
-        deviceName: String? = null,
-        platform: String? = null,
-    ): AuthTokenDto = httpClient
+    ): DesktopAuthStartDto = httpClient
         .post {
-            url("${config.baseUrl}/auth/exchange")
+            url("${config.baseUrl}/auth/desktop/start")
             headers.append(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             setBody(
-                CodeExchangeRequest(
-                    code = code,
+                DesktopAuthStartRequest(
+                    email = email,
+                    mode = mode,
+                    callbackUrl = callbackUrl,
                     state = state,
-                    deviceName = deviceName,
-                    platform = platform,
                 ),
             )
         }
@@ -41,13 +42,13 @@ internal class DesktopAuthExchangeMethod(
 }
 
 @Serializable
-private data class CodeExchangeRequest(
-    @SerialName("code")
-    val code: String,
+private data class DesktopAuthStartRequest(
+    @SerialName("email")
+    val email: String,
+    @SerialName("mode")
+    val mode: DesktopAuthMode,
+    @SerialName("callbackUrl")
+    val callbackUrl: String,
     @SerialName("state")
     val state: String,
-    @SerialName("device_name")
-    val deviceName: String? = null,
-    @SerialName("platform")
-    val platform: String? = null,
 )

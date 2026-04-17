@@ -1,5 +1,6 @@
 package com.example.thulur.data.session
 
+import com.example.thulur.domain.session.CurrentSession
 import com.example.thulur.domain.session.CurrentSessionProvider
 import com.example.thulur.domain.session.SecureTokenStore
 import kotlin.coroutines.cancellation.CancellationException
@@ -10,17 +11,25 @@ import kotlinx.coroutines.flow.asStateFlow
 class CurrentSessionProviderImpl(
     private val tokenStore: SecureTokenStore,
 ) : CurrentSessionProvider {
-    private val _tokenFlow = MutableStateFlow<String?>(null)
+    private val _sessionFlow = MutableStateFlow<CurrentSession?>(null)
+    private var nextSessionInstanceId = 1
 
-    override val tokenFlow: StateFlow<String?> = _tokenFlow.asStateFlow()
+    override val sessionFlow: StateFlow<CurrentSession?> = _sessionFlow.asStateFlow()
 
-    override fun currentToken(): String? = _tokenFlow.value
+    override fun currentSession(): CurrentSession? = _sessionFlow.value
+
+    override fun currentToken(): String? = _sessionFlow.value?.token
 
     override suspend fun loadPersistedToken() {
-        if (!_tokenFlow.value.isNullOrBlank()) return
+        if (_sessionFlow.value != null) return
 
-        _tokenFlow.value = ignoreStorageFailure {
+        ignoreStorageFailure {
             tokenStore.readToken()?.takeIf(String::isNotBlank)
+        }?.let { token ->
+            _sessionFlow.value = CurrentSession(
+                token = token,
+                instanceId = nextSessionInstanceId++,
+            )
         }
     }
 
@@ -31,14 +40,17 @@ class CurrentSessionProviderImpl(
             return
         }
 
-        _tokenFlow.value = normalizedToken
+        _sessionFlow.value = CurrentSession(
+            token = normalizedToken,
+            instanceId = _sessionFlow.value?.instanceId ?: nextSessionInstanceId++,
+        )
         ignoreStorageFailure {
             tokenStore.writeToken(normalizedToken)
         }
     }
 
     override suspend fun clearToken() {
-        _tokenFlow.value = null
+        _sessionFlow.value = null
         ignoreStorageFailure {
             tokenStore.clearToken()
         }

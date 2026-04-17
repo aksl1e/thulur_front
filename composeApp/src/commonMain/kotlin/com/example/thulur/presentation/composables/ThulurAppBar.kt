@@ -76,7 +76,7 @@ fun ThulurAppBar(
                 .padding(backAreaPadding),
             contentAlignment = Alignment.Center,
         ) {
-            ThulurTextButton(
+            ThulurButton(
                 text = backLabel,
                 onClick = onBackClick,
                 modifier = Modifier.fillMaxHeight(),
@@ -113,7 +113,7 @@ fun ThulurAppBar(
                 )
 
                 if (forwardLabel != null && onForwardClick != null) {
-                    ThulurTextButton(
+                    ThulurButton(
                         text = forwardLabel,
                         onClick = onForwardClick,
                         colorRole = ThulurColorRole.Slate,

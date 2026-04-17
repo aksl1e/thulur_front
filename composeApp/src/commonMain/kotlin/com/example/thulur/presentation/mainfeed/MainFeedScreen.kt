@@ -31,9 +31,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.thulur.domain.model.MainFeedThread
 import com.example.thulur.presentation.composables.ThulurAppBar
+import com.example.thulur.presentation.composables.ThulurButton
+import com.example.thulur.presentation.composables.ThulurButtonContentDirection
 import com.example.thulur.presentation.composables.ThulurChatFab
-import com.example.thulur.presentation.composables.ThulurTextButton
-import com.example.thulur.presentation.composables.ThulurTextButtonContentDirection
 import com.example.thulur.presentation.composables.ThulurThreadItem
 import com.example.thulur.presentation.composables.TopicsViewMode
 import com.example.thulur.presentation.theme.ThemeMode
@@ -52,7 +52,8 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun MainFeedRoute(
-    viewModel: MainFeedViewModel = koinViewModel(),
+    sessionInstanceId: Int,
+    viewModel: MainFeedViewModel = koinViewModel(key = mainFeedViewModelKey(sessionInstanceId)),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -65,6 +66,9 @@ fun MainFeedRoute(
         onThreadArticlesVisibilityToggle = viewModel::onThreadArticlesVisibilityToggle,
     )
 }
+
+internal fun mainFeedViewModelKey(sessionInstanceId: Int): String =
+    "main-feed-session-$sessionInstanceId"
 
 @Composable
 fun MainFeedScreen(
@@ -290,7 +294,7 @@ private fun MainFeedSuccessContent(
                 contentStartPadding = contentStartPadding,
                 articlesLeadingContent = if (areArticlesVisible && moreArticlesLabel != null) {
                     {
-                        ThulurTextButton(
+                        ThulurButton(
                             text = "More articles",
                             supportingText = moreArticlesLabel,
                             onClick = {},
@@ -303,7 +307,7 @@ private fun MainFeedSuccessContent(
                                     modifier = Modifier.size(24.thulurDp()),
                                 )
                             },
-                            contentDirection = ThulurTextButtonContentDirection.Vertical,
+                            contentDirection = ThulurButtonContentDirection.Vertical,
                             contentHorizontalAlignment = Alignment.End,
                             textStyle = typography.threadItemControl,
                             supportingTextStyle = typography.threadItemControl,

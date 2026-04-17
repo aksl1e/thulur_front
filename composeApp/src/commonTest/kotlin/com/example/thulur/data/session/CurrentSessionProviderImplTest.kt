@@ -1,5 +1,6 @@
 package com.example.thulur.data.session
 
+import com.example.thulur.domain.session.CurrentSession
 import com.example.thulur.domain.session.SecureTokenStore
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -12,7 +13,8 @@ class CurrentSessionProviderImplTest {
         val provider = CurrentSessionProviderImpl(InMemorySecureTokenStore(initialToken = "token-1"))
 
         assertNull(provider.currentToken())
-        assertNull(provider.tokenFlow.value)
+        assertNull(provider.currentSession())
+        assertNull(provider.sessionFlow.value)
     }
 
     @Test
@@ -22,7 +24,14 @@ class CurrentSessionProviderImplTest {
         provider.loadPersistedToken()
 
         assertEquals("token-1", provider.currentToken())
-        assertEquals("token-1", provider.tokenFlow.value)
+        assertEquals(
+            CurrentSession(token = "token-1", instanceId = 1),
+            provider.currentSession(),
+        )
+        assertEquals(
+            CurrentSession(token = "token-1", instanceId = 1),
+            provider.sessionFlow.value,
+        )
     }
 
     @Test
@@ -45,6 +54,7 @@ class CurrentSessionProviderImplTest {
         provider.clearToken()
 
         assertNull(provider.currentToken())
+        assertNull(provider.currentSession())
         assertNull(tokenStore.readToken())
     }
 
@@ -55,7 +65,8 @@ class CurrentSessionProviderImplTest {
         provider.loadPersistedToken()
 
         assertNull(provider.currentToken())
-        assertNull(provider.tokenFlow.value)
+        assertNull(provider.currentSession())
+        assertNull(provider.sessionFlow.value)
     }
 
     @Test
@@ -65,7 +76,10 @@ class CurrentSessionProviderImplTest {
         provider.updateToken("token-1")
 
         assertEquals("token-1", provider.currentToken())
-        assertEquals("token-1", provider.tokenFlow.value)
+        assertEquals(
+            CurrentSession(token = "token-1", instanceId = 1),
+            provider.currentSession(),
+        )
     }
 
     @Test
@@ -76,7 +90,42 @@ class CurrentSessionProviderImplTest {
         provider.loadPersistedToken()
 
         assertEquals("runtime-token", provider.currentToken())
-        assertEquals("runtime-token", provider.tokenFlow.value)
+        assertEquals(
+            CurrentSession(token = "runtime-token", instanceId = 1),
+            provider.currentSession(),
+        )
+    }
+
+    @Test
+    fun `new session gets a new instance id after clear`() = runTest {
+        val provider = CurrentSessionProviderImpl(InMemorySecureTokenStore())
+
+        provider.updateToken("token-1")
+        assertEquals(
+            CurrentSession(token = "token-1", instanceId = 1),
+            provider.currentSession(),
+        )
+
+        provider.clearToken()
+        provider.updateToken("token-2")
+
+        assertEquals(
+            CurrentSession(token = "token-2", instanceId = 2),
+            provider.currentSession(),
+        )
+    }
+
+    @Test
+    fun `token replacement inside active session keeps same instance id`() = runTest {
+        val provider = CurrentSessionProviderImpl(InMemorySecureTokenStore())
+
+        provider.updateToken("token-1")
+        provider.updateToken("token-2")
+
+        assertEquals(
+            CurrentSession(token = "token-2", instanceId = 1),
+            provider.currentSession(),
+        )
     }
 }
 
