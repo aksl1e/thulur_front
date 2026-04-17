@@ -158,9 +158,9 @@ internal class BrowserPasskeyAuthenticator(
                     error = query["error"],
                 ),
             )
-            exchange.sendText(
+            exchange.sendHtml(
                 statusCode = HTTP_OK,
-                text = "Authentication finished. You can return to Thulur.",
+                html = CALLBACK_SUCCESS_HTML,
             )
         } catch (throwable: Throwable) {
             callback.completeExceptionally(
@@ -205,6 +205,18 @@ internal class BrowserPasskeyAuthenticator(
         }
     }
 
+    private fun HttpExchange.sendHtml(
+        statusCode: Int,
+        html: String,
+    ) {
+        val bytes = html.encodeToByteArray()
+        responseHeaders.add("Content-Type", "text/html; charset=utf-8")
+        sendResponseHeaders(statusCode, bytes.size.toLong())
+        responseBody.use { stream ->
+            stream.write(bytes)
+        }
+    }
+
     private fun String.toUserMessage(): String = when (this) {
         PasskeyAuthenticationErrorCode.UserNotFound -> "No passkeys registered for this email."
         PasskeyAuthenticationErrorCode.PasskeyCancelled -> "Passkey sign-in was cancelled."
@@ -229,6 +241,32 @@ internal class BrowserPasskeyAuthenticator(
         const val HTTP_BAD_REQUEST = 400
         const val HTTP_NOT_FOUND = 404
         const val HTTP_SERVER_ERROR = 500
+        val CALLBACK_SUCCESS_HTML = """
+        <!DOCTYPE html>
+        <html><head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>Thulur</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Lora:wght@600&family=Public+Sans:wght@400;500&display=swap');
+          :root { --primary: #3B82F6; --slate: #64748B; --success: #22C55E; }
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body { font-family: 'Public Sans', system-ui, sans-serif; background: #F8FAFC;
+                 min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+          .card { background: #fff; border-radius: 16px; padding: 48px 40px; text-align: center;
+                  width: 100%; max-width: 400px;
+                  box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.08); }
+          h2 { font-family: 'Lora', serif; font-weight: 600; font-size: 22px;
+               color: #0F172A; margin-bottom: 12px; }
+          p { font-size: 14px; font-weight: 500; color: var(--slate); }
+        </style>
+        </head><body>
+        <div class="card">
+          <h2>You're signed in.</h2>
+          <p>You can close this tab and return to Thulur.</p>
+        </div>
+        </body></html>
+    """.trimIndent()
     }
 }
 
