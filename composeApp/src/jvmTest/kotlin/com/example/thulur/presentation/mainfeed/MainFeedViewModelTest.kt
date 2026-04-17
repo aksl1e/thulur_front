@@ -1,5 +1,6 @@
 package com.example.thulur.presentation.mainfeed
 
+import com.example.thulur.domain.model.ArticleParagraph
 import com.example.thulur.domain.model.MainFeedThread
 import com.example.thulur.domain.repository.ThulurApiRepository
 import com.example.thulur.domain.usecase.GetMainFeedUseCase
@@ -291,6 +292,9 @@ private class TrackingRepository(
         requestedDays += day
         return result.getOrThrow()
     }
+
+    override suspend fun getArticleParagraphs(articleId: String): List<ArticleParagraph> =
+        error("Not used in this test")
 }
 
 private fun sampleThread(id: String = "thread-1") = MainFeedThread(

@@ -1,5 +1,6 @@
 package com.example.thulur.data.repository
 
+import com.example.thulur.domain.model.ArticleParagraph
 import com.example.thulur.domain.model.MainFeedArticle
 import com.example.thulur.domain.model.MainFeedThread
 import com.example.thulur.domain.repository.ThulurApiRepository
@@ -41,6 +42,15 @@ class RemoteThulurApiRepository(
                 )
             }
     }
+
+    override suspend fun getArticleParagraphs(articleId: String): List<ArticleParagraph> =
+        thulurApi.getArticleParagraphs(articleId = articleId).map { paragraphDto ->
+            ArticleParagraph(
+                idx = paragraphDto.idx,
+                text = paragraphDto.text,
+                isNovel = paragraphDto.isNovel,
+            )
+        }
 }
 
 private fun String?.toMainFeedDateOrNull(): LocalDate? = when (this) {

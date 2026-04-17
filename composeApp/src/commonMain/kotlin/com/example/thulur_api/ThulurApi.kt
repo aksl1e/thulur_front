@@ -2,11 +2,13 @@ package com.example.thulur_api
 
 import com.example.thulur_api.config.ThulurApiConfig
 import com.example.thulur_api.dtos.DailyFeedThreadDto
+import com.example.thulur_api.dtos.ParagraphDto
 import com.example.thulur_api.dtos.auth.AuthTokenDto
 import com.example.thulur_api.dtos.auth.DesktopAuthMode
 import com.example.thulur_api.dtos.auth.DesktopAuthStartDto
 import com.example.thulur_api.methods.auth.DesktopAuthExchangeMethod
 import com.example.thulur_api.methods.auth.DesktopAuthStartMethod
+import com.example.thulur_api.methods.articles.ParagraphsMethod
 import com.example.thulur_api.methods.daily_feed.DailyFeedMethod
 import io.ktor.client.HttpClient
 import kotlinx.datetime.LocalDate
@@ -28,6 +30,13 @@ interface ThulurApi {
     suspend fun getDailyFeed(
         day: LocalDate? = null,
     ): List<DailyFeedThreadDto>
+
+    /**
+     * Returns raw paragraph metadata for a single article.
+     */
+    suspend fun getArticleParagraphs(
+        articleId: String,
+    ): List<ParagraphDto>
 
     suspend fun startDesktopAuth(
         email: String,
@@ -63,11 +72,21 @@ class RemoteThulurApi(
         httpClient = httpClient,
         config = config,
     )
+    private val paragraphsMethod = ParagraphsMethod(
+        httpClient = httpClient,
+        config = config,
+    )
 
     override suspend fun getDailyFeed(
         day: LocalDate?,
     ): List<DailyFeedThreadDto> = dailyFeedMethod.execute(
         day = day,
+    )
+
+    override suspend fun getArticleParagraphs(
+        articleId: String,
+    ): List<ParagraphDto> = paragraphsMethod.execute(
+        articleId = articleId,
     )
 
     override suspend fun startDesktopAuth(

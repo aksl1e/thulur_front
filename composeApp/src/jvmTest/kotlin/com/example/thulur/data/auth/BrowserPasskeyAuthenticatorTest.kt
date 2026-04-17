@@ -4,6 +4,7 @@ import com.example.thulur.domain.auth.PasskeyAuthenticationErrorCode
 import com.example.thulur.domain.auth.PasskeyAuthenticationException
 import com.example.thulur_api.ThulurApi
 import com.example.thulur_api.dtos.DailyFeedThreadDto
+import com.example.thulur_api.dtos.ParagraphDto
 import com.example.thulur_api.dtos.auth.AuthTokenDto
 import com.example.thulur_api.dtos.auth.DesktopAuthMode
 import com.example.thulur_api.dtos.auth.DesktopAuthStartDto
@@ -162,6 +163,10 @@ private class FakeDesktopAuthApi(
     override suspend fun getDailyFeed(
         day: LocalDate?,
     ): List<DailyFeedThreadDto> = error("Not used in this test")
+
+    override suspend fun getArticleParagraphs(
+        articleId: String,
+    ): List<ParagraphDto> = error("Not used in this test")
 
     override suspend fun startDesktopAuth(
         email: String,

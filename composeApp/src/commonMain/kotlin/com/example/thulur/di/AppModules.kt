@@ -8,6 +8,7 @@ import com.example.thulur.domain.repository.ThulurApiRepository
 import com.example.thulur.domain.session.CurrentSessionProvider
 import com.example.thulur.domain.session.SecureTokenStore
 import com.example.thulur.domain.session.providePlatformSecureTokenStore
+import com.example.thulur.domain.usecase.GetArticleParagraphsUseCase
 import com.example.thulur.domain.usecase.GetMainFeedUseCase
 import com.example.thulur.presentation.auth.AuthViewModel
 import com.example.thulur.presentation.mainfeed.MainFeedViewModel
@@ -45,6 +46,7 @@ val dataModule = module {
 
 val domainModule = module {
     factory { GetMainFeedUseCase(thulurApiRepository = get()) }
+    factory { GetArticleParagraphsUseCase(thulurApiRepository = get()) }
 }
 
 val presentationModule = module {

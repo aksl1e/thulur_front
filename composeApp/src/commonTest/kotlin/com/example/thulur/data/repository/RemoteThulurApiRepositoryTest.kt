@@ -1,9 +1,11 @@
 package com.example.thulur.data.repository
 
+import com.example.thulur.domain.model.ArticleParagraph
 import com.example.thulur.domain.model.MainFeedArticle
 import com.example.thulur_api.ThulurApi
 import com.example.thulur_api.dtos.DailyFeedArticleDto
 import com.example.thulur_api.dtos.DailyFeedThreadDto
+import com.example.thulur_api.dtos.ParagraphDto
 import com.example.thulur_api.dtos.auth.AuthTokenDto
 import com.example.thulur_api.dtos.auth.DesktopAuthMode
 import com.example.thulur_api.dtos.auth.DesktopAuthStartDto
@@ -68,6 +70,29 @@ class RemoteThulurApiRepositoryTest {
 
         assertEquals(LocalDate(2026, 3, 20), thread.firstSeen)
     }
+
+    @Test
+    fun `maps article paragraphs into app facing model`() = runTest {
+        val repository = RemoteThulurApiRepository(
+            thulurApi = FakeThulurApi(
+                threads = emptyList(),
+                paragraphs = listOf(
+                    ParagraphDto(idx = 0, text = "First paragraph", isNovel = true),
+                    ParagraphDto(idx = 1, text = "Second paragraph", isNovel = false),
+                ),
+            ),
+        )
+
+        val paragraphs = repository.getArticleParagraphs(articleId = "article-1")
+
+        assertEquals(
+            listOf(
+                ArticleParagraph(idx = 0, text = "First paragraph", isNovel = true),
+                ArticleParagraph(idx = 1, text = "Second paragraph", isNovel = false),
+            ),
+            paragraphs,
+        )
+    }
 }
 
 private fun article(
@@ -89,10 +114,15 @@ private fun article(
 
 private class FakeThulurApi(
     private val threads: List<DailyFeedThreadDto>,
+    private val paragraphs: List<ParagraphDto> = emptyList(),
 ) : ThulurApi {
     override suspend fun getDailyFeed(
         day: LocalDate?,
     ): List<DailyFeedThreadDto> = threads
+
+    override suspend fun getArticleParagraphs(
+        articleId: String,
+    ): List<ParagraphDto> = paragraphs
 
     override suspend fun startDesktopAuth(
         email: String,
