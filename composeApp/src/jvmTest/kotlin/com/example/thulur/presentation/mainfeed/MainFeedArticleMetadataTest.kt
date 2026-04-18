@@ -1,6 +1,6 @@
 package com.example.thulur.presentation.mainfeed
 
-import com.example.thulur.domain.model.MainFeedArticle
+import com.example.thulur.domain.model.ArticleQuality
 import com.example.thulur.presentation.composables.ThulurArticleItemVariant
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -35,15 +35,15 @@ class MainFeedArticleMetadataTest {
     fun `quality maps to ThulurArticleItemVariant`() {
         assertEquals(
             ThulurArticleItemVariant.Trash,
-            MainFeedArticle.ArticleQuality.Trash.toThulurArticleItemVariant(),
+            ArticleQuality.Trash.toThulurArticleItemVariant(),
         )
         assertEquals(
             ThulurArticleItemVariant.Default,
-            MainFeedArticle.ArticleQuality.Default.toThulurArticleItemVariant(),
+            ArticleQuality.Default.toThulurArticleItemVariant(),
         )
         assertEquals(
             ThulurArticleItemVariant.Important,
-            MainFeedArticle.ArticleQuality.Important.toThulurArticleItemVariant(),
+            ArticleQuality.Important.toThulurArticleItemVariant(),
         )
     }
 }

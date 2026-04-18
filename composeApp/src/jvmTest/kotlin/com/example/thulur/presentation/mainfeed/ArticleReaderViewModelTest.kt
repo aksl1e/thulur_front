@@ -2,6 +2,7 @@ package com.example.thulur.presentation.mainfeed
 
 import com.example.thulur.domain.model.ArticleParagraph
 import com.example.thulur.domain.model.MainFeedThread
+import com.example.thulur.domain.model.ThreadHistory
 import com.example.thulur.domain.repository.ThulurApiRepository
 import com.example.thulur.domain.usecase.GetArticleParagraphsUseCase
 import kotlin.test.AfterTest
@@ -116,4 +117,7 @@ private class ParagraphRepository(
 
     override suspend fun getArticleParagraphs(articleId: String): List<ArticleParagraph> =
         paragraphsResult.getOrThrow()
+
+    override suspend fun getThreadHistory(threadId: String): ThreadHistory =
+        error("Not used in this test")
 }

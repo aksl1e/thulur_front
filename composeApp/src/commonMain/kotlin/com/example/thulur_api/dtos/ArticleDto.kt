@@ -4,10 +4,10 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Raw daily feed article payload returned by the backend.
+ * Raw article payload reused across backend responses.
  */
 @Serializable
-data class DailyFeedArticleDto(
+data class ArticleDto(
     /** Article's id. */
     @SerialName("article_id")
     val articleId: String,
@@ -30,12 +30,15 @@ data class DailyFeedArticleDto(
      */
     @SerialName("quality_score")
     val qualityScore: Double,
-    /** Shows whether the article is new or not. */
+    /** Legacy backend flag showing whether the article is new or not. */
     @SerialName("novelty")
     val novelty: Boolean,
-    /** Summary version intended for backend logic, not for display. */
+    /** Legacy backend summary version intended for backend logic, not for display. */
     @SerialName("novelty_summary")
     val noveltySummary: String?,
+    /** Legacy backend paragraph ids related to novelty detection. */
+    @SerialName("novelty_paragraphs_ids")
+    val noveltyParagraphsIds: List<String> = emptyList(),
     /** Summary version intended for UI display. */
     @SerialName("display_summary")
     val displaySummary: String?,

@@ -1,6 +1,7 @@
 package com.example.thulur.domain.repository
 
 import com.example.thulur.domain.model.ArticleParagraph
+import com.example.thulur.domain.model.ThreadHistory
 import com.example.thulur.domain.model.MainFeedThread
 import kotlinx.datetime.LocalDate
 
@@ -22,4 +23,9 @@ interface ThulurApiRepository {
      * Loads paragraph metadata for a single article.
      */
     suspend fun getArticleParagraphs(articleId: String): List<ArticleParagraph>
+
+    /**
+     * Loads thread history grouped by day for a single thread.
+     */
+    suspend fun getThreadHistory(threadId: String): ThreadHistory
 }

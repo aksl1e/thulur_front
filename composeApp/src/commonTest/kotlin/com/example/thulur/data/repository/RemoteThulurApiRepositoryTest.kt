@@ -1,11 +1,13 @@
 package com.example.thulur.data.repository
 
+import com.example.thulur.domain.model.ArticleQuality
 import com.example.thulur.domain.model.ArticleParagraph
-import com.example.thulur.domain.model.MainFeedArticle
 import com.example.thulur_api.ThulurApi
-import com.example.thulur_api.dtos.DailyFeedArticleDto
+import com.example.thulur_api.dtos.ArticleDto
 import com.example.thulur_api.dtos.DailyFeedThreadDto
 import com.example.thulur_api.dtos.ParagraphDto
+import com.example.thulur_api.dtos.ThreadHistoryDayDto
+import com.example.thulur_api.dtos.ThreadHistoryDto
 import com.example.thulur_api.dtos.auth.AuthTokenDto
 import com.example.thulur_api.dtos.auth.DesktopAuthMode
 import com.example.thulur_api.dtos.auth.DesktopAuthStartDto
@@ -42,9 +44,9 @@ class RemoteThulurApiRepositoryTest {
         val thread = repository.getMainFeed().single()
 
         assertNull(thread.firstSeen)
-        assertEquals(MainFeedArticle.ArticleQuality.Trash, thread.articles[0].quality)
-        assertEquals(MainFeedArticle.ArticleQuality.Default, thread.articles[1].quality)
-        assertEquals(MainFeedArticle.ArticleQuality.Important, thread.articles[2].quality)
+        assertEquals(ArticleQuality.Trash, thread.articles[0].quality)
+        assertEquals(ArticleQuality.Default, thread.articles[1].quality)
+        assertEquals(ArticleQuality.Important, thread.articles[2].quality)
     }
 
     @Test
@@ -93,20 +95,63 @@ class RemoteThulurApiRepositoryTest {
             paragraphs,
         )
     }
+
+    @Test
+    fun `maps thread history into app facing model and ignores legacy novelty fields`() = runTest {
+        val repository = RemoteThulurApiRepository(
+            thulurApi = FakeThulurApi(
+                threads = emptyList(),
+                history = ThreadHistoryDto(
+                    threadId = "thread-1",
+                    threadName = "Thread 1",
+                    days = listOf(
+                        ThreadHistoryDayDto(
+                            day = "2026-04-17",
+                            threadSummary = "Summary",
+                            articles = listOf(
+                                article(
+                                    score = 0.9,
+                                    id = "article-1",
+                                    novelty = true,
+                                    noveltySummary = "Legacy novelty summary",
+                                    noveltyParagraphsIds = listOf("p-1", "p-2"),
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        )
+
+        val history = repository.getThreadHistory(threadId = "thread-1")
+
+        assertEquals("thread-1", history.threadId)
+        assertEquals("Thread 1", history.threadName)
+        assertEquals(LocalDate(2026, 4, 17), history.days.single().day)
+        assertEquals("Summary", history.days.single().threadSummary)
+        assertEquals(1, history.days.single().articles.size)
+        assertEquals("article-1", history.days.single().articles.single().id)
+        assertEquals(ArticleQuality.Important, history.days.single().articles.single().quality)
+        assertEquals("Display summary", history.days.single().articles.single().displaySummary)
+    }
 }
 
 private fun article(
     score: Double,
     id: String = "article",
-) = DailyFeedArticleDto(
+    novelty: Boolean = false,
+    noveltySummary: String? = null,
+    noveltyParagraphsIds: List<String> = emptyList(),
+) = ArticleDto(
     articleId = id,
     feedId = "feed-1",
     title = "Title",
     url = "https://example.com/$id",
     published = null,
     qualityScore = score,
-    novelty = false,
-    noveltySummary = null,
+    novelty = novelty,
+    noveltySummary = noveltySummary,
+    noveltyParagraphsIds = noveltyParagraphsIds,
     displaySummary = "Display summary",
     isRead = false,
     isSuggestion = false,
@@ -115,6 +160,11 @@ private fun article(
 private class FakeThulurApi(
     private val threads: List<DailyFeedThreadDto>,
     private val paragraphs: List<ParagraphDto> = emptyList(),
+    private val history: ThreadHistoryDto = ThreadHistoryDto(
+        threadId = "thread-1",
+        threadName = "Thread 1",
+        days = emptyList(),
+    ),
 ) : ThulurApi {
     override suspend fun getDailyFeed(
         day: LocalDate?,
@@ -123,6 +173,10 @@ private class FakeThulurApi(
     override suspend fun getArticleParagraphs(
         articleId: String,
     ): List<ParagraphDto> = paragraphs
+
+    override suspend fun getThreadHistory(
+        threadId: String,
+    ): ThreadHistoryDto = history
 
     override suspend fun startDesktopAuth(
         email: String,

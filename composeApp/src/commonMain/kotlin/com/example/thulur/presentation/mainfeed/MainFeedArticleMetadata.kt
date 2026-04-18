@@ -1,6 +1,7 @@
 package com.example.thulur.presentation.mainfeed
 
-import com.example.thulur.domain.model.MainFeedArticle
+import com.example.thulur.domain.model.Article
+import com.example.thulur.domain.model.ArticleQuality
 import com.example.thulur.presentation.composables.ThulurArticleItemVariant
 import com.example.thulur.presentation.composables.ThulurThreadArticleData
 import kotlinx.datetime.LocalDateTime
@@ -13,7 +14,7 @@ internal data class MainFeedPublishedMetadata(
     val timeText: String?,
 )
 
-internal fun MainFeedArticle.toThulurThreadArticleData(): ThulurThreadArticleData {
+internal fun Article.toThulurThreadArticleData(): ThulurThreadArticleData {
     val publishedMetadata = parsePublishedMetadata(published)
 
     return ThulurThreadArticleData(
@@ -29,10 +30,10 @@ internal fun MainFeedArticle.toThulurThreadArticleData(): ThulurThreadArticleDat
     )
 }
 
-internal fun MainFeedArticle.ArticleQuality.toThulurArticleItemVariant(): ThulurArticleItemVariant = when (this) {
-    MainFeedArticle.ArticleQuality.Trash -> ThulurArticleItemVariant.Trash
-    MainFeedArticle.ArticleQuality.Default -> ThulurArticleItemVariant.Default
-    MainFeedArticle.ArticleQuality.Important -> ThulurArticleItemVariant.Important
+internal fun ArticleQuality.toThulurArticleItemVariant(): ThulurArticleItemVariant = when (this) {
+    ArticleQuality.Trash -> ThulurArticleItemVariant.Trash
+    ArticleQuality.Default -> ThulurArticleItemVariant.Default
+    ArticleQuality.Important -> ThulurArticleItemVariant.Important
 }
 
 internal fun extractSourceLabel(url: String): String? {

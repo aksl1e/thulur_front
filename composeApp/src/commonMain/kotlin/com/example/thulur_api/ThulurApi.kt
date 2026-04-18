@@ -3,6 +3,7 @@ package com.example.thulur_api
 import com.example.thulur_api.config.ThulurApiConfig
 import com.example.thulur_api.dtos.DailyFeedThreadDto
 import com.example.thulur_api.dtos.ParagraphDto
+import com.example.thulur_api.dtos.ThreadHistoryDto
 import com.example.thulur_api.dtos.auth.AuthTokenDto
 import com.example.thulur_api.dtos.auth.DesktopAuthMode
 import com.example.thulur_api.dtos.auth.DesktopAuthStartDto
@@ -10,6 +11,7 @@ import com.example.thulur_api.methods.auth.DesktopAuthExchangeMethod
 import com.example.thulur_api.methods.auth.DesktopAuthStartMethod
 import com.example.thulur_api.methods.articles.ParagraphsMethod
 import com.example.thulur_api.methods.daily_feed.DailyFeedMethod
+import com.example.thulur_api.methods.thread_history.ThreadHistoryMethod
 import io.ktor.client.HttpClient
 import kotlinx.datetime.LocalDate
 
@@ -37,6 +39,13 @@ interface ThulurApi {
     suspend fun getArticleParagraphs(
         articleId: String,
     ): List<ParagraphDto>
+
+    /**
+     * Returns raw thread history for a single thread.
+     */
+    suspend fun getThreadHistory(
+        threadId: String,
+    ): ThreadHistoryDto
 
     suspend fun startDesktopAuth(
         email: String,
@@ -76,6 +85,10 @@ class RemoteThulurApi(
         httpClient = httpClient,
         config = config,
     )
+    private val threadHistoryMethod = ThreadHistoryMethod(
+        httpClient = httpClient,
+        config = config,
+    )
 
     override suspend fun getDailyFeed(
         day: LocalDate?,
@@ -87,6 +100,12 @@ class RemoteThulurApi(
         articleId: String,
     ): List<ParagraphDto> = paragraphsMethod.execute(
         articleId = articleId,
+    )
+
+    override suspend fun getThreadHistory(
+        threadId: String,
+    ): ThreadHistoryDto = threadHistoryMethod.execute(
+        threadId = threadId,
     )
 
     override suspend fun startDesktopAuth(

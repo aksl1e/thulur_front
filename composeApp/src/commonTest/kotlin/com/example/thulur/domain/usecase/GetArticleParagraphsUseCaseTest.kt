@@ -2,6 +2,7 @@ package com.example.thulur.domain.usecase
 
 import com.example.thulur.domain.model.ArticleParagraph
 import com.example.thulur.domain.model.MainFeedThread
+import com.example.thulur.domain.model.ThreadHistory
 import com.example.thulur.domain.repository.ThulurApiRepository
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -43,4 +44,7 @@ private class TrackingRepository(
         requestedArticleId = articleId
         return paragraphs
     }
+
+    override suspend fun getThreadHistory(threadId: String): ThreadHistory =
+        error("Not used in this test")
 }

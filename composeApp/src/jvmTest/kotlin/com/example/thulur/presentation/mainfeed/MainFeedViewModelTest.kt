@@ -2,6 +2,7 @@ package com.example.thulur.presentation.mainfeed
 
 import com.example.thulur.domain.model.ArticleParagraph
 import com.example.thulur.domain.model.MainFeedThread
+import com.example.thulur.domain.model.ThreadHistory
 import com.example.thulur.domain.repository.ThulurApiRepository
 import com.example.thulur.domain.usecase.GetMainFeedUseCase
 import com.example.thulur.presentation.composables.TopicsViewMode
@@ -336,6 +337,9 @@ private class TrackingRepository(
     }
 
     override suspend fun getArticleParagraphs(articleId: String): List<ArticleParagraph> =
+        error("Not used in this test")
+
+    override suspend fun getThreadHistory(threadId: String): ThreadHistory =
         error("Not used in this test")
 }
 
