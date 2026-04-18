@@ -1,14 +1,17 @@
 package com.example.thulur.data.repository
 
+import com.example.thulur.domain.model.Article
 import com.example.thulur.domain.model.ArticleParagraph
 import com.example.thulur.domain.model.AuthSession
 import com.example.thulur.domain.model.CurrentUser
 import com.example.thulur.domain.model.Feed
-import com.example.thulur.domain.model.MainFeedArticle
 import com.example.thulur.domain.model.MainFeedThread
 import com.example.thulur.domain.model.PatchUserSettings
 import com.example.thulur.domain.model.UserSettings
+import com.example.thulur.domain.model.ThreadHistory
+import com.example.thulur.domain.model.ThreadHistoryDay
 import com.example.thulur.domain.repository.ThulurApiRepository
+import com.example.thulur_api.dtos.ArticleDto
 import com.example.thulur_api.ThulurApi
 import com.example.thulur_api.dtos.AuthSessionDto
 import com.example.thulur_api.dtos.FeedDto
@@ -37,7 +40,7 @@ class RemoteThulurApiRepository(
                     firstSeen = threadDto.threadFirstSeen.toMainFeedDateOrNull(),
                     summary = threadDto.threadSummary,
                     articles = threadDto.articles.map { articleDto ->
-                        MainFeedArticle(
+                        Article(
                             id = articleDto.articleId,
                             feedId = articleDto.feedId,
                             title = articleDto.title,
@@ -91,6 +94,21 @@ class RemoteThulurApiRepository(
     override suspend fun terminateAuthSession(sessionId: String) {
         thulurApi.terminateAuthSession(sessionId = sessionId)
     }
+
+    override suspend fun getThreadHistory(threadId: String): ThreadHistory =
+        thulurApi.getThreadHistory(threadId = threadId).let { historyDto ->
+            ThreadHistory(
+                threadId = historyDto.threadId,
+                threadName = historyDto.threadName,
+                days = historyDto.days.map { dayDto ->
+                    ThreadHistoryDay(
+                        day = parse(dayDto.day),
+                        threadSummary = dayDto.threadSummary,
+                        articles = dayDto.articles.map(ArticleDto::toArticle),
+                    )
+                },
+            )
+        }
 }
 
 private fun String?.toMainFeedDateOrNull(): LocalDate? = when (this) {
@@ -101,14 +119,26 @@ private fun String?.toMainFeedDateOrNull(): LocalDate? = when (this) {
     else -> parse(this)
 }
 
-private fun String?.toArticleQuality(): MainFeedArticle.ArticleQuality = when (this?.lowercase()) {
-    "trash" -> MainFeedArticle.ArticleQuality.Trash
+private fun ArticleDto.toArticle(): Article = Article(
+    id = articleId,
+    feedId = feedId,
+    title = title,
+    url = url,
+    published = published,
+    displaySummary = displaySummary,
+    isRead = isRead,
+    isSuggestion = isSuggestion,
+    quality = qualityScore.toArticleQuality(),
+)
+
+private fun String?.toArticleQuality(): ArticleQuality = when (this?.lowercase()) {
+    "trash" -> ArticleQuality.Trash
     "important" -> MainFeedArticle.ArticleQuality.Important
     "default",
     null,
-    -> MainFeedArticle.ArticleQuality.Default
+    -> ArticleQuality.Default
 
-    else -> MainFeedArticle.ArticleQuality.Default
+    else -> ArticleQuality.Default
 }
 
 private fun UserSettingsDto.toDomain(): UserSettings = UserSettings(

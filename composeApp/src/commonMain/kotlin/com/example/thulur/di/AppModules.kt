@@ -21,6 +21,7 @@ import com.example.thulur.domain.usecase.GetUserSettingsUseCase
 import com.example.thulur.domain.usecase.TerminateAuthSessionUseCase
 import com.example.thulur.domain.usecase.UnfollowFeedUseCase
 import com.example.thulur.domain.usecase.PatchUserSettingsUseCase
+import com.example.thulur.domain.usecase.GetThreadHistoryUseCase
 import com.example.thulur.presentation.auth.AuthViewModel
 import com.example.thulur.presentation.mainfeed.MainFeedViewModel
 import com.example.thulur.presentation.root.AppRootViewModel
@@ -69,6 +70,7 @@ val domainModule = module {
     factory { GetCurrentUserUseCase(thulurApiRepository = get()) }
     factory { GetAuthSessionsUseCase(thulurApiRepository = get()) }
     factory { TerminateAuthSessionUseCase(thulurApiRepository = get()) }
+    factory { GetThreadHistoryUseCase(thulurApiRepository = get()) }
 }
 
 val presentationModule = module {

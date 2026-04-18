@@ -5,6 +5,7 @@ import com.example.thulur.domain.model.AuthSession
 import com.example.thulur.domain.model.CurrentUser
 import com.example.thulur.domain.model.Feed
 import com.example.thulur.domain.model.MainFeedThread
+import com.example.thulur.domain.model.ThreadHistory
 import com.example.thulur.domain.model.PatchUserSettings
 import com.example.thulur.domain.model.UserSettings
 import com.example.thulur.domain.repository.ThulurApiRepository
@@ -147,5 +148,8 @@ private class ParagraphRepository(
         error("Not used in this test")
 
     override suspend fun terminateAuthSession(sessionId: String) =
+        error("Not used in this test")
+
+    override suspend fun getThreadHistory(threadId: String): ThreadHistory =
         error("Not used in this test")
 }
