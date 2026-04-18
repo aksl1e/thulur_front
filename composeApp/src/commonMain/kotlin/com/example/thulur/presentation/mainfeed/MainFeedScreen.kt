@@ -1,8 +1,10 @@
 package com.example.thulur.presentation.mainfeed
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,8 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.Icon
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
@@ -25,23 +25,23 @@ import androidx.compose.material.icons.outlined.ArrowCircleLeft
 import androidx.compose.material.icons.outlined.ArrowCircleRight
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.animation.core.tween
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.thulur.domain.model.MainFeedThread
 import com.example.thulur.presentation.composables.ThulurAppBar
 import com.example.thulur.presentation.composables.ThulurButton
 import com.example.thulur.presentation.composables.ThulurButtonContentDirection
-import com.example.thulur.presentation.composables.ThulurThreadArticleData
 import com.example.thulur.presentation.composables.ThulurChatFab
+import com.example.thulur.presentation.composables.ThulurThreadArticleData
 import com.example.thulur.presentation.composables.ThulurThreadItem
 import com.example.thulur.presentation.composables.TopicsViewMode
 import com.example.thulur.presentation.composables.TopicsSwitch
+import com.example.thulur.presentation.mainfeed.thread_history.ThreadHistoryRoute
 import com.example.thulur.presentation.theme.ThemeMode
 import com.example.thulur.presentation.theme.ThulurColorRole
 import com.example.thulur.presentation.theme.ThulurTheme
@@ -64,24 +64,40 @@ fun MainFeedRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val openArticle = uiState.openArticle
-    if (openArticle != null) {
-        ArticleReaderRoute(
-            sessionInstanceId = sessionInstanceId,
-            openArticle = openArticle,
-            onBackClick = viewModel::onCloseArticleReader,
-        )
-    } else {
-        MainFeedScreen(
-            uiState = uiState,
-            onRetry = viewModel::retry,
-            onBackClick = viewModel::onBackClick,
-            onForwardClick = viewModel::onForwardClick,
-            onSettingsClick = onOpenSettings,
-            onTopicsViewModeChange = viewModel::onTopicsViewModeChange,
-            onThreadArticlesVisibilityToggle = viewModel::onThreadArticlesVisibilityToggle,
-            onArticleClick = viewModel::onArticleClick,
-        )
+    AnimatedContent(
+        targetState = uiState,
+        transitionSpec = {
+            fadeIn(animationSpec = tween(durationMillis = 220)) togetherWith
+                fadeOut(animationSpec = tween(durationMillis = 220))
+        },
+        contentKey = { state -> state.routeContentKey() },
+    ) { state ->
+        when {
+            state.openArticle != null -> ArticleReaderRoute(
+                sessionInstanceId = sessionInstanceId,
+                openArticle = state.openArticle,
+                onBackClick = viewModel::onCloseArticleReader,
+            )
+
+            state.openThreadHistory != null -> ThreadHistoryRoute(
+                sessionInstanceId = sessionInstanceId,
+                openThreadHistory = state.openThreadHistory,
+                onBackClick = viewModel::onCloseThreadHistory,
+                onArticleClick = viewModel::onArticleClick,
+            )
+
+            else -> MainFeedScreen(
+                uiState = state,
+                onRetry = viewModel::retry,
+                onBackClick = viewModel::onBackClick,
+                onForwardClick = viewModel::onForwardClick,
+                onTopicsViewModeChange = viewModel::onTopicsViewModeChange,
+                onThreadArticlesVisibilityToggle = viewModel::onThreadArticlesVisibilityToggle,
+                onShowWholeSubjectClick = viewModel::onShowWholeSubjectClick,
+                onArticleClick = viewModel::onArticleClick,
+                onSettingsClick = onOpenSettings,
+            )
+        }
     }
 }
 
@@ -97,6 +113,7 @@ fun MainFeedScreen(
     onSettingsClick: () -> Unit,
     onTopicsViewModeChange: (TopicsViewMode) -> Unit,
     onThreadArticlesVisibilityToggle: (String) -> Unit,
+    onShowWholeSubjectClick: (String, String) -> Unit,
     onArticleClick: (ThulurThreadArticleData) -> Unit,
 ) {
     val colors = mainFeedColors()
@@ -189,7 +206,7 @@ fun MainFeedScreen(
 
             when (val contentState = uiState.contentState) {
                 MainFeedContentState.Loading -> CircularProgressIndicator(
-                    color = colors.indicator,
+                    color = colors.surface,
                     modifier = Modifier
                         .align(Alignment.Center)
                         .padding(
@@ -215,6 +232,7 @@ fun MainFeedScreen(
                 )
 
                 is MainFeedContentState.Error -> MainFeedErrorCard(
+                    title = "Main feed failed to load",
                     message = contentState.message,
                     colors = colors,
                     onRetry = onRetry,
@@ -233,6 +251,7 @@ fun MainFeedScreen(
                     articleVisibilityByThreadId = uiState.articleVisibilityByThreadId,
                     threads = contentState.threads,
                     onThreadArticlesVisibilityToggle = onThreadArticlesVisibilityToggle,
+                    onShowWholeSubjectClick = onShowWholeSubjectClick,
                     onArticleClick = onArticleClick,
                     leadingLaneWidth = leftRailWidth,
                     contentStartPadding = contentStartPadding,
@@ -252,80 +271,12 @@ fun MainFeedScreen(
 }
 
 @Composable
-private fun MainFeedStatusCard(
-    title: String,
-    body: String,
-    colors: MainFeedColors,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-            .background(colors.surfaceContainer, RoundedCornerShape(28.dp))
-            .border(1.dp, colors.outline, RoundedCornerShape(28.dp))
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        BasicText(
-            text = title,
-            style = ThulurTheme.Typography.headlineMedium.copy(color = colors.onSurface),
-        )
-        BasicText(
-            text = body,
-            style = ThulurTheme.Typography.bodyLarge.copy(color = colors.onSurfaceVariant),
-        )
-    }
-}
-
-@Composable
-private fun MainFeedErrorCard(
-    message: String,
-    colors: MainFeedColors,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-            .background(colors.surfaceContainer, RoundedCornerShape(28.dp))
-            .border(1.dp, colors.outline, RoundedCornerShape(28.dp))
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        BasicText(
-            text = "Main Feed Failed To Load",
-            style = ThulurTheme.Typography.headlineMedium.copy(color = colors.onSurface),
-        )
-        BasicText(
-            text = message,
-            style = ThulurTheme.Typography.bodyLarge.copy(color = colors.onSurfaceVariant),
-        )
-        RetryButton(colors = colors, onRetry = onRetry)
-    }
-}
-
-@Composable
-private fun RetryButton(
-    colors: MainFeedColors,
-    onRetry: () -> Unit,
-) {
-    Box(
-        modifier = Modifier
-            .background(colors.accent, RoundedCornerShape(999.dp))
-            .clickable(onClick = onRetry)
-            .padding(horizontal = 18.dp, vertical = 10.dp),
-    ) {
-        BasicText(
-            text = "Retry",
-            style = ThulurTheme.Typography.labelLarge.copy(color = colors.onAccent),
-        )
-    }
-}
-
-@Composable
 private fun MainFeedSuccessContent(
     topicsViewMode: TopicsViewMode,
     articleVisibilityByThreadId: Map<String, Boolean>,
     threads: List<MainFeedThread>,
     onThreadArticlesVisibilityToggle: (String) -> Unit,
+    onShowWholeSubjectClick: (String, String) -> Unit,
     onArticleClick: (ThulurThreadArticleData) -> Unit,
     leadingLaneWidth: androidx.compose.ui.unit.Dp,
     contentStartPadding: androidx.compose.ui.unit.Dp,
@@ -350,7 +301,9 @@ private fun MainFeedSuccessContent(
             ThulurThreadItem(
                 title = thread.name,
                 summary = thread.summary,
-                onShowWholeSubjectClick = {},
+                onShowWholeSubjectClick = {
+                    onShowWholeSubjectClick(thread.id, thread.name)
+                },
                 onToggleArticlesClick = { onThreadArticlesVisibilityToggle(thread.id) },
                 onArticleClick = onArticleClick,
                 areArticlesVisible = areArticlesVisible,
@@ -388,47 +341,6 @@ private fun MainFeedSuccessContent(
     }
 }
 
-private data class MainFeedColors(
-    val surface: Color,
-    val surfaceContainer: Color,
-    val onSurface: Color,
-    val onSurfaceVariant: Color,
-    val outline: Color,
-    val accent: Color,
-    val onAccent: Color,
-    val indicator: Color,
-)
-
-@Composable
-@ReadOnlyComposable
-private fun mainFeedColors(): MainFeedColors {
-    val colors = ThulurTheme.Colors
-
-    return when (ThulurTheme.Mode) {
-        ThemeMode.Light -> MainFeedColors(
-            surface = colors.slate.s50,
-            surfaceContainer = colors.slate.s100,
-            onSurface = colors.slate.s900,
-            onSurfaceVariant = colors.slate.s700,
-            outline = colors.slate.s300,
-            accent = colors.primary.s500,
-            onAccent = colors.slate.s50,
-            indicator = colors.primary.s500,
-        )
-
-        ThemeMode.Dark -> MainFeedColors(
-            surface = colors.slate.s950,
-            surfaceContainer = colors.slate.s900,
-            onSurface = colors.slate.s50,
-            onSurfaceVariant = colors.slate.s300,
-            outline = colors.slate.s700,
-            accent = colors.primary.s500,
-            onAccent = colors.slate.s50,
-            indicator = colors.primary.s500,
-        )
-    }
-}
-
 private fun LocalDate.toTitleAppBarLabel(today: LocalDate): String {
     val yesterday = today.minus(1, DateTimeUnit.DAY)
 
@@ -461,3 +373,9 @@ private fun LocalDate.toShortDateLabel(): String {
 }
 
 private fun LocalDate.toMoreArticlesDateLabel(): String = toShortDateLabel()
+
+private fun MainFeedUiState.routeContentKey(): String = when {
+    openArticle != null -> "article:${openArticle.articleId}"
+    openThreadHistory != null -> "history:${openThreadHistory.threadId}:${openThreadHistory.initialDay}"
+    else -> "feed"
+}
