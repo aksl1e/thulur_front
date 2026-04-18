@@ -12,6 +12,8 @@ ktor = "3.4.1"
 material3 = "1.10.0-alpha05"
 composeMaterialIconsExtended = "1.7.3"
 credentialSecureStorage = "1.0.3"
+jcefmaven = "135.0.20"
+jcefmavenNatives = "jcef-ca49ada+cef-135.0.20+ge7de5c3+chromium-135.0.7049.85"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -42,6 +44,7 @@ ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 credential-secure-storage = { module = "com.microsoft:credential-secure-storage", version.ref = "credentialSecureStorage" }
+jcefmaven = { module = "me.friwi:jcefmaven", version.ref = "jcefmaven" }
 
 [plugins]
 composeHotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "composeHotReload" }

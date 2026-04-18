@@ -12,6 +12,13 @@ data class MainFeedUiState(
     val topicsViewMode: TopicsViewMode = TopicsViewMode.TopicsAndArticles,
     val articleVisibilityByThreadId: Map<String, Boolean> = emptyMap(),
     val contentState: MainFeedContentState = MainFeedContentState.Loading,
+    val openArticle: OpenArticle? = null,
+)
+
+data class OpenArticle(
+    val articleId: String,
+    val title: String,
+    val url: String,
 )
 
 sealed interface MainFeedContentState {

@@ -21,6 +21,8 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowCircleLeft
+import androidx.compose.material.icons.outlined.ArrowCircleRight
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
@@ -29,13 +31,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.thulur.domain.model.MainFeedThread
 import com.example.thulur.presentation.composables.ThulurAppBar
 import com.example.thulur.presentation.composables.ThulurButton
 import com.example.thulur.presentation.composables.ThulurButtonContentDirection
+import com.example.thulur.presentation.composables.ThulurThreadArticleData
 import com.example.thulur.presentation.composables.ThulurChatFab
 import com.example.thulur.presentation.composables.ThulurThreadItem
 import com.example.thulur.presentation.composables.TopicsViewMode
+import com.example.thulur.presentation.composables.TopicsSwitch
 import com.example.thulur.presentation.theme.ThemeMode
 import com.example.thulur.presentation.theme.ThulurColorRole
 import com.example.thulur.presentation.theme.ThulurTheme
@@ -57,14 +62,24 @@ fun MainFeedRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    MainFeedScreen(
-        uiState = uiState,
-        onRetry = viewModel::retry,
-        onBackClick = viewModel::onBackClick,
-        onForwardClick = viewModel::onForwardClick,
-        onTopicsViewModeChange = viewModel::onTopicsViewModeChange,
-        onThreadArticlesVisibilityToggle = viewModel::onThreadArticlesVisibilityToggle,
-    )
+    val openArticle = uiState.openArticle
+    if (openArticle != null) {
+        ArticleReaderRoute(
+            sessionInstanceId = sessionInstanceId,
+            openArticle = openArticle,
+            onBackClick = viewModel::onCloseArticleReader,
+        )
+    } else {
+        MainFeedScreen(
+            uiState = uiState,
+            onRetry = viewModel::retry,
+            onBackClick = viewModel::onBackClick,
+            onForwardClick = viewModel::onForwardClick,
+            onTopicsViewModeChange = viewModel::onTopicsViewModeChange,
+            onThreadArticlesVisibilityToggle = viewModel::onThreadArticlesVisibilityToggle,
+            onArticleClick = viewModel::onArticleClick,
+        )
+    }
 }
 
 internal fun mainFeedViewModelKey(sessionInstanceId: Int): String =
@@ -78,8 +93,11 @@ fun MainFeedScreen(
     onForwardClick: () -> Unit,
     onTopicsViewModeChange: (TopicsViewMode) -> Unit,
     onThreadArticlesVisibilityToggle: (String) -> Unit,
+    onArticleClick: (ThulurThreadArticleData) -> Unit,
 ) {
     val colors = mainFeedColors()
+    val appBarColors = ThulurTheme.SemanticColors.appBar
+    val semanticTypography = ThulurTheme.SemanticTypography
     val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
     val title = uiState.selectedDay.toTitleAppBarLabel(today = today)
     val backLabel = uiState.selectedDay
@@ -106,11 +124,53 @@ fun MainFeedScreen(
             title = title,
             backLabel = backLabel,
             onBackClick = onBackClick,
-            forwardLabel = forwardLabel,
-            onForwardClick = onForwardClick.takeIf { forwardLabel != null },
-            topicsViewMode = uiState.topicsViewMode,
-            onTopicsViewModeChange = onTopicsViewModeChange,
-            onSettingsClick = {},
+            forwardButton = if (forwardLabel != null) {
+                {
+                    ThulurButton(
+                        text = forwardLabel,
+                        onClick = onForwardClick,
+                        colorRole = ThulurColorRole.Slate,
+                        useContainerStates = false,
+                        stateColorsOverride = appBarColors.forwardButton,
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Outlined.ArrowCircleRight,
+                                contentDescription = null,
+                                modifier = Modifier.size(24.thulurDp()),
+                            )
+                        },
+                        textStyle = semanticTypography.appBarBackLabel,
+                        contentPadding = PaddingValues(horizontal = 10.thulurDp()),
+                        spacing = 10.thulurDp(),
+                    )
+                }
+            } else {
+                null
+            },
+            endPrimaryContent = {
+                TopicsSwitch(
+                    selected = uiState.topicsViewMode,
+                    onSelect = onTopicsViewModeChange,
+                )
+            },
+            endSecondaryContent = {
+                ThulurButton(
+                    onClick = {},
+                    colorRole = ThulurColorRole.Slate,
+                    useContainerStates = false,
+                    stateColorsOverride = appBarColors.settingsButton,
+                    contentPadding = PaddingValues(),
+                    contentDescription = "Settings",
+                    tooltipText = "Settings",
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Outlined.Settings,
+                            contentDescription = null,
+                            modifier = Modifier.size(32.thulurDp()),
+                        )
+                    },
+                )
+            },
         )
 
         Box(
@@ -171,6 +231,7 @@ fun MainFeedScreen(
                     articleVisibilityByThreadId = uiState.articleVisibilityByThreadId,
                     threads = contentState.threads,
                     onThreadArticlesVisibilityToggle = onThreadArticlesVisibilityToggle,
+                    onArticleClick = onArticleClick,
                     leadingLaneWidth = leftRailWidth,
                     contentStartPadding = contentStartPadding,
                     fabBottomInset = fabBottomInset,
@@ -263,6 +324,7 @@ private fun MainFeedSuccessContent(
     articleVisibilityByThreadId: Map<String, Boolean>,
     threads: List<MainFeedThread>,
     onThreadArticlesVisibilityToggle: (String) -> Unit,
+    onArticleClick: (com.example.thulur.presentation.composables.ThulurThreadArticleData) -> Unit,
     leadingLaneWidth: androidx.compose.ui.unit.Dp,
     contentStartPadding: androidx.compose.ui.unit.Dp,
     fabBottomInset: androidx.compose.ui.unit.Dp,
@@ -288,6 +350,7 @@ private fun MainFeedSuccessContent(
                 summary = thread.summary,
                 onShowWholeSubjectClick = {},
                 onToggleArticlesClick = { onThreadArticlesVisibilityToggle(thread.id) },
+                onArticleClick = onArticleClick,
                 areArticlesVisible = areArticlesVisible,
                 articles = thread.articles.map { article -> article.toThulurThreadArticleData() },
                 leadingLaneWidth = leadingLaneWidth,

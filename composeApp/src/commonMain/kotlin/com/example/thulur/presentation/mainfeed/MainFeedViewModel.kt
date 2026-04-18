@@ -3,6 +3,7 @@ package com.example.thulur.presentation.mainfeed
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.thulur.domain.usecase.GetMainFeedUseCase
+import com.example.thulur.presentation.composables.ThulurThreadArticleData
 import com.example.thulur.presentation.composables.TopicsViewMode
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -53,6 +54,24 @@ class MainFeedViewModel(
 
     fun retry() {
         loadDay(_uiState.value.selectedDay)
+    }
+
+    fun onArticleClick(article: ThulurThreadArticleData) {
+        _uiState.update { state ->
+            state.copy(
+                openArticle = OpenArticle(
+                    articleId = article.id,
+                    title = article.title,
+                    url = article.url,
+                ),
+            )
+        }
+    }
+
+    fun onCloseArticleReader() {
+        _uiState.update { state ->
+            state.copy(openArticle = null)
+        }
     }
 
     fun onTopicsViewModeChange(viewMode: TopicsViewMode) {

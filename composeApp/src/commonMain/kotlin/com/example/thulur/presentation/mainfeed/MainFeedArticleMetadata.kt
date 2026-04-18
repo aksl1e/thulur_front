@@ -18,6 +18,7 @@ internal fun MainFeedArticle.toThulurThreadArticleData(): ThulurThreadArticleDat
 
     return ThulurThreadArticleData(
         id = id,
+        url = url,
         variant = quality.toThulurArticleItemVariant(),
         title = title,
         summary = displaySummary,

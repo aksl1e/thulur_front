@@ -5,6 +5,8 @@ import com.example.thulur.domain.model.MainFeedThread
 import com.example.thulur.domain.repository.ThulurApiRepository
 import com.example.thulur.domain.usecase.GetMainFeedUseCase
 import com.example.thulur.presentation.composables.TopicsViewMode
+import com.example.thulur.presentation.composables.ThulurArticleItemVariant
+import com.example.thulur.presentation.composables.ThulurThreadArticleData
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -281,6 +283,46 @@ class MainFeedViewModelTest {
             viewModel.uiState.value.articleVisibilityByThreadId,
         )
     }
+
+    @Test
+    fun `article click opens reader destination`() = runTest {
+        val repository = TrackingRepository(
+            result = Result.success<List<MainFeedThread>>(listOf(sampleThread())),
+        )
+        val viewModel = MainFeedViewModel(
+            getMainFeedUseCase = GetMainFeedUseCase(repository),
+        )
+
+        advanceUntilIdle()
+        viewModel.onArticleClick(sampleArticleData())
+
+        assertEquals(
+            OpenArticle(
+                articleId = "article-1",
+                title = "Article 1",
+                url = "https://example.com/articles/1",
+            ),
+            viewModel.uiState.value.openArticle,
+        )
+    }
+
+    @Test
+    fun `closing reader clears open article without affecting feed content`() = runTest {
+        val threads = listOf(sampleThread())
+        val repository = TrackingRepository(
+            result = Result.success<List<MainFeedThread>>(threads),
+        )
+        val viewModel = MainFeedViewModel(
+            getMainFeedUseCase = GetMainFeedUseCase(repository),
+        )
+
+        advanceUntilIdle()
+        viewModel.onArticleClick(sampleArticleData())
+        viewModel.onCloseArticleReader()
+
+        assertEquals(null, viewModel.uiState.value.openArticle)
+        assertEquals(MainFeedContentState.Success(threads), viewModel.uiState.value.contentState)
+    }
 }
 
 private class TrackingRepository(
@@ -309,3 +351,14 @@ private fun sampleThread(id: String = "thread-1") = MainFeedThread(
 )
 
 private fun visibleArticlesMap(vararg entries: Pair<String, Boolean>): Map<String, Boolean> = mapOf(*entries)
+
+private fun sampleArticleData() = ThulurThreadArticleData(
+    id = "article-1",
+    url = "https://example.com/articles/1",
+    variant = ThulurArticleItemVariant.Default,
+    title = "Article 1",
+    summary = "Summary",
+    sourceLabel = "example.com",
+    dateText = "17.04.2026",
+    timeText = "12:00",
+)

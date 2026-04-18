@@ -1,12 +1,6 @@
 package com.example.thulur.presentation.composables
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.hoverable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsHoveredAsState
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
@@ -26,12 +19,13 @@ import androidx.compose.material.icons.outlined.ArrowCircleLeft
 import androidx.compose.material.icons.outlined.ArrowCircleRight
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.thulur.presentation.theme.ThulurColorRole
 import com.example.thulur.presentation.theme.ThulurDesignScale
@@ -43,14 +37,14 @@ import com.example.thulur.presentation.theme.thulurDp
 @Composable
 fun ThulurAppBar(
     title: String,
-    backLabel: String,
-    onBackClick: () -> Unit,
-    forwardLabel: String? = null,
-    onForwardClick: (() -> Unit)? = null,
-    topicsViewMode: TopicsViewMode,
-    onTopicsViewModeChange: (TopicsViewMode) -> Unit,
-    onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier,
+    backLabel: String = "Back",
+    onBackClick: () -> Unit = {},
+    backButton: (@Composable () -> Unit)? = null,
+    forwardButton: (@Composable () -> Unit)? = null,
+    endPrimaryContent: (@Composable () -> Unit)? = null,
+    endSecondaryContent: (@Composable () -> Unit)? = null,
+    brandContent: @Composable () -> Unit = { DefaultThulurAppBarBrand() },
 ) {
     val colors = ThulurTheme.SemanticColors.appBar
     val typography = ThulurTheme.SemanticTypography
@@ -76,116 +70,91 @@ fun ThulurAppBar(
                 .padding(backAreaPadding),
             contentAlignment = Alignment.Center,
         ) {
-            ThulurButton(
-                text = backLabel,
-                onClick = onBackClick,
-                modifier = Modifier.fillMaxHeight(),
-                colorRole = ThulurColorRole.Slate,
-                useContainerStates = false,
-                stateColorsOverride = colors.backButton,
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Outlined.ArrowCircleLeft,
-                        contentDescription = null,
-                        modifier = Modifier.size(24.thulurDp()),
-                    )
-                },
-                textStyle = typography.appBarBackLabel,
-                contentPadding = PaddingValues(horizontal = backAreaPadding),
-                spacing = backItemSpacing,
-            )
+            if (backButton != null) {
+                backButton()
+            } else {
+                DefaultThulurAppBarBackButton(
+                    backLabel = backLabel,
+                    onBackClick = onBackClick,
+                    modifier = Modifier.fillMaxHeight(),
+                )
+            }
         }
 
         Row(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = contentHorizontalPadding),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
+                modifier = Modifier.weight(1f),
                 horizontalArrangement = Arrangement.spacedBy(actionSpacing),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 BasicText(
                     text = title,
+                    modifier = Modifier.weight(1f, fill = false),
                     style = typography.appBarTitle.copy(color = colors.titleColor),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
 
-                if (forwardLabel != null && onForwardClick != null) {
-                    ThulurButton(
-                        text = forwardLabel,
-                        onClick = onForwardClick,
-                        colorRole = ThulurColorRole.Slate,
-                        useContainerStates = false,
-                        stateColorsOverride = colors.forwardButton,
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Outlined.ArrowCircleRight,
-                                contentDescription = null,
-                                modifier = Modifier.size(24.thulurDp()),
-                            )
-                        },
-                        textStyle = typography.appBarBackLabel,
-                        contentPadding = PaddingValues(horizontal = backAreaPadding),
-                        spacing = backItemSpacing,
-                    )
-                }
+                forwardButton?.invoke()
             }
 
             Row(
                 horizontalArrangement = Arrangement.spacedBy(actionSpacing),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(actionSpacing),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    val settingsInteractionSource = remember { MutableInteractionSource() }
-                    val isSettingsHovered by settingsInteractionSource.collectIsHoveredAsState()
-                    val isSettingsPressed by settingsInteractionSource.collectIsPressedAsState()
-                    val settingsColors = when {
-                        isSettingsPressed -> colors.settingsButton.pressed
-                        isSettingsHovered -> colors.settingsButton.hovered
-                        else -> colors.settingsButton.rest
-                    }
-                    val settingsTint by animateColorAsState(
-                        targetValue = settingsColors.contentColor,
-                        label = "thulurAppBarSettingsTint",
-                    )
-
-                    TopicsSwitch(
-                        selected = topicsViewMode,
-                        onSelect = onTopicsViewModeChange,
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .size(32.thulurDp())
-                            .hoverable(interactionSource = settingsInteractionSource)
-                            .clickable(
-                                interactionSource = settingsInteractionSource,
-                                indication = null,
-                                onClick = onSettingsClick,
-                            ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Settings,
-                            contentDescription = "Settings",
-                            tint = settingsTint,
-                            modifier = Modifier.size(32.thulurDp()),
-                        )
-                    }
-                }
-
-                BasicText(
-                    text = "Thulur",
-                    style = typography.appBarBrand.copy(color = colors.brandColor),
-                )
+                endPrimaryContent?.invoke()
+                endSecondaryContent?.invoke()
+                brandContent()
             }
         }
     }
+}
+
+@Composable
+private fun DefaultThulurAppBarBackButton(
+    backLabel: String,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = ThulurTheme.SemanticColors.appBar
+    val typography = ThulurTheme.SemanticTypography
+    val backAreaPadding = 10.thulurDp()
+    val backItemSpacing = 10.thulurDp()
+
+    ThulurButton(
+        text = backLabel,
+        onClick = onBackClick,
+        modifier = modifier,
+        colorRole = ThulurColorRole.Slate,
+        useContainerStates = false,
+        stateColorsOverride = colors.backButton,
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Outlined.ArrowCircleLeft,
+                contentDescription = null,
+                modifier = Modifier.size(24.thulurDp()),
+            )
+        },
+        textStyle = typography.appBarBackLabel,
+        contentPadding = PaddingValues(horizontal = backAreaPadding),
+        spacing = backItemSpacing,
+    )
+}
+
+@Composable
+private fun DefaultThulurAppBarBrand() {
+    val colors = ThulurTheme.SemanticColors.appBar
+    val typography = ThulurTheme.SemanticTypography
+
+    BasicText(
+        text = "Thulur",
+        style = typography.appBarBrand.copy(color = colors.brandColor),
+    )
 }
 
 @Preview
@@ -199,9 +168,47 @@ private fun ThulurAppBarLightPreview() {
                 title = "Today",
                 backLabel = "Yesterday",
                 onBackClick = {},
-                topicsViewMode = topicsViewMode,
-                onTopicsViewModeChange = { topicsViewMode = it },
-                onSettingsClick = {},
+                forwardButton = {
+                    ThulurButton(
+                        text = "Tomorrow",
+                        onClick = {},
+                        colorRole = ThulurColorRole.Slate,
+                        useContainerStates = false,
+                        stateColorsOverride = ThulurTheme.SemanticColors.appBar.forwardButton,
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Outlined.ArrowCircleRight,
+                                contentDescription = null,
+                                modifier = Modifier.size(24.thulurDp()),
+                            )
+                        },
+                        textStyle = ThulurTheme.SemanticTypography.appBarBackLabel,
+                        contentPadding = PaddingValues(horizontal = 10.thulurDp()),
+                        spacing = 10.thulurDp(),
+                    )
+                },
+                endPrimaryContent = {
+                    TopicsSwitch(
+                        selected = topicsViewMode,
+                        onSelect = { topicsViewMode = it },
+                    )
+                },
+                endSecondaryContent = {
+                    ThulurButton(
+                        onClick = {},
+                        colorRole = ThulurColorRole.Slate,
+                        useContainerStates = false,
+                        stateColorsOverride = ThulurTheme.SemanticColors.appBar.settingsButton,
+                        contentPadding = PaddingValues(),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Settings,
+                                contentDescription = null,
+                                modifier = Modifier.size(32.thulurDp()),
+                            )
+                        },
+                    )
+                },
             )
         }
     }
@@ -215,12 +222,15 @@ private fun ThulurAppBarDarkCompactPreview() {
     ProvideThulurDesignScale(scale = ThulurDesignScale(factor = 0.75f)) {
         ThulurTheme(mode = ThemeMode.Dark) {
             ThulurAppBar(
-                title = "Today",
-                backLabel = "Yesterday",
+                title = "Article Reader",
+                backLabel = "Back",
                 onBackClick = {},
-                topicsViewMode = topicsViewMode,
-                onTopicsViewModeChange = { topicsViewMode = it },
-                onSettingsClick = {},
+                endPrimaryContent = {
+                    TopicsSwitch(
+                        selected = topicsViewMode,
+                        onSelect = { topicsViewMode = it },
+                    )
+                },
             )
         }
     }

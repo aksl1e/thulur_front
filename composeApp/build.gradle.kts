@@ -1,5 +1,8 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
+val jcefNativeVersion = libs.versions.jcefmavenNatives.get()
+val jcefNativeArtifact = currentJcefNativeArtifact()
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinSerialization)
@@ -41,9 +44,24 @@ kotlin {
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.credential.secure.storage)
+            implementation(libs.jcefmaven)
+            implementation("me.friwi:$jcefNativeArtifact:$jcefNativeVersion")
             implementation(libs.kotlinx.coroutinesSwing)
             implementation(libs.ktor.client.cio)
         }
+    }
+}
+
+fun currentJcefNativeArtifact(): String {
+    val osName = System.getProperty("os.name").lowercase()
+    val osArch = System.getProperty("os.arch").lowercase()
+    val isArm64 = osArch.contains("aarch64") || osArch.contains("arm64")
+
+    return when {
+        osName.contains("win") -> if (isArm64) "jcef-natives-windows-arm64" else "jcef-natives-windows-amd64"
+        osName.contains("mac") -> if (isArm64) "jcef-natives-macosx-arm64" else "jcef-natives-macosx-amd64"
+        osName.contains("linux") -> if (isArm64) "jcef-natives-linux-arm64" else "jcef-natives-linux-amd64"
+        else -> error("Unsupported JCEF platform: $osName / $osArch")
     }
 }
 
@@ -51,6 +69,13 @@ kotlin {
 compose.desktop {
     application {
         mainClass = "com.example.thulur.MainKt"
+        jvmArgs("--add-opens", "java.desktop/sun.awt=ALL-UNNAMED")
+        jvmArgs("--add-opens", "java.desktop/java.awt.peer=ALL-UNNAMED")
+
+        if (System.getProperty("os.name").contains("Mac")) {
+            jvmArgs("--add-opens", "java.desktop/sun.lwawt=ALL-UNNAMED")
+            jvmArgs("--add-opens", "java.desktop/sun.lwawt.macosx=ALL-UNNAMED")
+        }
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)

@@ -39,6 +39,7 @@ import thulur_front.composeapp.generated.resources.ic_book_marked
 
 data class ThulurThreadArticleData(
     val id: String,
+    val url: String,
     val variant: ThulurArticleItemVariant,
     val title: String,
     val summary: String?,
@@ -54,6 +55,7 @@ fun ThulurThreadItem(
     summary: String?,
     onShowWholeSubjectClick: () -> Unit,
     onToggleArticlesClick: () -> Unit,
+    onArticleClick: (ThulurThreadArticleData) -> Unit,
     areArticlesVisible: Boolean,
     articles: List<ThulurThreadArticleData>,
     modifier: Modifier = Modifier,
@@ -185,6 +187,7 @@ fun ThulurThreadItem(
                             timeText = article.timeText,
                             showDate = article.showDate,
                             modifier = Modifier.height(340.thulurDp()),
+                            onClick = { onArticleClick(article) },
                         )
                     }
                 }
@@ -199,6 +202,7 @@ private fun ThulurThreadItemPreview() {
     val articles = listOf(
         ThulurThreadArticleData(
             id = "default",
+            url = "https://example.com/default",
             variant = ThulurArticleItemVariant.Default,
             title = "Default Article",
             summary = "Field-level developments are now moving faster than policy responses in several areas.",
@@ -208,6 +212,7 @@ private fun ThulurThreadItemPreview() {
         ),
         ThulurThreadArticleData(
             id = "trash",
+            url = "https://example.com/trash",
             variant = ThulurArticleItemVariant.Trash,
             title = "Trash Article",
             summary = "Field-level developments are now moving faster than policy responses in several areas.",
@@ -217,6 +222,7 @@ private fun ThulurThreadItemPreview() {
         ),
         ThulurThreadArticleData(
             id = "important",
+            url = "https://example.com/important",
             variant = ThulurArticleItemVariant.Important,
             title = "Important Article",
             summary = "Field-level developments are now moving faster than policy responses in several areas.",
@@ -233,6 +239,7 @@ private fun ThulurThreadItemPreview() {
                 summary = "Mysterious visitor from the deep cosmos is currently tearing through our solar system at a staggering speed.",
                 onShowWholeSubjectClick = {},
                 onToggleArticlesClick = {},
+                onArticleClick = {},
                 areArticlesVisible = true,
                 articles = articles,
             )
