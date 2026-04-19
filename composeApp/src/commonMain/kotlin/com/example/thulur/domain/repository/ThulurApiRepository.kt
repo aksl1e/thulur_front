@@ -4,6 +4,7 @@ import com.example.thulur.domain.model.ArticleParagraph
 import com.example.thulur.domain.model.AuthSession
 import com.example.thulur.domain.model.CurrentUser
 import com.example.thulur.domain.model.Feed
+import com.example.thulur.domain.model.ThreadHistory
 import com.example.thulur.domain.model.MainFeedThread
 import com.example.thulur.domain.model.PatchUserSettings
 import com.example.thulur.domain.model.UserSettings
@@ -27,6 +28,11 @@ interface ThulurApiRepository {
      * Loads paragraph metadata for a single article.
      */
     suspend fun getArticleParagraphs(articleId: String): List<ArticleParagraph>
+
+    /**
+     * Loads thread history grouped by day for a single thread.
+     */
+    suspend fun getThreadHistory(threadId: String): ThreadHistory
 
     /**
      * Loads settings for the current user.

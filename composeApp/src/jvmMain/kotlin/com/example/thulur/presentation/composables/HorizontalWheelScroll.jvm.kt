@@ -40,9 +40,7 @@ actual fun Modifier.desktopHorizontalWheelScroll(
     }
 
     LaunchedEffect(hasOverflow) {
-        if (!hasOverflow) {
-            isMoveActivated = false
-        }
+        if (!hasOverflow) isMoveActivated = false
     }
 
     return this
@@ -69,9 +67,7 @@ actual fun Modifier.desktopHorizontalWheelScroll(
             event.changes.forEach { it.consume() }
             scope.launch {
                 val consumed = state.scrollBy(primaryAxisDelta * 40f)
-                if (consumed == 0f) {
-                    isMoveActivated = false
-                }
+                if (consumed == 0f) isMoveActivated = false
             }
         }
 }

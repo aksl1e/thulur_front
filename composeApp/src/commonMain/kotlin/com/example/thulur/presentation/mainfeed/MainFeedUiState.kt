@@ -12,7 +12,16 @@ data class MainFeedUiState(
     val topicsViewMode: TopicsViewMode = TopicsViewMode.TopicsAndArticles,
     val articleVisibilityByThreadId: Map<String, Boolean> = emptyMap(),
     val contentState: MainFeedContentState = MainFeedContentState.Loading,
+    val openThreadHistory: OpenThreadHistory? = null,
     val openArticle: OpenArticle? = null,
+    val feedScrollIndex: Int = 0,
+    val feedScrollOffset: Int = 0,
+)
+
+data class OpenThreadHistory(
+    val threadId: String,
+    val threadName: String,
+    val initialDay: LocalDate,
 )
 
 data class OpenArticle(

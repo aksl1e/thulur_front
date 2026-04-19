@@ -7,6 +7,7 @@ import com.example.thulur.domain.model.Feed
 import com.example.thulur.domain.model.MainFeedThread
 import com.example.thulur.domain.model.PatchUserSettings
 import com.example.thulur.domain.model.UserSettings
+import com.example.thulur.domain.model.ThreadHistory
 import com.example.thulur.domain.repository.ThulurApiRepository
 import com.example.thulur.domain.usecase.GetMainFeedUseCase
 import com.example.thulur.presentation.composables.TopicsViewMode
@@ -311,6 +312,48 @@ class MainFeedViewModelTest {
     }
 
     @Test
+    fun `show whole subject opens history destination with current selected day`() = runTest {
+        val repository = TrackingRepository(
+            result = Result.success<List<MainFeedThread>>(listOf(sampleThread())),
+        )
+        val viewModel = MainFeedViewModel(
+            getMainFeedUseCase = GetMainFeedUseCase(repository),
+        )
+
+        advanceUntilIdle()
+        viewModel.onBackClick()
+        advanceUntilIdle()
+        viewModel.onShowWholeSubjectClick(threadId = "thread-1", threadName = "Thread 1")
+
+        assertEquals(
+            OpenThreadHistory(
+                threadId = "thread-1",
+                threadName = "Thread 1",
+                initialDay = today.minus(1, DateTimeUnit.DAY),
+            ),
+            viewModel.uiState.value.openThreadHistory,
+        )
+    }
+
+    @Test
+    fun `closing history clears open thread history without affecting content`() = runTest {
+        val threads = listOf(sampleThread())
+        val repository = TrackingRepository(
+            result = Result.success<List<MainFeedThread>>(threads),
+        )
+        val viewModel = MainFeedViewModel(
+            getMainFeedUseCase = GetMainFeedUseCase(repository),
+        )
+
+        advanceUntilIdle()
+        viewModel.onShowWholeSubjectClick(threadId = "thread-1", threadName = "Thread 1")
+        viewModel.onCloseThreadHistory()
+
+        assertEquals(null, viewModel.uiState.value.openThreadHistory)
+        assertEquals(MainFeedContentState.Success(threads), viewModel.uiState.value.contentState)
+    }
+
+    @Test
     fun `closing reader clears open article without affecting feed content`() = runTest {
         val threads = listOf(sampleThread())
         val repository = TrackingRepository(
@@ -326,6 +369,31 @@ class MainFeedViewModelTest {
 
         assertEquals(null, viewModel.uiState.value.openArticle)
         assertEquals(MainFeedContentState.Success(threads), viewModel.uiState.value.contentState)
+    }
+
+    @Test
+    fun `closing reader returns to whole subject when history is still open`() = runTest {
+        val repository = TrackingRepository(
+            result = Result.success<List<MainFeedThread>>(listOf(sampleThread())),
+        )
+        val viewModel = MainFeedViewModel(
+            getMainFeedUseCase = GetMainFeedUseCase(repository),
+        )
+
+        advanceUntilIdle()
+        viewModel.onShowWholeSubjectClick(threadId = "thread-1", threadName = "Thread 1")
+        viewModel.onArticleClick(sampleArticleData())
+        viewModel.onCloseArticleReader()
+
+        assertEquals(null, viewModel.uiState.value.openArticle)
+        assertEquals(
+            OpenThreadHistory(
+                threadId = "thread-1",
+                threadName = "Thread 1",
+                initialDay = today,
+            ),
+            viewModel.uiState.value.openThreadHistory,
+        )
     }
 }
 
@@ -367,6 +435,9 @@ private class TrackingRepository(
         error("Not used in this test")
 
     override suspend fun terminateAuthSession(sessionId: String) =
+        error("Not used in this test")
+
+    override suspend fun getThreadHistory(threadId: String): ThreadHistory =
         error("Not used in this test")
 }
 

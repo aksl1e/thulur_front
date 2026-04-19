@@ -1081,7 +1081,7 @@ fun rememberThulurButtonSemanticColors(
             ThemeMode.Light -> when {
                 !enabled -> ThulurButtonSemanticColors(
                     containerColor = Color.Transparent,
-                    contentColor = roleScale.s300,
+                    contentColor = roleScale.s100,
                 )
 
                 isPressed -> ThulurButtonSemanticColors(
@@ -1103,7 +1103,7 @@ fun rememberThulurButtonSemanticColors(
             ThemeMode.Dark -> when {
                 !enabled -> ThulurButtonSemanticColors(
                     containerColor = Color.Transparent,
-                    contentColor = roleScale.s500,
+                    contentColor = roleScale.s900,
                 )
 
                 isPressed -> ThulurButtonSemanticColors(
