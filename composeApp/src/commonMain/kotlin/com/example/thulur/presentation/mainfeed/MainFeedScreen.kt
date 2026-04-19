@@ -32,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.animation.core.tween
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -67,9 +68,13 @@ fun MainFeedRoute(
     viewModel: MainFeedViewModel = koinViewModel(key = mainFeedViewModelKey(sessionInstanceId)),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val colors = mainFeedColors()
 
     AnimatedContent(
         targetState = uiState,
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colors.surface),
         transitionSpec = {
             fadeIn(animationSpec = tween(durationMillis = 220)) togetherWith
                 fadeOut(animationSpec = tween(durationMillis = 220))
@@ -92,6 +97,7 @@ fun MainFeedRoute(
 
             else -> MainFeedScreen(
                 uiState = state,
+                colors = colors,
                 onRetry = viewModel::retry,
                 onBackClick = viewModel::onBackClick,
                 onForwardClick = viewModel::onForwardClick,
@@ -112,6 +118,7 @@ internal fun mainFeedViewModelKey(sessionInstanceId: Int): String =
 @Composable
 fun MainFeedScreen(
     uiState: MainFeedUiState,
+    colors: MainFeedColors,
     onRetry: () -> Unit,
     onBackClick: () -> Unit,
     onForwardClick: () -> Unit,
@@ -122,7 +129,6 @@ fun MainFeedScreen(
     onArticleClick: (ThulurThreadArticleData) -> Unit,
     onFeedScrollStateChange: (Int, Int) -> Unit = { _, _ -> },
 ) {
-    val colors = mainFeedColors()
     val appBarColors = ThulurTheme.SemanticColors.appBar
     val semanticTypography = ThulurTheme.SemanticTypography
     val today = Clock.System.todayIn(TimeZone.currentSystemDefault())

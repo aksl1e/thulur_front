@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.example.thulur.presentation.theme.ThemeMode
 import com.example.thulur.presentation.theme.ThulurTheme
 
-internal data class MainFeedColors(
+data class MainFeedColors(
     val surface: Color,
     val surfaceContainer: Color,
     val onSurface: Color,
