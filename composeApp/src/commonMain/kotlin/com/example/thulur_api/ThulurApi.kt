@@ -8,7 +8,6 @@ import com.example.thulur_api.dtos.ParagraphDto
 import com.example.thulur_api.dtos.UpdateUserSettingsDto
 import com.example.thulur_api.dtos.UserDto
 import com.example.thulur_api.dtos.UserSettingsDto
-import com.example.thulur_api.dtos.ThreadHistoryDto
 import com.example.thulur_api.dtos.auth.AuthTokenDto
 import com.example.thulur_api.dtos.auth.DesktopAuthMode
 import com.example.thulur_api.dtos.auth.DesktopAuthStartDto
@@ -25,7 +24,6 @@ import com.example.thulur_api.methods.feeds.UnfollowFeedMethod
 import com.example.thulur_api.methods.settings.GetSettingsMethod
 import com.example.thulur_api.methods.settings.PatchSettingsMethod
 import com.example.thulur_api.methods.users.GetCurrentUserMethod
-import com.example.thulur_api.methods.thread_history.ThreadHistoryMethod
 import io.ktor.client.HttpClient
 import kotlinx.datetime.LocalDate
 
@@ -53,13 +51,6 @@ interface ThulurApi {
     suspend fun getArticleParagraphs(
         articleId: String,
     ): List<ParagraphDto>
-
-    /**
-     * Returns raw thread history for a single thread.
-     */
-    suspend fun getThreadHistory(
-        threadId: String,
-    ): ThreadHistoryDto
 
     /**
      * Returns the current user's settings.
@@ -146,10 +137,6 @@ class RemoteThulurApi(
         httpClient = httpClient,
         config = config,
     )
-    private val threadHistoryMethod = ThreadHistoryMethod(
-        httpClient = httpClient,
-        config = config,
-    )
     private val getSettingsMethod = GetSettingsMethod(
         httpClient = httpClient,
         config = config,
@@ -197,12 +184,6 @@ class RemoteThulurApi(
         articleId: String,
     ): List<ParagraphDto> = paragraphsMethod.execute(
         articleId = articleId,
-    )
-
-    override suspend fun getThreadHistory(
-        threadId: String,
-    ): ThreadHistoryDto = threadHistoryMethod.execute(
-        threadId = threadId,
     )
 
     override suspend fun getUserSettings(): UserSettingsDto = getSettingsMethod.execute()

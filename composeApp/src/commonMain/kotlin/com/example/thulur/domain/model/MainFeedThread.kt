@@ -13,5 +13,5 @@ data class MainFeedThread(
     val mainFeedScore: Double,
     val firstSeen: LocalDate?,
     val summary: String?,
-    val articles: List<Article>,
+    val articles: List<MainFeedArticle>,
 )

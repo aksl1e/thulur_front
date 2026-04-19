@@ -4,10 +4,10 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Raw article payload reused across backend responses.
+ * Raw daily feed article payload returned by the backend.
  */
 @Serializable
-data class ArticleDto(
+data class DailyFeedArticleDto(
     /** Article's id. */
     @SerialName("article_id")
     val articleId: String,

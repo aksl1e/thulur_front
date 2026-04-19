@@ -1,9 +1,9 @@
 package com.example.thulur.domain.model
 
 /**
- * App-facing article model reused by feed and history features.
+ * App-facing article model used by the Main Feed feature.
  */
-data class Article(
+data class MainFeedArticle(
     val id: String,
     val feedId: String,
     val title: String,
@@ -13,4 +13,13 @@ data class Article(
     val isRead: Boolean,
     val isSuggestion: Boolean,
     val quality: ArticleQuality,
-)
+) {
+    /**
+     * UI-oriented quality bucket derived from the raw backend score.
+     */
+    enum class ArticleQuality {
+        Trash,
+        Default,
+        Important,
+    }
+}

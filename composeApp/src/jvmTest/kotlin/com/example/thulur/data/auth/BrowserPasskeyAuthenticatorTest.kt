@@ -10,7 +10,6 @@ import com.example.thulur_api.dtos.ParagraphDto
 import com.example.thulur_api.dtos.UpdateUserSettingsDto
 import com.example.thulur_api.dtos.UserDto
 import com.example.thulur_api.dtos.UserSettingsDto
-import com.example.thulur_api.dtos.ThreadHistoryDto
 import com.example.thulur_api.dtos.auth.AuthTokenDto
 import com.example.thulur_api.dtos.auth.DesktopAuthMode
 import com.example.thulur_api.dtos.auth.DesktopAuthStartDto
@@ -173,10 +172,6 @@ private class FakeDesktopAuthApi(
     override suspend fun getArticleParagraphs(
         articleId: String,
     ): List<ParagraphDto> = error("Not used in this test")
-
-    override suspend fun getThreadHistory(
-        threadId: String,
-    ): ThreadHistoryDto = error("Not used in this test")
 
     override suspend fun getUserSettings(): UserSettingsDto = error("Not used in this test")
 

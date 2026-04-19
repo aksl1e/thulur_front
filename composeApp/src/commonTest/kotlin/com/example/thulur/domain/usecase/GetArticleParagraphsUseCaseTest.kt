@@ -7,7 +7,6 @@ import com.example.thulur.domain.model.Feed
 import com.example.thulur.domain.model.MainFeedThread
 import com.example.thulur.domain.model.PatchUserSettings
 import com.example.thulur.domain.model.UserSettings
-import com.example.thulur.domain.model.ThreadHistory
 import com.example.thulur.domain.repository.ThulurApiRepository
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -49,9 +48,6 @@ private class TrackingRepository(
         requestedArticleId = articleId
         return paragraphs
     }
-
-    override suspend fun getThreadHistory(threadId: String): ThreadHistory =
-        error("Not used in this test")
 
     override suspend fun getUserSettings(): UserSettings =
         error("Not used in this test")

@@ -35,5 +35,5 @@ data class DailyFeedThreadDto(
     val threadSummary: String?,
     /** Articles within the thread. */
     @SerialName("articles")
-    val articles: List<ArticleDto> = emptyList(),
+    val articles: List<DailyFeedArticleDto> = emptyList(),
 )

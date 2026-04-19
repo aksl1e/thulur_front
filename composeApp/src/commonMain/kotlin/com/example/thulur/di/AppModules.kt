@@ -17,14 +17,10 @@ import com.example.thulur.domain.usecase.GetAuthSessionsUseCase
 import com.example.thulur.domain.usecase.GetCurrentUserUseCase
 import com.example.thulur.domain.usecase.GetFollowedFeedsUseCase
 import com.example.thulur.domain.usecase.GetMainFeedUseCase
-<<<<<<< HEAD
 import com.example.thulur.domain.usecase.GetUserSettingsUseCase
 import com.example.thulur.domain.usecase.TerminateAuthSessionUseCase
 import com.example.thulur.domain.usecase.UnfollowFeedUseCase
 import com.example.thulur.domain.usecase.PatchUserSettingsUseCase
-=======
-import com.example.thulur.domain.usecase.GetThreadHistoryUseCase
->>>>>>> 7ec637d (Add thread history API and shared article models)
 import com.example.thulur.presentation.auth.AuthViewModel
 import com.example.thulur.presentation.mainfeed.MainFeedViewModel
 import com.example.thulur.presentation.root.AppRootViewModel
@@ -64,7 +60,6 @@ val dataModule = module {
 val domainModule = module {
     factory { GetMainFeedUseCase(thulurApiRepository = get()) }
     factory { GetArticleParagraphsUseCase(thulurApiRepository = get()) }
-<<<<<<< HEAD
     factory { GetUserSettingsUseCase(thulurApiRepository = get()) }
     factory { PatchUserSettingsUseCase(thulurApiRepository = get()) }
     factory { GetFollowedFeedsUseCase(thulurApiRepository = get()) }
@@ -74,9 +69,6 @@ val domainModule = module {
     factory { GetCurrentUserUseCase(thulurApiRepository = get()) }
     factory { GetAuthSessionsUseCase(thulurApiRepository = get()) }
     factory { TerminateAuthSessionUseCase(thulurApiRepository = get()) }
-=======
-    factory { GetThreadHistoryUseCase(thulurApiRepository = get()) }
->>>>>>> 7ec637d (Add thread history API and shared article models)
 }
 
 val presentationModule = module {
