@@ -5,6 +5,9 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.thulur.presentation.auth.AuthRoute
 import com.example.thulur.presentation.mainfeed.MainFeedRoute
+import com.example.thulur.presentation.settings.SettingsRoute
+import com.example.thulur.presentation.theme.ThemeMode
+import com.example.thulur.presentation.theme.ThulurTheme
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -13,9 +16,28 @@ fun AppRootRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    when (val state = uiState) {
-        AppRootUiState.Loading -> RootLoadingScreen()
-        AppRootUiState.Unauthenticated -> AuthRoute()
-        is AppRootUiState.Authenticated -> MainFeedRoute(sessionInstanceId = state.sessionInstanceId)
+    val themeMode = when (val s = uiState) {
+        is AppRootUiState.Ready -> s.themeMode
+        is AppRootUiState.Unready -> s.themeMode
+        AppRootUiState.Loading -> ThemeMode.Light
+    }
+
+    ThulurTheme(mode = themeMode) {
+        when (val state = uiState) {
+            AppRootUiState.Loading -> RootLoadingScreen()
+            is AppRootUiState.Unready -> AuthRoute()
+            is AppRootUiState.Ready -> when (state.destination) {
+                AppRootAuthenticatedDestination.MainFeed -> MainFeedRoute(
+                    sessionInstanceId = state.sessionInstanceId,
+                    onOpenSettings = viewModel::openSettings,
+                )
+
+                AppRootAuthenticatedDestination.Settings -> SettingsRoute(
+                    sessionInstanceId = state.sessionInstanceId,
+                    onBackClick = viewModel::backToMainFeed,
+                    onThemeApplied = viewModel::updateTheme,
+                )
+            }
+        }
     }
 }

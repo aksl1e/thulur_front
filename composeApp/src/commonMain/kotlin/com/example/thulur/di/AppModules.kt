@@ -8,11 +8,23 @@ import com.example.thulur.domain.repository.ThulurApiRepository
 import com.example.thulur.domain.session.CurrentSessionProvider
 import com.example.thulur.domain.session.SecureTokenStore
 import com.example.thulur.domain.session.providePlatformSecureTokenStore
+import com.example.thulur.domain.theme.ThemeStore
+import com.example.thulur.domain.theme.providePlatformThemeStore
+import com.example.thulur.domain.usecase.FollowFeedUseCase
+import com.example.thulur.domain.usecase.GetAllFeedsUseCase
 import com.example.thulur.domain.usecase.GetArticleParagraphsUseCase
+import com.example.thulur.domain.usecase.GetAuthSessionsUseCase
+import com.example.thulur.domain.usecase.GetCurrentUserUseCase
+import com.example.thulur.domain.usecase.GetFollowedFeedsUseCase
 import com.example.thulur.domain.usecase.GetMainFeedUseCase
+import com.example.thulur.domain.usecase.GetUserSettingsUseCase
+import com.example.thulur.domain.usecase.TerminateAuthSessionUseCase
+import com.example.thulur.domain.usecase.UnfollowFeedUseCase
+import com.example.thulur.domain.usecase.PatchUserSettingsUseCase
 import com.example.thulur.presentation.auth.AuthViewModel
 import com.example.thulur.presentation.mainfeed.MainFeedViewModel
 import com.example.thulur.presentation.root.AppRootViewModel
+import com.example.thulur.presentation.settings.SettingsViewModel
 import com.example.thulur_api.RemoteThulurApi
 import com.example.thulur_api.ThulurApi
 import com.example.thulur_api.client.createThulurHttpClient
@@ -35,6 +47,7 @@ val apiModule = module {
 
 val dataModule = module {
     single<SecureTokenStore> { providePlatformSecureTokenStore() }
+    single<ThemeStore> { providePlatformThemeStore() }
     single<CurrentSessionProvider> { CurrentSessionProviderImpl(tokenStore = get()) }
     single<PasskeyAuthenticator> { providePlatformPasskeyAuthenticator(thulurApi = get()) }
     single<ThulurApiRepository> {
@@ -47,12 +60,22 @@ val dataModule = module {
 val domainModule = module {
     factory { GetMainFeedUseCase(thulurApiRepository = get()) }
     factory { GetArticleParagraphsUseCase(thulurApiRepository = get()) }
+    factory { GetUserSettingsUseCase(thulurApiRepository = get()) }
+    factory { PatchUserSettingsUseCase(thulurApiRepository = get()) }
+    factory { GetFollowedFeedsUseCase(thulurApiRepository = get()) }
+    factory { GetAllFeedsUseCase(thulurApiRepository = get()) }
+    factory { FollowFeedUseCase(thulurApiRepository = get()) }
+    factory { UnfollowFeedUseCase(thulurApiRepository = get()) }
+    factory { GetCurrentUserUseCase(thulurApiRepository = get()) }
+    factory { GetAuthSessionsUseCase(thulurApiRepository = get()) }
+    factory { TerminateAuthSessionUseCase(thulurApiRepository = get()) }
 }
 
 val presentationModule = module {
     viewModelOf(::AppRootViewModel)
     viewModelOf(::AuthViewModel)
     viewModelOf(::MainFeedViewModel)
+    viewModelOf(::SettingsViewModel)
 }
 
 val appModules = listOf(

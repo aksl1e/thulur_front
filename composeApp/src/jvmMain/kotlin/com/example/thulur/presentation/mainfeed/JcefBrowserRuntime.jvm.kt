@@ -20,6 +20,12 @@ internal object JcefBrowserRuntime {
         startInitialization()
     }
 
+    fun shutdown() {
+        val future = initFutureRef.get() ?: return
+        if (!future.isDone) return
+        future.getNow(null)?.getOrNull()?.dispose()
+    }
+
     fun createClientAsync(): CompletableFuture<Result<org.cef.CefClient>> = startInitialization()
         .thenApply { result ->
             if (result.isSuccess) {

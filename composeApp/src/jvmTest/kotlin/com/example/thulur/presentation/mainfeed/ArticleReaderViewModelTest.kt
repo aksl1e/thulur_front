@@ -1,7 +1,12 @@
 package com.example.thulur.presentation.mainfeed
 
 import com.example.thulur.domain.model.ArticleParagraph
+import com.example.thulur.domain.model.AuthSession
+import com.example.thulur.domain.model.CurrentUser
+import com.example.thulur.domain.model.Feed
 import com.example.thulur.domain.model.MainFeedThread
+import com.example.thulur.domain.model.PatchUserSettings
+import com.example.thulur.domain.model.UserSettings
 import com.example.thulur.domain.repository.ThulurApiRepository
 import com.example.thulur.domain.usecase.GetArticleParagraphsUseCase
 import kotlin.test.AfterTest
@@ -116,4 +121,31 @@ private class ParagraphRepository(
 
     override suspend fun getArticleParagraphs(articleId: String): List<ArticleParagraph> =
         paragraphsResult.getOrThrow()
+
+    override suspend fun getUserSettings(): UserSettings =
+        error("Not used in this test")
+
+    override suspend fun patchUserSettings(patch: PatchUserSettings): UserSettings =
+        error("Not used in this test")
+
+    override suspend fun getFollowedFeeds(): List<Feed> =
+        error("Not used in this test")
+
+    override suspend fun getAllFeeds(): List<Feed> =
+        error("Not used in this test")
+
+    override suspend fun followFeed(feedId: String) =
+        error("Not used in this test")
+
+    override suspend fun unfollowFeed(feedId: String) =
+        error("Not used in this test")
+
+    override suspend fun getCurrentUser(): CurrentUser =
+        error("Not used in this test")
+
+    override suspend fun getAuthSessions(): List<AuthSession> =
+        error("Not used in this test")
+
+    override suspend fun terminateAuthSession(sessionId: String) =
+        error("Not used in this test")
 }

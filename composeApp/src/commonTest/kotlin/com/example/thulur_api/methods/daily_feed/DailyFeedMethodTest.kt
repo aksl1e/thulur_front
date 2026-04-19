@@ -14,7 +14,6 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
@@ -89,7 +88,7 @@ class DailyFeedMethodTest {
     }
 
     @Test
-    fun `ignores transitional backend fields such as novelty paragraphs ids`() = runTest {
+    fun `deserializes current daily feed article shape and ignores unknown fields`() = runTest {
         val client = HttpClient(
             engine = MockEngine {
                 respond(
@@ -110,9 +109,7 @@ class DailyFeedMethodTest {
                                 "title": "Article",
                                 "url": "https://example.com",
                                 "published": null,
-                                "quality_score": 0.9,
-                                "novelty": true,
-                                "novelty_summary": null,
+                                "quality_tier": "important",
                                 "novelty_paragraphs_ids": ["p1", "p2"],
                                 "display_summary": "Visible summary",
                                 "is_read": false,
@@ -145,7 +142,8 @@ class DailyFeedMethodTest {
 
         assertEquals(1, response.size)
         assertEquals(1, response.first().articles.size)
-        assertTrue(response.first().articles.first().displaySummary == "Visible summary")
+        assertEquals("important", response.first().articles.first().qualityTier)
+        assertEquals("Visible summary", response.first().articles.first().displaySummary)
     }
 }
 

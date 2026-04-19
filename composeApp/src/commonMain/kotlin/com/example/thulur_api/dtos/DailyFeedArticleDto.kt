@@ -23,19 +23,9 @@ data class DailyFeedArticleDto(
     /** Article's publication date from RSS. */
     @SerialName("published")
     val published: String?,
-    /**
-     * Raw quality score in the range [0.0, 1.0].
-     *
-     * The UI later maps it to Trash / Default / Important.
-     */
-    @SerialName("quality_score")
-    val qualityScore: Double,
-    /** Shows whether the article is new or not. */
-    @SerialName("novelty")
-    val novelty: Boolean,
-    /** Summary version intended for backend logic, not for display. */
-    @SerialName("novelty_summary")
-    val noveltySummary: String?,
+    /** UI-oriented article quality tier from the backend. */
+    @SerialName("quality_tier")
+    val qualityTier: String?,
     /** Summary version intended for UI display. */
     @SerialName("display_summary")
     val displaySummary: String?,

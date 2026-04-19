@@ -71,8 +71,14 @@ compose.desktop {
         mainClass = "com.example.thulur.MainKt"
         jvmArgs("--add-opens", "java.desktop/sun.awt=ALL-UNNAMED")
         jvmArgs("--add-opens", "java.desktop/java.awt.peer=ALL-UNNAMED")
+        jvmArgs(
+            "--add-exports=java.base/java.lang=ALL-UNNAMED",
+            "--add-exports=java.desktop/sun.awt=ALL-UNNAMED",
+            "--add-exports=java.desktop/sun.java2d=ALL-UNNAMED"
+        )
 
         if (System.getProperty("os.name").contains("Mac")) {
+            jvmArgs("--add-opens java.desktop/sun.awt=ALL-UNNAMED")
             jvmArgs("--add-opens", "java.desktop/sun.lwawt=ALL-UNNAMED")
             jvmArgs("--add-opens", "java.desktop/sun.lwawt.macosx=ALL-UNNAMED")
         }

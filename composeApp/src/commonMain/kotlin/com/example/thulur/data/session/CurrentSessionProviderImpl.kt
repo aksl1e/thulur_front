@@ -30,6 +30,7 @@ class CurrentSessionProviderImpl(
                 token = token,
                 instanceId = nextSessionInstanceId++,
             )
+            println(token)
         }
     }
 
@@ -47,6 +48,7 @@ class CurrentSessionProviderImpl(
         ignoreStorageFailure {
             tokenStore.writeToken(normalizedToken)
         }
+        println(token)
     }
 
     override suspend fun clearToken() {

@@ -20,4 +20,5 @@ node_modules/
 .gradle-user-home/
 .claude/
 AGENTS.md
+CLAUDE.md
 PROJECT_TREE.md

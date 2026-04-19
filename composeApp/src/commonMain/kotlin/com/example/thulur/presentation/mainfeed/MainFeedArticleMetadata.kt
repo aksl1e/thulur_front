@@ -3,6 +3,7 @@ package com.example.thulur.presentation.mainfeed
 import com.example.thulur.domain.model.MainFeedArticle
 import com.example.thulur.presentation.composables.ThulurArticleItemVariant
 import com.example.thulur.presentation.composables.ThulurThreadArticleData
+import com.example.thulur.presentation.composables.extractSourceLabel
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -33,19 +34,6 @@ internal fun MainFeedArticle.ArticleQuality.toThulurArticleItemVariant(): Thulur
     MainFeedArticle.ArticleQuality.Trash -> ThulurArticleItemVariant.Trash
     MainFeedArticle.ArticleQuality.Default -> ThulurArticleItemVariant.Default
     MainFeedArticle.ArticleQuality.Important -> ThulurArticleItemVariant.Important
-}
-
-internal fun extractSourceLabel(url: String): String? {
-    val host = url
-        .substringAfter("://", url)
-        .substringBefore('/')
-        .substringBefore('?')
-        .substringBefore('#')
-        .substringBefore(':')
-        .removePrefix("www.")
-        .trim()
-
-    return host.takeIf { it.isNotBlank() }
 }
 
 internal fun parsePublishedMetadata(published: String?): MainFeedPublishedMetadata {

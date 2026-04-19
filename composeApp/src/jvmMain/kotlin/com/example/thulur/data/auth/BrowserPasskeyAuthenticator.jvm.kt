@@ -112,9 +112,17 @@ internal class BrowserPasskeyAuthenticator(
                     code = PasskeyAuthenticationErrorCode.MissingCode,
                 )
 
+            val deviceName = try {
+                InetAddress.getLocalHost().hostName
+            } catch (_: Throwable) {
+                "Unknown device"
+            }
+
             thulurApi.exchangeAuthCode(
                 code = code,
                 state = state,
+                deviceName = deviceName,
+                platform = "desktop",
             ).token
         } finally {
             server.stop(0)

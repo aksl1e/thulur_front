@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.Icon
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowCircleLeft
 import androidx.compose.material.icons.outlined.ArrowCircleRight
@@ -58,6 +59,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun MainFeedRoute(
     sessionInstanceId: Int,
+    onOpenSettings: () -> Unit,
     viewModel: MainFeedViewModel = koinViewModel(key = mainFeedViewModelKey(sessionInstanceId)),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -75,6 +77,7 @@ fun MainFeedRoute(
             onRetry = viewModel::retry,
             onBackClick = viewModel::onBackClick,
             onForwardClick = viewModel::onForwardClick,
+            onSettingsClick = onOpenSettings,
             onTopicsViewModeChange = viewModel::onTopicsViewModeChange,
             onThreadArticlesVisibilityToggle = viewModel::onThreadArticlesVisibilityToggle,
             onArticleClick = viewModel::onArticleClick,
@@ -91,6 +94,7 @@ fun MainFeedScreen(
     onRetry: () -> Unit,
     onBackClick: () -> Unit,
     onForwardClick: () -> Unit,
+    onSettingsClick: () -> Unit,
     onTopicsViewModeChange: (TopicsViewMode) -> Unit,
     onThreadArticlesVisibilityToggle: (String) -> Unit,
     onArticleClick: (ThulurThreadArticleData) -> Unit,
@@ -155,7 +159,7 @@ fun MainFeedScreen(
             },
             endSecondaryContent = {
                 ThulurButton(
-                    onClick = {},
+                    onClick = onSettingsClick,
                     colorRole = ThulurColorRole.Slate,
                     useContainerStates = false,
                     stateColorsOverride = appBarColors.settingsButton,
@@ -184,12 +188,10 @@ fun MainFeedScreen(
             )
 
             when (val contentState = uiState.contentState) {
-                MainFeedContentState.Loading -> MainFeedStatusCard(
-                    title = "Loading Main Feed",
-                    body = "Requesting daily_feed from Thulur API.",
-                    colors = colors,
+                MainFeedContentState.Loading -> CircularProgressIndicator(
+                    color = colors.indicator,
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .align(Alignment.Center)
                         .padding(
                             start = leftRailWidth + contentStartPadding,
                             top = contentStartPadding,
@@ -324,7 +326,7 @@ private fun MainFeedSuccessContent(
     articleVisibilityByThreadId: Map<String, Boolean>,
     threads: List<MainFeedThread>,
     onThreadArticlesVisibilityToggle: (String) -> Unit,
-    onArticleClick: (com.example.thulur.presentation.composables.ThulurThreadArticleData) -> Unit,
+    onArticleClick: (ThulurThreadArticleData) -> Unit,
     leadingLaneWidth: androidx.compose.ui.unit.Dp,
     contentStartPadding: androidx.compose.ui.unit.Dp,
     fabBottomInset: androidx.compose.ui.unit.Dp,
@@ -394,6 +396,7 @@ private data class MainFeedColors(
     val outline: Color,
     val accent: Color,
     val onAccent: Color,
+    val indicator: Color,
 )
 
 @Composable
@@ -410,6 +413,7 @@ private fun mainFeedColors(): MainFeedColors {
             outline = colors.slate.s300,
             accent = colors.primary.s500,
             onAccent = colors.slate.s50,
+            indicator = colors.primary.s500,
         )
 
         ThemeMode.Dark -> MainFeedColors(
@@ -420,6 +424,7 @@ private fun mainFeedColors(): MainFeedColors {
             outline = colors.slate.s700,
             accent = colors.primary.s500,
             onAccent = colors.slate.s50,
+            indicator = colors.primary.s500,
         )
     }
 }

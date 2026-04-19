@@ -2,6 +2,7 @@ package com.example.thulur.presentation.mainfeed
 
 import com.example.thulur.domain.model.MainFeedArticle
 import com.example.thulur.presentation.composables.ThulurArticleItemVariant
+import com.example.thulur.presentation.composables.extractSourceLabel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -13,6 +14,19 @@ class MainFeedArticleMetadataTest {
             "wyborcza.pl",
             extractSourceLabel("https://www.wyborcza.pl/article?id=1"),
         )
+    }
+
+    @Test
+    fun `extractSourceLabel ignores query fragment and port`() {
+        assertEquals(
+            "example.com",
+            extractSourceLabel("https://www.example.com:8443/path?q=1#top"),
+        )
+    }
+
+    @Test
+    fun `extractSourceLabel returns null for blank host`() {
+        assertNull(extractSourceLabel("   "))
     }
 
     @Test

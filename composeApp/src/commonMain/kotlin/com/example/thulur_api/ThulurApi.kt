@@ -1,15 +1,29 @@
 package com.example.thulur_api
 
 import com.example.thulur_api.config.ThulurApiConfig
+import com.example.thulur_api.dtos.AuthSessionDto
 import com.example.thulur_api.dtos.DailyFeedThreadDto
+import com.example.thulur_api.dtos.FeedDto
 import com.example.thulur_api.dtos.ParagraphDto
+import com.example.thulur_api.dtos.UpdateUserSettingsDto
+import com.example.thulur_api.dtos.UserDto
+import com.example.thulur_api.dtos.UserSettingsDto
 import com.example.thulur_api.dtos.auth.AuthTokenDto
 import com.example.thulur_api.dtos.auth.DesktopAuthMode
 import com.example.thulur_api.dtos.auth.DesktopAuthStartDto
+import com.example.thulur_api.methods.auth.GetAuthSessionsMethod
+import com.example.thulur_api.methods.auth.TerminateAuthSessionMethod
 import com.example.thulur_api.methods.auth.DesktopAuthExchangeMethod
 import com.example.thulur_api.methods.auth.DesktopAuthStartMethod
 import com.example.thulur_api.methods.articles.ParagraphsMethod
 import com.example.thulur_api.methods.daily_feed.DailyFeedMethod
+import com.example.thulur_api.methods.feeds.FollowFeedMethod
+import com.example.thulur_api.methods.feeds.GetAllFeedsMethod
+import com.example.thulur_api.methods.feeds.GetUserFeedsMethod
+import com.example.thulur_api.methods.feeds.UnfollowFeedMethod
+import com.example.thulur_api.methods.settings.GetSettingsMethod
+import com.example.thulur_api.methods.settings.PatchSettingsMethod
+import com.example.thulur_api.methods.users.GetCurrentUserMethod
 import io.ktor.client.HttpClient
 import kotlinx.datetime.LocalDate
 
@@ -37,6 +51,53 @@ interface ThulurApi {
     suspend fun getArticleParagraphs(
         articleId: String,
     ): List<ParagraphDto>
+
+    /**
+     * Returns the current user's settings.
+     */
+    suspend fun getUserSettings(): UserSettingsDto
+
+    /**
+     * Applies a partial settings update for the current user.
+     */
+    suspend fun patchUserSettings(
+        patch: UpdateUserSettingsDto,
+    ): UserSettingsDto
+
+    /**
+     * Returns feeds followed by the current user.
+     */
+    suspend fun getFollowedFeeds(): List<FeedDto>
+
+    /**
+     * Returns all available feeds.
+     */
+    suspend fun getAllFeeds(): List<FeedDto>
+
+    /**
+     * Follows a single feed for the current user.
+     */
+    suspend fun followFeed(feedId: String)
+
+    /**
+     * Unfollows a single feed for the current user.
+     */
+    suspend fun unfollowFeed(feedId: String)
+
+    /**
+     * Returns the current authenticated user.
+     */
+    suspend fun getCurrentUser(): UserDto
+
+    /**
+     * Returns active auth sessions for the current user.
+     */
+    suspend fun getAuthSessions(): List<AuthSessionDto>
+
+    /**
+     * Terminates a single auth session for the current user.
+     */
+    suspend fun terminateAuthSession(sessionId: String)
 
     suspend fun startDesktopAuth(
         email: String,
@@ -76,6 +137,42 @@ class RemoteThulurApi(
         httpClient = httpClient,
         config = config,
     )
+    private val getSettingsMethod = GetSettingsMethod(
+        httpClient = httpClient,
+        config = config,
+    )
+    private val patchSettingsMethod = PatchSettingsMethod(
+        httpClient = httpClient,
+        config = config,
+    )
+    private val getUserFeedsMethod = GetUserFeedsMethod(
+        httpClient = httpClient,
+        config = config,
+    )
+    private val getAllFeedsMethod = GetAllFeedsMethod(
+        httpClient = httpClient,
+        config = config,
+    )
+    private val followFeedMethod = FollowFeedMethod(
+        httpClient = httpClient,
+        config = config,
+    )
+    private val unfollowFeedMethod = UnfollowFeedMethod(
+        httpClient = httpClient,
+        config = config,
+    )
+    private val getCurrentUserMethod = GetCurrentUserMethod(
+        httpClient = httpClient,
+        config = config,
+    )
+    private val getAuthSessionsMethod = GetAuthSessionsMethod(
+        httpClient = httpClient,
+        config = config,
+    )
+    private val terminateAuthSessionMethod = TerminateAuthSessionMethod(
+        httpClient = httpClient,
+        config = config,
+    )
 
     override suspend fun getDailyFeed(
         day: LocalDate?,
@@ -88,6 +185,32 @@ class RemoteThulurApi(
     ): List<ParagraphDto> = paragraphsMethod.execute(
         articleId = articleId,
     )
+
+    override suspend fun getUserSettings(): UserSettingsDto = getSettingsMethod.execute()
+
+    override suspend fun patchUserSettings(
+        patch: UpdateUserSettingsDto,
+    ): UserSettingsDto = patchSettingsMethod.execute(update = patch)
+
+    override suspend fun getFollowedFeeds(): List<FeedDto> = getUserFeedsMethod.execute()
+
+    override suspend fun getAllFeeds(): List<FeedDto> = getAllFeedsMethod.execute()
+
+    override suspend fun followFeed(feedId: String) {
+        followFeedMethod.execute(feedId = feedId)
+    }
+
+    override suspend fun unfollowFeed(feedId: String) {
+        unfollowFeedMethod.execute(feedId = feedId)
+    }
+
+    override suspend fun getCurrentUser(): UserDto = getCurrentUserMethod.execute()
+
+    override suspend fun getAuthSessions(): List<AuthSessionDto> = getAuthSessionsMethod.execute()
+
+    override suspend fun terminateAuthSession(sessionId: String) {
+        terminateAuthSessionMethod.execute(sessionId = sessionId)
+    }
 
     override suspend fun startDesktopAuth(
         email: String,

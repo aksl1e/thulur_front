@@ -130,6 +130,52 @@ data class ThulurRootLoadingScreenSemanticColors(
 )
 
 @Immutable
+data class ThulurSettingsSectionItemSemanticColors(
+    val rest: ThulurButtonSemanticColors,
+    val hovered: ThulurButtonSemanticColors,
+    val pressed: ThulurButtonSemanticColors,
+    val selected: ThulurButtonSemanticColors,
+    val disabled: ThulurButtonSemanticColors,
+)
+
+@Immutable
+data class ThulurSettingsTimeSelectorSemanticColors(
+    val segmentContainerColor: Color,
+    val segmentHoveredContainerColor: Color,
+    val segmentDisabledContainerColor: Color,
+    val segmentContentColor: Color,
+    val segmentDisabledContentColor: Color,
+    val dividerColor: Color,
+    val arrowRestColor: Color,
+    val arrowHoveredColor: Color,
+    val arrowDisabledColor: Color,
+)
+
+@Immutable
+data class ThulurSettingsScreenSemanticColors(
+    val screenBackground: Color,
+    val railColor: Color,
+    val sectionTitleColor: Color,
+    val subsectionTitleColor: Color,
+    val bodyColor: Color,
+    val bodyMutedColor: Color,
+    val metaColor: Color,
+    val dividerColor: Color,
+    val errorColor: Color,
+    val inputField: ThulurTextFieldStateSemanticColors,
+    val inlineActionButton: ThulurButtonStateSemanticColors,
+    val terminateButton: ThulurButtonStateSemanticColors,
+    val dropdownMenuContainerColor: Color,
+    val dropdownMenuContentColor: Color,
+    val switchCheckedThumbColor: Color,
+    val switchCheckedTrackColor: Color,
+    val switchUncheckedThumbColor: Color,
+    val switchUncheckedTrackColor: Color,
+    val switchDisabledThumbColor: Color,
+    val switchDisabledTrackColor: Color,
+)
+
+@Immutable
 data class ThulurSemanticColors(
     val buttonTooltip: ThulurButtonTooltipSemanticColors,
     val appBar: ThulurAppBarSemanticColors,
@@ -140,6 +186,9 @@ data class ThulurSemanticColors(
     val chatFab: ThulurChatFabSemanticColors,
     val authScreen: ThulurAuthScreenSemanticColors,
     val rootLoadingScreen: ThulurRootLoadingScreenSemanticColors,
+    val settingsScreen: ThulurSettingsScreenSemanticColors,
+    val settingsSectionItem: ThulurSettingsSectionItemSemanticColors,
+    val settingsTimeSelector: ThulurSettingsTimeSelectorSemanticColors,
 )
 
 @Immutable
@@ -167,6 +216,13 @@ data class ThulurSemanticTypography(
     val authInputPlaceholder: TextStyle,
     val authPrimaryAction: TextStyle,
     val authTroubleLink: TextStyle,
+    val settingsSelectorLabel: TextStyle,
+    val settingsSectionTitle: TextStyle,
+    val settingsSubsectionTitle: TextStyle,
+    val settingsBody: TextStyle,
+    val settingsMeta: TextStyle,
+    val settingsAction: TextStyle,
+    val settingsTimeValue: TextStyle,
 )
 
 @Composable
@@ -739,6 +795,267 @@ fun rememberThulurRootLoadingScreenSemanticColors(): ThulurRootLoadingScreenSema
 
 @Composable
 @ReadOnlyComposable
+fun rememberThulurSettingsSectionItemSemanticColors(): ThulurSettingsSectionItemSemanticColors {
+    val slate = ThulurTheme.Colors.slate
+    val primary = ThulurTheme.Colors.primary
+
+    return when (ThulurTheme.Mode) {
+        ThemeMode.Light -> ThulurSettingsSectionItemSemanticColors(
+            rest = ThulurButtonSemanticColors(
+                containerColor = Color.Transparent,
+                contentColor = slate.s700,
+            ),
+            hovered = ThulurButtonSemanticColors(
+                containerColor = slate.s300,
+                contentColor = slate.s900,
+            ),
+            pressed = ThulurButtonSemanticColors(
+                containerColor = slate.s500,
+                contentColor = slate.s950,
+            ),
+            selected = ThulurButtonSemanticColors(
+                containerColor = primary.s500,
+                contentColor = slate.s50,
+            ),
+            disabled = ThulurButtonSemanticColors(
+                containerColor = Color.Transparent,
+                contentColor = slate.s300,
+            ),
+        )
+
+        ThemeMode.Dark -> ThulurSettingsSectionItemSemanticColors(
+            rest = ThulurButtonSemanticColors(
+                containerColor = Color.Transparent,
+                contentColor = slate.s300,
+            ),
+            hovered = ThulurButtonSemanticColors(
+                containerColor = slate.s700,
+                contentColor = slate.s100,
+            ),
+            pressed = ThulurButtonSemanticColors(
+                containerColor = slate.s500,
+                contentColor = slate.s50,
+            ),
+            selected = ThulurButtonSemanticColors(
+                containerColor = primary.s500,
+                contentColor = slate.s50,
+            ),
+            disabled = ThulurButtonSemanticColors(
+                containerColor = Color.Transparent,
+                contentColor = slate.s700,
+            ),
+        )
+    }
+}
+
+@Composable
+@ReadOnlyComposable
+fun rememberThulurSettingsTimeSelectorSemanticColors(): ThulurSettingsTimeSelectorSemanticColors {
+    val slate = ThulurTheme.Colors.slate
+
+    return when (ThulurTheme.Mode) {
+        ThemeMode.Light -> ThulurSettingsTimeSelectorSemanticColors(
+            segmentContainerColor = slate.s300,
+            segmentHoveredContainerColor = slate.s300,
+            segmentDisabledContainerColor = slate.s100,
+            segmentContentColor = slate.s950,
+            segmentDisabledContentColor = slate.s500,
+            dividerColor = slate.s950,
+            arrowRestColor = slate.s700,
+            arrowHoveredColor = slate.s950,
+            arrowDisabledColor = slate.s300,
+        )
+
+        ThemeMode.Dark -> ThulurSettingsTimeSelectorSemanticColors(
+            segmentContainerColor = slate.s700,
+            segmentHoveredContainerColor = slate.s700,
+            segmentDisabledContainerColor = slate.s900,
+            segmentContentColor = slate.s50,
+            segmentDisabledContentColor = slate.s500,
+            dividerColor = slate.s50,
+            arrowRestColor = slate.s300,
+            arrowHoveredColor = slate.s50,
+            arrowDisabledColor = slate.s700,
+        )
+    }
+}
+
+@Composable
+@ReadOnlyComposable
+fun rememberThulurSettingsScreenSemanticColors(): ThulurSettingsScreenSemanticColors {
+    val slate = ThulurTheme.Colors.slate
+    val primary = ThulurTheme.Colors.primary
+    val error = ThulurTheme.Colors.error
+
+    return when (ThulurTheme.Mode) {
+        ThemeMode.Light -> ThulurSettingsScreenSemanticColors(
+            screenBackground = slate.s50,
+            railColor = slate.s100,
+            sectionTitleColor = slate.s950,
+            subsectionTitleColor = slate.s950,
+            bodyColor = slate.s900,
+            bodyMutedColor = slate.s700,
+            metaColor = slate.s500,
+            dividerColor = slate.s300,
+            errorColor = error.s700,
+            inputField = ThulurTextFieldStateSemanticColors(
+                rest = ThulurTextFieldSemanticColors(
+                    containerColor = slate.s50,
+                    contentColor = slate.s700,
+                    placeholderColor = slate.s500,
+                    borderColor = slate.s700A10,
+                ),
+                focused = ThulurTextFieldSemanticColors(
+                    containerColor = slate.s50,
+                    contentColor = slate.s700,
+                    placeholderColor = slate.s500,
+                    borderColor = slate.s500,
+                ),
+                error = ThulurTextFieldSemanticColors(
+                    containerColor = slate.s50,
+                    contentColor = slate.s700,
+                    placeholderColor = slate.s500,
+                    borderColor = error.s500,
+                ),
+                disabled = ThulurTextFieldSemanticColors(
+                    containerColor = slate.s100,
+                    contentColor = slate.s500,
+                    placeholderColor = slate.s300,
+                    borderColor = slate.s300A10,
+                ),
+            ),
+            inlineActionButton = ThulurButtonStateSemanticColors(
+                rest = ThulurButtonSemanticColors(
+                    containerColor = Color.Transparent,
+                    contentColor = primary.s500,
+                ),
+                hovered = ThulurButtonSemanticColors(
+                    containerColor = Color.Transparent,
+                    contentColor = primary.s700,
+                ),
+                pressed = ThulurButtonSemanticColors(
+                    containerColor = Color.Transparent,
+                    contentColor = primary.s900,
+                ),
+                disabled = ThulurButtonSemanticColors(
+                    containerColor = Color.Transparent,
+                    contentColor = primary.s300,
+                ),
+            ),
+            terminateButton = ThulurButtonStateSemanticColors(
+                rest = ThulurButtonSemanticColors(
+                    containerColor = Color.Transparent,
+                    contentColor = error.s500,
+                ),
+                hovered = ThulurButtonSemanticColors(
+                    containerColor = Color.Transparent,
+                    contentColor = error.s700,
+                ),
+                pressed = ThulurButtonSemanticColors(
+                    containerColor = Color.Transparent,
+                    contentColor = error.s900,
+                ),
+                disabled = ThulurButtonSemanticColors(
+                    containerColor = Color.Transparent,
+                    contentColor = error.s300,
+                ),
+            ),
+            dropdownMenuContainerColor = slate.s50,
+            dropdownMenuContentColor = slate.s900,
+            switchCheckedThumbColor = slate.s50,
+            switchCheckedTrackColor = primary.s500,
+            switchUncheckedThumbColor = slate.s50,
+            switchUncheckedTrackColor = slate.s300,
+            switchDisabledThumbColor = slate.s300,
+            switchDisabledTrackColor = slate.s100,
+        )
+
+        ThemeMode.Dark -> ThulurSettingsScreenSemanticColors(
+            screenBackground = slate.s950,
+            railColor = slate.s900,
+            sectionTitleColor = slate.s50,
+            subsectionTitleColor = slate.s50,
+            bodyColor = slate.s100,
+            bodyMutedColor = slate.s300,
+            metaColor = slate.s500,
+            dividerColor = slate.s700,
+            errorColor = error.s300,
+            inputField = ThulurTextFieldStateSemanticColors(
+                rest = ThulurTextFieldSemanticColors(
+                    containerColor = slate.s950,
+                    contentColor = slate.s100,
+                    placeholderColor = slate.s500,
+                    borderColor = slate.s50A30,
+                ),
+                focused = ThulurTextFieldSemanticColors(
+                    containerColor = slate.s950,
+                    contentColor = slate.s100,
+                    placeholderColor = slate.s500,
+                    borderColor = slate.s300,
+                ),
+                error = ThulurTextFieldSemanticColors(
+                    containerColor = slate.s950,
+                    contentColor = slate.s100,
+                    placeholderColor = slate.s500,
+                    borderColor = error.s300,
+                ),
+                disabled = ThulurTextFieldSemanticColors(
+                    containerColor = slate.s900,
+                    contentColor = slate.s500,
+                    placeholderColor = slate.s700,
+                    borderColor = slate.s300A10,
+                ),
+            ),
+            inlineActionButton = ThulurButtonStateSemanticColors(
+                rest = ThulurButtonSemanticColors(
+                    containerColor = Color.Transparent,
+                    contentColor = primary.s500,
+                ),
+                hovered = ThulurButtonSemanticColors(
+                    containerColor = Color.Transparent,
+                    contentColor = primary.s300,
+                ),
+                pressed = ThulurButtonSemanticColors(
+                    containerColor = Color.Transparent,
+                    contentColor = slate.s50,
+                ),
+                disabled = ThulurButtonSemanticColors(
+                    containerColor = Color.Transparent,
+                    contentColor = slate.s500,
+                ),
+            ),
+            terminateButton = ThulurButtonStateSemanticColors(
+                rest = ThulurButtonSemanticColors(
+                    containerColor = Color.Transparent,
+                    contentColor = error.s300,
+                ),
+                hovered = ThulurButtonSemanticColors(
+                    containerColor = Color.Transparent,
+                    contentColor = error.s100,
+                ),
+                pressed = ThulurButtonSemanticColors(
+                    containerColor = Color.Transparent,
+                    contentColor = slate.s50,
+                ),
+                disabled = ThulurButtonSemanticColors(
+                    containerColor = Color.Transparent,
+                    contentColor = slate.s700,
+                ),
+            ),
+            dropdownMenuContainerColor = slate.s900,
+            dropdownMenuContentColor = slate.s100,
+            switchCheckedThumbColor = slate.s50,
+            switchCheckedTrackColor = primary.s500,
+            switchUncheckedThumbColor = slate.s50,
+            switchUncheckedTrackColor = slate.s500,
+            switchDisabledThumbColor = slate.s500,
+            switchDisabledTrackColor = slate.s700,
+        )
+    }
+}
+
+@Composable
+@ReadOnlyComposable
 fun rememberThulurButtonSemanticColors(
     colorRole: ThulurColorRole,
     enabled: Boolean,
@@ -1013,6 +1330,41 @@ fun rememberThulurSemanticTypography(): ThulurSemanticTypography = ThulurSemanti
         lineHeight = 20.thulurSp(),
         textDecoration = TextDecoration.Underline,
     ),
+    settingsSelectorLabel = ThulurTheme.Typography.bodyLarge.copy(
+        fontWeight = FontWeight.Normal,
+        fontSize = 18.thulurSp(),
+        lineHeight = 18.thulurSp(),
+    ),
+    settingsSectionTitle = ThulurTheme.Typography.headlineLarge.copy(
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 32.thulurSp(),
+        lineHeight = 40.thulurSp(),
+    ),
+    settingsSubsectionTitle = ThulurTheme.Typography.headlineMedium.copy(
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 24.thulurSp(),
+        lineHeight = 30.thulurSp(),
+    ),
+    settingsBody = ThulurTheme.Typography.bodyLarge.copy(
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.thulurSp(),
+        lineHeight = 24.thulurSp(),
+    ),
+    settingsMeta = ThulurTheme.Typography.bodyMedium.copy(
+        fontWeight = FontWeight.Normal,
+        fontSize = 14.thulurSp(),
+        lineHeight = 20.thulurSp(),
+    ),
+    settingsAction = ThulurTheme.Typography.bodyLarge.copy(
+        fontWeight = FontWeight.Medium,
+        fontSize = 16.thulurSp(),
+        lineHeight = 20.thulurSp(),
+    ),
+    settingsTimeValue = ThulurTheme.Typography.headlineLarge.copy(
+        fontWeight = FontWeight.Normal,
+        fontSize = 20.thulurSp(),
+        lineHeight = 20.thulurSp(),
+    ),
 )
 
 @Composable
@@ -1027,4 +1379,7 @@ fun rememberThulurSemanticColors(): ThulurSemanticColors = ThulurSemanticColors(
     chatFab = rememberThulurChatFabSemanticColors(),
     authScreen = rememberThulurAuthScreenSemanticColors(),
     rootLoadingScreen = rememberThulurRootLoadingScreenSemanticColors(),
+    settingsScreen = rememberThulurSettingsScreenSemanticColors(),
+    settingsSectionItem = rememberThulurSettingsSectionItemSemanticColors(),
+    settingsTimeSelector = rememberThulurSettingsTimeSelectorSemanticColors(),
 )
