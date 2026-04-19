@@ -97,7 +97,6 @@ fun MainFeedScreen(
     onSettingsClick: () -> Unit,
     onTopicsViewModeChange: (TopicsViewMode) -> Unit,
     onThreadArticlesVisibilityToggle: (String) -> Unit,
-    onShowWholeSubjectClick: (String, String) -> Unit,
     onArticleClick: (ThulurThreadArticleData) -> Unit,
 ) {
     val colors = mainFeedColors()
@@ -160,7 +159,7 @@ fun MainFeedScreen(
             },
             endSecondaryContent = {
                 ThulurButton(
-                    onClick = {},
+                    onClick = onSettingsClick,
                     colorRole = ThulurColorRole.Slate,
                     useContainerStates = false,
                     stateColorsOverride = appBarColors.settingsButton,
@@ -189,12 +188,10 @@ fun MainFeedScreen(
             )
 
             when (val contentState = uiState.contentState) {
-                MainFeedContentState.Loading -> MainFeedStatusCard(
-                    title = "Loading Main Feed",
-                    body = "Requesting daily_feed from Thulur API.",
-                    colors = colors,
+                MainFeedContentState.Loading -> CircularProgressIndicator(
+                    color = colors.indicator,
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .align(Alignment.Center)
                         .padding(
                             start = leftRailWidth + contentStartPadding,
                             top = contentStartPadding,
@@ -329,7 +326,7 @@ private fun MainFeedSuccessContent(
     articleVisibilityByThreadId: Map<String, Boolean>,
     threads: List<MainFeedThread>,
     onThreadArticlesVisibilityToggle: (String) -> Unit,
-    onArticleClick: (com.example.thulur.presentation.composables.ThulurThreadArticleData) -> Unit,
+    onArticleClick: (ThulurThreadArticleData) -> Unit,
     leadingLaneWidth: androidx.compose.ui.unit.Dp,
     contentStartPadding: androidx.compose.ui.unit.Dp,
     fabBottomInset: androidx.compose.ui.unit.Dp,
@@ -391,6 +388,47 @@ private fun MainFeedSuccessContent(
     }
 }
 
+private data class MainFeedColors(
+    val surface: Color,
+    val surfaceContainer: Color,
+    val onSurface: Color,
+    val onSurfaceVariant: Color,
+    val outline: Color,
+    val accent: Color,
+    val onAccent: Color,
+    val indicator: Color,
+)
+
+@Composable
+@ReadOnlyComposable
+private fun mainFeedColors(): MainFeedColors {
+    val colors = ThulurTheme.Colors
+
+    return when (ThulurTheme.Mode) {
+        ThemeMode.Light -> MainFeedColors(
+            surface = colors.slate.s50,
+            surfaceContainer = colors.slate.s100,
+            onSurface = colors.slate.s900,
+            onSurfaceVariant = colors.slate.s700,
+            outline = colors.slate.s300,
+            accent = colors.primary.s500,
+            onAccent = colors.slate.s50,
+            indicator = colors.primary.s500,
+        )
+
+        ThemeMode.Dark -> MainFeedColors(
+            surface = colors.slate.s950,
+            surfaceContainer = colors.slate.s900,
+            onSurface = colors.slate.s50,
+            onSurfaceVariant = colors.slate.s300,
+            outline = colors.slate.s700,
+            accent = colors.primary.s500,
+            onAccent = colors.slate.s50,
+            indicator = colors.primary.s500,
+        )
+    }
+}
+
 private fun LocalDate.toTitleAppBarLabel(today: LocalDate): String {
     val yesterday = today.minus(1, DateTimeUnit.DAY)
 
@@ -423,9 +461,3 @@ private fun LocalDate.toShortDateLabel(): String {
 }
 
 private fun LocalDate.toMoreArticlesDateLabel(): String = toShortDateLabel()
-
-private fun MainFeedUiState.routeContentKey(): String = when {
-    openArticle != null -> "article:${openArticle.articleId}"
-    openThreadHistory != null -> "history:${openThreadHistory.threadId}:${openThreadHistory.initialDay}"
-    else -> "feed"
-}

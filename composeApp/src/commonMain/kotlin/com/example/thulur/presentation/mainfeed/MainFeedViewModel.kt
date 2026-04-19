@@ -56,18 +56,6 @@ class MainFeedViewModel(
         loadDay(_uiState.value.selectedDay)
     }
 
-    fun onShowWholeSubjectClick(threadId: String, threadName: String) {
-        _uiState.update { state ->
-            state.copy(
-                openThreadHistory = OpenThreadHistory(
-                    threadId = threadId,
-                    threadName = threadName,
-                    initialDay = state.selectedDay,
-                ),
-            )
-        }
-    }
-
     fun onArticleClick(article: ThulurThreadArticleData) {
         _uiState.update { state ->
             state.copy(
@@ -77,12 +65,6 @@ class MainFeedViewModel(
                     url = article.url,
                 ),
             )
-        }
-    }
-
-    fun onCloseThreadHistory() {
-        _uiState.update { state ->
-            state.copy(openThreadHistory = null)
         }
     }
 
