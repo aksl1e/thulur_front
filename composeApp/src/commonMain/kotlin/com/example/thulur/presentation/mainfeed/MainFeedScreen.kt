@@ -18,6 +18,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.flow.distinctUntilChanged
 import androidx.compose.material.Icon
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
@@ -29,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.animation.core.tween
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -96,6 +100,7 @@ fun MainFeedRoute(
                 onShowWholeSubjectClick = viewModel::onShowWholeSubjectClick,
                 onArticleClick = viewModel::onArticleClick,
                 onSettingsClick = onOpenSettings,
+                onFeedScrollStateChange = viewModel::onFeedScrollStateChange,
             )
         }
     }
@@ -115,6 +120,7 @@ fun MainFeedScreen(
     onThreadArticlesVisibilityToggle: (String) -> Unit,
     onShowWholeSubjectClick: (String, String) -> Unit,
     onArticleClick: (ThulurThreadArticleData) -> Unit,
+    onFeedScrollStateChange: (Int, Int) -> Unit = { _, _ -> },
 ) {
     val colors = mainFeedColors()
     val appBarColors = ThulurTheme.SemanticColors.appBar
@@ -256,6 +262,9 @@ fun MainFeedScreen(
                     leadingLaneWidth = leftRailWidth,
                     contentStartPadding = contentStartPadding,
                     fabBottomInset = fabBottomInset,
+                    scrollIndex = uiState.feedScrollIndex,
+                    scrollOffset = uiState.feedScrollOffset,
+                    onScrollStateChange = onFeedScrollStateChange,
                 )
             }
 
@@ -281,11 +290,25 @@ private fun MainFeedSuccessContent(
     leadingLaneWidth: androidx.compose.ui.unit.Dp,
     contentStartPadding: androidx.compose.ui.unit.Dp,
     fabBottomInset: androidx.compose.ui.unit.Dp,
+    scrollIndex: Int = 0,
+    scrollOffset: Int = 0,
+    onScrollStateChange: (Int, Int) -> Unit = { _, _ -> },
 ) {
     val typography = ThulurTheme.SemanticTypography
     val moreArticlesColors = ThulurTheme.SemanticColors.threadItem.moreArticlesButton
+    val listState = rememberLazyListState(
+        initialFirstVisibleItemIndex = scrollIndex,
+        initialFirstVisibleItemScrollOffset = scrollOffset,
+    )
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
+            .distinctUntilChanged()
+            .collect { (index, offset) -> onScrollStateChange(index, offset) }
+    }
 
     LazyColumn(
+        state = listState,
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(20.dp),
         contentPadding = PaddingValues(

@@ -92,6 +92,12 @@ class MainFeedViewModel(
         }
     }
 
+    fun onFeedScrollStateChange(index: Int, offset: Int) {
+        _uiState.update { state ->
+            state.copy(feedScrollIndex = index, feedScrollOffset = offset)
+        }
+    }
+
     fun onTopicsViewModeChange(viewMode: TopicsViewMode) {
         _uiState.update { state ->
             val articleVisibilityByThreadId = when (val contentState = state.contentState) {
@@ -129,6 +135,8 @@ class MainFeedViewModel(
                     selectedDay = day,
                     articleVisibilityByThreadId = emptyMap(),
                     contentState = MainFeedContentState.Loading,
+                    feedScrollIndex = 0,
+                    feedScrollOffset = 0,
                 )
             }
 

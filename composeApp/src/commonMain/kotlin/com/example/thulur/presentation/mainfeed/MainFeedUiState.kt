@@ -14,6 +14,8 @@ data class MainFeedUiState(
     val contentState: MainFeedContentState = MainFeedContentState.Loading,
     val openThreadHistory: OpenThreadHistory? = null,
     val openArticle: OpenArticle? = null,
+    val feedScrollIndex: Int = 0,
+    val feedScrollOffset: Int = 0,
 )
 
 data class OpenThreadHistory(

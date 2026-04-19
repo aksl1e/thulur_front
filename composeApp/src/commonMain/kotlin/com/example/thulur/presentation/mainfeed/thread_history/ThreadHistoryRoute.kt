@@ -116,7 +116,6 @@ private fun ThreadHistoryScreen(
     onArticleClick: (ThulurThreadArticleData) -> Unit,
 ) {
     val colors = mainFeedColors()
-    val appBarColors = ThulurTheme.SemanticColors.appBar
     val loadingColors = ThulurTheme.SemanticColors.rootLoadingScreen
     val leftRailWidth = 225.thulurDp()
     val contentStartPadding = 30.thulurDp()
@@ -193,8 +192,6 @@ private fun ThreadHistoryScreen(
                     contentStartPadding = contentStartPadding,
                     bottomActionInset = bottomActionInset,
                     bottomActionPadding = bottomActionPadding,
-                    previousDayButtonColors = appBarColors.backButton,
-                    nextDayButtonColors = appBarColors.forwardButton,
                 )
             }
 
@@ -221,8 +218,6 @@ private fun ThreadHistorySuccessContent(
     contentStartPadding: Dp,
     bottomActionInset: Dp,
     bottomActionPadding: Dp,
-    previousDayButtonColors: ThulurButtonStateSemanticColors,
-    nextDayButtonColors: ThulurButtonStateSemanticColors,
 ) {
     var isPageTransitionRunning by remember { mutableStateOf(false) }
 
@@ -266,8 +261,6 @@ private fun ThreadHistorySuccessContent(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = bottomActionPadding),
-                previousDayButtonColors = previousDayButtonColors,
-                nextDayButtonColors = nextDayButtonColors,
             )
         }
     }
@@ -367,8 +360,6 @@ private fun ThreadHistoryBottomActionRow(
     onPreviousDayClick: () -> Unit,
     onNextDayClick: () -> Unit,
     modifier: Modifier = Modifier,
-    previousDayButtonColors: ThulurButtonStateSemanticColors,
-    nextDayButtonColors: ThulurButtonStateSemanticColors,
 ) {
     Row(
         modifier = modifier,
@@ -381,7 +372,6 @@ private fun ThreadHistoryBottomActionRow(
             colorRole = ThulurColorRole.Slate,
             useContainerStates = false,
             shape = RoundedCornerShape(1000.thulurDp()),
-            stateColorsOverride = previousDayButtonColors,
             contentDescription = "Previous day",
             tooltipText = "Previous day",
             leadingIcon = {
@@ -404,7 +394,6 @@ private fun ThreadHistoryBottomActionRow(
             colorRole = ThulurColorRole.Slate,
             useContainerStates = false,
             shape = RoundedCornerShape(1000.thulurDp()),
-            stateColorsOverride = nextDayButtonColors,
             contentDescription = "Next day",
             tooltipText = "Next day",
             leadingIcon = {

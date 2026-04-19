@@ -2,6 +2,7 @@ package com.example.thulur.data.repository
 
 import com.example.thulur.domain.model.Article
 import com.example.thulur.domain.model.ArticleParagraph
+import com.example.thulur.domain.model.ArticleQuality
 import com.example.thulur.domain.model.AuthSession
 import com.example.thulur.domain.model.CurrentUser
 import com.example.thulur.domain.model.Feed
@@ -128,12 +129,12 @@ private fun ArticleDto.toArticle(): Article = Article(
     displaySummary = displaySummary,
     isRead = isRead,
     isSuggestion = isSuggestion,
-    quality = qualityScore.toArticleQuality(),
+    quality = qualityTier.toArticleQuality(),
 )
 
 private fun String?.toArticleQuality(): ArticleQuality = when (this?.lowercase()) {
     "trash" -> ArticleQuality.Trash
-    "important" -> MainFeedArticle.ArticleQuality.Important
+    "important" -> ArticleQuality.Important
     "default",
     null,
     -> ArticleQuality.Default
