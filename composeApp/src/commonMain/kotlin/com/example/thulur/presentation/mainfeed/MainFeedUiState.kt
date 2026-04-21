@@ -28,6 +28,7 @@ data class OpenArticle(
     val articleId: String,
     val title: String,
     val url: String,
+    val isRead: Boolean = false,
 )
 
 sealed interface MainFeedContentState {

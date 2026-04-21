@@ -3,6 +3,7 @@ package com.example.thulur.presentation.mainfeed
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.thulur.domain.usecase.GetArticleParagraphsUseCase
+import com.example.thulur.domain.usecase.RateArticleUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,12 +14,14 @@ import kotlinx.coroutines.launch
 class ArticleReaderViewModel(
     openArticle: OpenArticle,
     private val getArticleParagraphsUseCase: GetArticleParagraphsUseCase,
+    private val rateArticleUseCase: RateArticleUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(
         ArticleReaderUiState(
             articleId = openArticle.articleId,
             title = openArticle.title,
             url = openArticle.url,
+            isArticleRead = openArticle.isRead,
         ),
     )
     val uiState: StateFlow<ArticleReaderUiState> = _uiState.asStateFlow()
@@ -43,6 +46,26 @@ class ArticleReaderViewModel(
         val clampedProgress = progress.coerceIn(0f, 1f)
         _uiState.update { state ->
             state.copy(readProgress = maxOf(state.readProgress, clampedProgress))
+        }
+    }
+
+    fun onRateArticle(rate: Int) {
+        _uiState.update { state ->
+            state.copy(rate = maxOf(state.rate, rate))
+        }
+    }
+
+    fun submitRate() {
+        val state = _uiState.value
+        if (state.rate > 0 && !state.isArticleRead) {
+            println("[ThulurArticleReader] submitRate articleId=${state.articleId} rate=${state.rate}")
+            viewModelScope.launch {
+                runCatching { rateArticleUseCase(articleId = state.articleId, rating = state.rate) }
+                    .onSuccess { println("[ThulurArticleReader] submitRate SUCCESS articleId=${state.articleId} rate=${state.rate}") }
+                    .onFailure { println("[ThulurArticleReader] submitRate FAILURE articleId=${state.articleId} rate=${state.rate} error=${it.message}") }
+            }
+        } else {
+            println("[ThulurArticleReader] submitRate skipped articleId=${state.articleId} rate=${state.rate} isRead=${state.isArticleRead}")
         }
     }
 

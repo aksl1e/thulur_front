@@ -23,6 +23,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.thulur.domain.usecase.GetArticleParagraphsUseCase
+import com.example.thulur.domain.usecase.RateArticleUseCase
 import com.example.thulur.presentation.composables.ThulurAppBar
 import com.example.thulur.presentation.theme.ThulurTheme
 import org.koin.compose.koinInject
@@ -34,10 +35,12 @@ fun ArticleReaderRoute(
     onBackClick: () -> Unit,
 ) {
     val getArticleParagraphsUseCase = koinInject<GetArticleParagraphsUseCase>()
-    val factory = remember(openArticle, getArticleParagraphsUseCase) {
+    val rateArticleUseCase = koinInject<RateArticleUseCase>()
+    val factory = remember(openArticle, getArticleParagraphsUseCase, rateArticleUseCase) {
         articleReaderViewModelFactory(
             openArticle = openArticle,
             getArticleParagraphsUseCase = getArticleParagraphsUseCase,
+            rateArticleUseCase = rateArticleUseCase,
         )
     }
     val viewModel: ArticleReaderViewModel = viewModel(
@@ -51,10 +54,14 @@ fun ArticleReaderRoute(
 
     ArticleReaderScreen(
         uiState = uiState,
-        onBackClick = onBackClick,
+        onBackClick = {
+            viewModel.submitRate()
+            onBackClick()
+        },
         onInitialPageLoaded = viewModel::onInitialPageLoaded,
         onInjectionSucceeded = viewModel::onInjectionSucceeded,
         onProgressChanged = viewModel::onProgressChanged,
+        onRateArticle = viewModel::onRateArticle,
         onError = viewModel::onBrowserError,
     )
 }
@@ -71,6 +78,7 @@ private fun ArticleReaderScreen(
     onInitialPageLoaded: () -> Unit,
     onInjectionSucceeded: () -> Unit,
     onProgressChanged: (Float) -> Unit,
+    onRateArticle: (Int) -> Unit,
     onError: (String) -> Unit,
 ) {
     val loadingColors = ThulurTheme.SemanticColors.rootLoadingScreen
@@ -96,10 +104,12 @@ private fun ArticleReaderScreen(
                 initialUrl = uiState.url,
                 paragraphs = uiState.paragraphs,
                 areParagraphsReady = uiState.areParagraphsLoaded,
+                isArticleRead = uiState.isArticleRead,
                 modifier = Modifier.fillMaxSize(),
                 onInitialPageLoaded = onInitialPageLoaded,
                 onInjectionSucceeded = onInjectionSucceeded,
                 onProgressChanged = onProgressChanged,
+                onRateArticle = onRateArticle,
                 onError = onError,
             )
             if (uiState.errorMessage == null && !uiState.isReady) {
@@ -152,6 +162,7 @@ private fun ArticleReaderErrorState(
 private fun articleReaderViewModelFactory(
     openArticle: OpenArticle,
     getArticleParagraphsUseCase: GetArticleParagraphsUseCase,
+    rateArticleUseCase: RateArticleUseCase,
 ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(
@@ -160,5 +171,6 @@ private fun articleReaderViewModelFactory(
     ): T = ArticleReaderViewModel(
         openArticle = openArticle,
         getArticleParagraphsUseCase = getArticleParagraphsUseCase,
+        rateArticleUseCase = rateArticleUseCase,
     ) as T
 }

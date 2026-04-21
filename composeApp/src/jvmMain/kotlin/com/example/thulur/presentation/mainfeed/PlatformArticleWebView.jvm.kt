@@ -28,10 +28,12 @@ internal actual fun PlatformArticleWebView(
     initialUrl: String,
     paragraphs: List<ArticleParagraph>,
     areParagraphsReady: Boolean,
+    isArticleRead: Boolean,
     modifier: Modifier,
     onInitialPageLoaded: () -> Unit,
     onInjectionSucceeded: () -> Unit,
     onProgressChanged: (Float) -> Unit,
+    onRateArticle: (Int) -> Unit,
     onError: (String) -> Unit,
 ) {
     val controller = remember(initialUrl) {
@@ -51,9 +53,11 @@ internal actual fun PlatformArticleWebView(
             controller.update(
                 paragraphs = paragraphs,
                 areParagraphsReady = areParagraphsReady,
+                isArticleRead = isArticleRead,
                 onInitialPageLoaded = onInitialPageLoaded,
                 onInjectionSucceeded = onInjectionSucceeded,
                 onProgressChanged = onProgressChanged,
+                onRateArticle = onRateArticle,
                 onError = onError,
             )
         },
@@ -82,9 +86,11 @@ private class JcefArticleWebViewController(
 
     private var paragraphs: List<ArticleParagraph> = emptyList()
     private var areParagraphsReady: Boolean = false
+    private var isArticleRead: Boolean = false
     private var onInitialPageLoaded: () -> Unit = {}
     private var onInjectionSucceeded: () -> Unit = {}
     private var onProgressChanged: (Float) -> Unit = {}
+    private var onRateArticle: (Int) -> Unit = {}
     private var onError: (String) -> Unit = {}
     private var resolvedInitialUrl: String? = null
     private var initialPageLoaded = false
@@ -103,16 +109,20 @@ private class JcefArticleWebViewController(
     fun update(
         paragraphs: List<ArticleParagraph>,
         areParagraphsReady: Boolean,
+        isArticleRead: Boolean,
         onInitialPageLoaded: () -> Unit,
         onInjectionSucceeded: () -> Unit,
         onProgressChanged: (Float) -> Unit,
+        onRateArticle: (Int) -> Unit,
         onError: (String) -> Unit,
     ) {
         this.paragraphs = paragraphs
         this.areParagraphsReady = areParagraphsReady
+        this.isArticleRead = isArticleRead
         this.onInitialPageLoaded = onInitialPageLoaded
         this.onInjectionSucceeded = onInjectionSucceeded
         this.onProgressChanged = onProgressChanged
+        this.onRateArticle = onRateArticle
         this.onError = onError
 
         flushPendingErrors()
@@ -233,6 +243,13 @@ private class JcefArticleWebViewController(
         if (disposed.get() || !initialPageLoaded || !areParagraphsReady || injectionRequested) return
 
         injectionRequested = true
+
+        if (isArticleRead) {
+            // Skip JS for already-read articles; signal ready immediately so no spinner shows.
+            onInjectionSucceeded()
+            return
+        }
+
         SwingUtilities.invokeLater {
             if (disposed.get()) return@invokeLater
 
@@ -242,7 +259,7 @@ private class JcefArticleWebViewController(
                     "injectScript url=$browserUrl paragraphs=${paragraphs.size} areParagraphsReady=$areParagraphsReady has novel=${paragraphs.count { it.isNovel }}"
                 )
                 browser.executeJavaScript(
-                    buildArticleReaderInjectionScript(paragraphs),
+                    buildArticleReaderInjectionScript(paragraphs, includeRateTracker = true),
                     browserUrl,
                     0,
                 )
@@ -273,6 +290,14 @@ private class JcefArticleWebViewController(
                 val value = payload.data?.value ?: return false
                 articleReaderDebugLog("cefQuery progress value=$value")
                 onProgressChanged(value.toFloat())
+                callback.success("")
+                return true
+            }
+
+            "rate" -> {
+                val rateValue = payload.data?.rate ?: return false
+                articleReaderDebugLog("cefQuery rate value=$rateValue")
+                onRateArticle(rateValue)
                 callback.success("")
                 return true
             }
@@ -319,4 +344,5 @@ internal data class ArticleReaderBridgeMessage(
 @kotlinx.serialization.Serializable
 internal data class ArticleReaderBridgeMessageData(
     val value: Double? = null,
+    val rate: Int? = null,
 )

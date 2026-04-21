@@ -69,12 +69,15 @@ class MainFeedViewModel(
     }
 
     fun onArticleClick(article: ThulurThreadArticleData) {
+        val isRead = (_uiState.value.contentState as? MainFeedContentState.Success)
+            ?.threads?.flatMap { it.articles }?.find { it.id == article.id }?.isRead ?: false
         _uiState.update { state ->
             state.copy(
                 openArticle = OpenArticle(
                     articleId = article.id,
                     title = article.title,
                     url = article.url,
+                    isRead = isRead,
                 ),
             )
         }

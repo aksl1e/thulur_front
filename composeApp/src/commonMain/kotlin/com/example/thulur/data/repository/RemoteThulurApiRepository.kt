@@ -96,6 +96,10 @@ class RemoteThulurApiRepository(
         thulurApi.terminateAuthSession(sessionId = sessionId)
     }
 
+    override suspend fun rateArticle(articleId: String, rating: Int) {
+        thulurApi.rateArticle(articleId = articleId, rating = rating)
+    }
+
     override suspend fun getThreadHistory(threadId: String): ThreadHistory =
         thulurApi.getThreadHistory(threadId = threadId).let { historyDto ->
             ThreadHistory(
@@ -134,8 +138,8 @@ private fun ArticleDto.toArticle(): Article = Article(
 
 private fun String?.toArticleQuality(): ArticleQuality = when (this?.lowercase()) {
     "trash" -> ArticleQuality.Trash
-    "important" -> ArticleQuality.Important
-    "default",
+    "quality" -> ArticleQuality.Important
+    "normal",
     null,
     -> ArticleQuality.Default
 

@@ -78,4 +78,12 @@ interface ThulurApiRepository {
      * Terminates a single auth session.
      */
     suspend fun terminateAuthSession(sessionId: String)
+
+    /**
+     * Submits a reading-quality rating for a single article.
+     *
+     * @param articleId Backend article identifier.
+     * @param rating Integer score in [0, 10].
+     */
+    suspend fun rateArticle(articleId: String, rating: Int)
 }

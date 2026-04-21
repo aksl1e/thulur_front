@@ -33,6 +33,7 @@ internal fun orderArticleReaderCandidateIndices(
 
 internal fun buildArticleReaderInjectionScript(
     paragraphs: List<ArticleParagraph>,
+    includeRateTracker: Boolean = false,
 ): String {
     val payload = paragraphs.map { paragraph ->
         ArticleReaderParagraphPayload(
@@ -323,11 +324,65 @@ internal fun buildArticleReaderInjectionScript(
 
           window.addEventListener('scroll', computeProgress, { passive: true });
 
+          ${if (includeRateTracker) rateTrackerJs else ""}
+
           computeProgress();
           sendEvent('ready', { matchedCount: matchedElements.length });
         })();
     """.trimIndent()
 }
+
+private val rateTrackerJs = """
+          var rateContainer = (function() {
+            var selectors = [
+              'article', '[role="article"]', '[itemprop="articleBody"]',
+              '[class*="article-body"]', '[class*="article-content"]',
+              '[class*="articleBody"]', '[class*="story-body"]',
+              '[class*="story-content"]', '[class*="post-body"]',
+              '[class*="post-content"]', '[class*="entry-content"]',
+              '[class*="content-body"]', 'main', '[role="main"]'
+            ];
+            for (var si = 0; si < selectors.length; si++) {
+              var el = document.querySelector(selectors[si]);
+              if (el) return el;
+            }
+            return document.body;
+          })();
+
+          var rateWordCount = ((rateContainer.innerText || '').match(/\S+/g) || []).length; // get all article's words
+          var readingSpeed = 200; // reading speed - words per minute
+          var rateTimePerChunk = Math.max(2, rateWordCount * 6 / readingSpeed);
+          var rateChunkTime = new Array(10).fill(0);
+          var rateChunkDone = new Array(10).fill(false);
+          var rateLastSent = -1;
+
+          var sendRate = function() {
+            var total = 0;
+            for (var ci = 0; ci < 10; ci++) { if (rateChunkDone[ci]) total++; }
+            if (total !== rateLastSent) {
+              rateLastSent = total;
+              sendEvent('rate', { rate: total });
+            }
+          };
+
+          setInterval(function() {
+            if (document.hidden) return;
+            var rect = rateContainer.getBoundingClientRect();
+            if (rect.height === 0) return;
+            var vh = window.innerHeight;
+            var topPct  = Math.max(0, -rect.top) / rect.height;
+            var botPct  = Math.min(rect.height, vh - rect.top) / rect.height;
+            for (var ci = 0; ci < 10; ci++) {
+              if (botPct > ci / 10 && topPct < (ci + 1) / 10) {
+                rateChunkTime[ci]++;
+                if (rateChunkTime[ci] >= rateTimePerChunk) rateChunkDone[ci] = true;
+              }
+            }
+            sendRate();
+          }, 1000);
+
+          window.addEventListener('beforeunload', sendRate);
+""".trimIndent()
 
 @Serializable
 private data class ArticleReaderParagraphPayload(

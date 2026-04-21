@@ -9,9 +9,11 @@ internal expect fun PlatformArticleWebView(
     initialUrl: String,
     paragraphs: List<ArticleParagraph>,
     areParagraphsReady: Boolean,
+    isArticleRead: Boolean,
     modifier: Modifier = Modifier,
     onInitialPageLoaded: () -> Unit,
     onInjectionSucceeded: () -> Unit,
     onProgressChanged: (Float) -> Unit,
+    onRateArticle: (Int) -> Unit,
     onError: (String) -> Unit,
 )

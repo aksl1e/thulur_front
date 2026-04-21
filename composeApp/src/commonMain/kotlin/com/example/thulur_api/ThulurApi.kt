@@ -17,6 +17,7 @@ import com.example.thulur_api.methods.auth.TerminateAuthSessionMethod
 import com.example.thulur_api.methods.auth.DesktopAuthExchangeMethod
 import com.example.thulur_api.methods.auth.DesktopAuthStartMethod
 import com.example.thulur_api.methods.articles.ParagraphsMethod
+import com.example.thulur_api.methods.articles.RateArticleMethod
 import com.example.thulur_api.methods.daily_feed.DailyFeedMethod
 import com.example.thulur_api.methods.thread_history.ThreadHistoryMethod
 import com.example.thulur_api.methods.feeds.FollowFeedMethod
@@ -53,6 +54,17 @@ interface ThulurApi {
     suspend fun getArticleParagraphs(
         articleId: String,
     ): List<ParagraphDto>
+
+    /**
+     * Submits a reading-quality rating for a single article.
+     *
+     * @param articleId Backend article identifier.
+     * @param rating Integer score in [0, 10].
+     */
+    suspend fun rateArticle(
+        articleId: String,
+        rating: Int,
+    )
 
     /**
      * Returns the current user's settings.
@@ -146,6 +158,10 @@ class RemoteThulurApi(
         httpClient = httpClient,
         config = config,
     )
+    private val rateArticleMethod = RateArticleMethod(
+        httpClient = httpClient,
+        config = config,
+    )
     private val getSettingsMethod = GetSettingsMethod(
         httpClient = httpClient,
         config = config,
@@ -198,6 +214,16 @@ class RemoteThulurApi(
     ): List<ParagraphDto> = paragraphsMethod.execute(
         articleId = articleId,
     )
+
+    override suspend fun rateArticle(
+        articleId: String,
+        rating: Int,
+    ) {
+        rateArticleMethod.execute(
+            articleId = articleId,
+            rating = rating,
+        )
+    }
 
     override suspend fun getThreadHistory(
         threadId: String,
