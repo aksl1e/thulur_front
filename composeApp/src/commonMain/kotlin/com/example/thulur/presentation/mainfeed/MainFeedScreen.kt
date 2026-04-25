@@ -65,6 +65,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun MainFeedRoute(
     sessionInstanceId: Int,
     onOpenSettings: () -> Unit,
+    onOpenChat: () -> Unit,
     viewModel: MainFeedViewModel = koinViewModel(key = mainFeedViewModelKey(sessionInstanceId)),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -106,6 +107,7 @@ fun MainFeedRoute(
                 onShowWholeSubjectClick = viewModel::onShowWholeSubjectClick,
                 onArticleClick = viewModel::onArticleClick,
                 onSettingsClick = onOpenSettings,
+                onChatClick = onOpenChat,
                 onFeedScrollStateChange = viewModel::onFeedScrollStateChange,
             )
         }
@@ -123,6 +125,7 @@ fun MainFeedScreen(
     onBackClick: () -> Unit,
     onForwardClick: () -> Unit,
     onSettingsClick: () -> Unit,
+    onChatClick: () -> Unit,
     onTopicsViewModeChange: (TopicsViewMode) -> Unit,
     onThreadArticlesVisibilityToggle: (String) -> Unit,
     onShowWholeSubjectClick: (String, String) -> Unit,
@@ -276,7 +279,7 @@ fun MainFeedScreen(
 
             ThulurChatFab(
                 text = "Discuss",
-                onClick = {},
+                onClick = onChatClick, // Change the screen here
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = fabBottomPadding),

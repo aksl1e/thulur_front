@@ -23,6 +23,7 @@ import com.example.thulur.domain.usecase.UnfollowFeedUseCase
 import com.example.thulur.domain.usecase.PatchUserSettingsUseCase
 import com.example.thulur.domain.usecase.GetThreadHistoryUseCase
 import com.example.thulur.presentation.auth.AuthViewModel
+import com.example.thulur.presentation.chat.ChatViewModel
 import com.example.thulur.presentation.mainfeed.MainFeedViewModel
 import com.example.thulur.presentation.root.AppRootViewModel
 import com.example.thulur.presentation.settings.SettingsViewModel
@@ -78,6 +79,7 @@ val presentationModule = module {
     viewModelOf(::AuthViewModel)
     viewModelOf(::MainFeedViewModel)
     viewModelOf(::SettingsViewModel)
+    viewModelOf(::ChatViewModel)
 }
 
 val appModules = listOf(

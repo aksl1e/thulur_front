@@ -56,6 +56,9 @@ class AppRootViewModel(
         updateAuthenticatedDestination(AppRootAuthenticatedDestination.Settings)
     }
 
+    fun openChat() {
+        updateAuthenticatedDestination(AppRootAuthenticatedDestination.Chat)
+    }
     fun backToMainFeed() {
         updateAuthenticatedDestination(AppRootAuthenticatedDestination.MainFeed)
     }

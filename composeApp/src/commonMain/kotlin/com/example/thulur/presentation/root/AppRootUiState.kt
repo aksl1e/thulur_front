@@ -17,4 +17,5 @@ sealed interface AppRootUiState {
 enum class AppRootAuthenticatedDestination {
     MainFeed,
     Settings,
+    Chat,
 }
