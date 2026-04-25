@@ -89,7 +89,7 @@ class FeedsMethodTest {
     }
 
     @Test
-    fun `follow feed uses post and accepts no content response`() = runTest {
+    fun `follow feed uses post with identifier body and accepts no content response`() = runTest {
         var capturedRequest: HttpRequestData? = null
         val client = createTestClient {
             capturedRequest = it
@@ -102,10 +102,10 @@ class FeedsMethodTest {
         FollowFeedMethod(
             httpClient = client,
             config = ThulurApiConfig(),
-        ).execute(feedId = "feed-3")
+        ).execute(identifier = "feed-3")
 
         assertEquals(HttpMethod.Post, capturedRequest?.method)
-        assertEquals("/users/me/feeds/feed-3/follow", capturedRequest?.url?.encodedPath)
+        assertEquals("/users/me/feeds/follow", capturedRequest?.url?.encodedPath)
     }
 
     @Test

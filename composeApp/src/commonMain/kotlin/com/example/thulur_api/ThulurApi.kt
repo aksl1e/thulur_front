@@ -91,7 +91,7 @@ interface ThulurApi {
     /**
      * Follows a single feed for the current user.
      */
-    suspend fun followFeed(feedId: String)
+    suspend fun followFeed(identifier: String)
 
     /**
      * Unfollows a single feed for the current user.
@@ -241,8 +241,8 @@ class RemoteThulurApi(
 
     override suspend fun getAllFeeds(): List<FeedDto> = getAllFeedsMethod.execute()
 
-    override suspend fun followFeed(feedId: String) {
-        followFeedMethod.execute(feedId = feedId)
+    override suspend fun followFeed(identifier: String) {
+        followFeedMethod.execute(identifier = identifier)
     }
 
     override suspend fun unfollowFeed(feedId: String) {

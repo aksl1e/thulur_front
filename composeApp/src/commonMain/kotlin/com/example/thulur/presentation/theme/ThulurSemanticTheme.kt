@@ -110,6 +110,16 @@ data class ThulurChatFabSemanticColors(
 )
 
 @Immutable
+data class ThulurSnackBarSemanticColors(
+    val containerColor: Color,
+    val defaultTextColor: Color,
+    val errorTextColor: Color,
+    val successTextColor: Color,
+    val actionButton: ThulurButtonStateSemanticColors,
+    val dismissButton: ThulurButtonStateSemanticColors,
+)
+
+@Immutable
 data class ThulurAuthScreenSemanticColors(
     val screenBackground: Color,
     val cardContainer: Color,
@@ -184,6 +194,7 @@ data class ThulurSemanticColors(
     val articleItem: ThulurArticleItemSemanticColors,
     val dateTime: ThulurDateTimeSemanticColors,
     val chatFab: ThulurChatFabSemanticColors,
+    val snackBar: ThulurSnackBarSemanticColors,
     val authScreen: ThulurAuthScreenSemanticColors,
     val rootLoadingScreen: ThulurRootLoadingScreenSemanticColors,
     val settingsScreen: ThulurSettingsScreenSemanticColors,
@@ -210,6 +221,7 @@ data class ThulurSemanticTypography(
     val dateTimeDate: TextStyle,
     val dateTimeTime: TextStyle,
     val chatFabLabel: TextStyle,
+    val snackBarMessage: TextStyle,
     val authTitle: TextStyle,
     val authSubtitle: TextStyle,
     val authInputText: TextStyle,
@@ -1299,6 +1311,11 @@ fun rememberThulurSemanticTypography(): ThulurSemanticTypography = ThulurSemanti
         fontSize = 20.thulurSp(),
         lineHeight = 20.thulurSp(),
     ),
+    snackBarMessage = ThulurTheme.Typography.bodyMedium.copy(
+        fontWeight = FontWeight.Normal,
+        fontSize = 14.thulurSp(),
+        lineHeight = 14.thulurSp(),
+    ),
     authTitle = ThulurTheme.Typography.displaySmall.copy(
         fontWeight = FontWeight.Medium,
         fontSize = 36.thulurSp(),
@@ -1369,6 +1386,54 @@ fun rememberThulurSemanticTypography(): ThulurSemanticTypography = ThulurSemanti
 
 @Composable
 @ReadOnlyComposable
+fun rememberThulurSnackBarSemanticColors(): ThulurSnackBarSemanticColors {
+    val slate = ThulurTheme.Colors.slate
+    val error = ThulurTheme.Colors.error
+    val success = ThulurTheme.Colors.success
+    val primary = ThulurTheme.Colors.primary
+
+    return when (ThulurTheme.Mode) {
+        ThemeMode.Light -> ThulurSnackBarSemanticColors(
+            containerColor = slate.s300,
+            defaultTextColor = slate.s700,
+            errorTextColor = error.s700,
+            successTextColor = success.s700,
+            actionButton = ThulurButtonStateSemanticColors(
+                rest = ThulurButtonSemanticColors(Color.Transparent, primary.s500),
+                hovered = ThulurButtonSemanticColors(Color.Transparent, primary.s700),
+                pressed = ThulurButtonSemanticColors(Color.Transparent, primary.s900),
+                disabled = ThulurButtonSemanticColors(Color.Transparent, primary.s300),
+            ),
+            dismissButton = ThulurButtonStateSemanticColors(
+                rest = ThulurButtonSemanticColors(Color.Transparent, slate.s700),
+                hovered = ThulurButtonSemanticColors(Color.Transparent, slate.s900),
+                pressed = ThulurButtonSemanticColors(Color.Transparent, slate.s950),
+                disabled = ThulurButtonSemanticColors(Color.Transparent, slate.s500),
+            ),
+        )
+        ThemeMode.Dark -> ThulurSnackBarSemanticColors(
+            containerColor = slate.s700,
+            defaultTextColor = slate.s300,
+            errorTextColor = error.s300,
+            successTextColor = success.s300,
+            actionButton = ThulurButtonStateSemanticColors(
+                rest = ThulurButtonSemanticColors(Color.Transparent, primary.s300),
+                hovered = ThulurButtonSemanticColors(Color.Transparent, primary.s100),
+                pressed = ThulurButtonSemanticColors(Color.Transparent, primary.s50),
+                disabled = ThulurButtonSemanticColors(Color.Transparent, primary.s700),
+            ),
+            dismissButton = ThulurButtonStateSemanticColors(
+                rest = ThulurButtonSemanticColors(Color.Transparent, slate.s300),
+                hovered = ThulurButtonSemanticColors(Color.Transparent, slate.s100),
+                pressed = ThulurButtonSemanticColors(Color.Transparent, slate.s50),
+                disabled = ThulurButtonSemanticColors(Color.Transparent, slate.s500),
+            ),
+        )
+    }
+}
+
+@Composable
+@ReadOnlyComposable
 fun rememberThulurSemanticColors(): ThulurSemanticColors = ThulurSemanticColors(
     buttonTooltip = rememberThulurButtonTooltipSemanticColors(),
     appBar = rememberThulurAppBarSemanticColors(),
@@ -1377,6 +1442,7 @@ fun rememberThulurSemanticColors(): ThulurSemanticColors = ThulurSemanticColors(
     articleItem = rememberThulurArticleItemSemanticColors(),
     dateTime = rememberThulurDateTimeSemanticColors(),
     chatFab = rememberThulurChatFabSemanticColors(),
+    snackBar = rememberThulurSnackBarSemanticColors(),
     authScreen = rememberThulurAuthScreenSemanticColors(),
     rootLoadingScreen = rememberThulurRootLoadingScreenSemanticColors(),
     settingsScreen = rememberThulurSettingsScreenSemanticColors(),

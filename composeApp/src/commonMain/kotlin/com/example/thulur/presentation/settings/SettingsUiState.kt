@@ -31,7 +31,6 @@ data class SettingsAccountState(
     val currentEmail: String? = null,
     val sessions: List<SettingsSessionState> = emptyList(),
     val isLoading: Boolean = true,
-    val errorMessage: String? = null,
     val terminatingSessionIds: Set<String> = emptySet(),
 )
 
@@ -45,7 +44,6 @@ data class SettingsSessionState(
 data class SettingsAppState(
     val values: SettingsAppValues = SettingsAppValues(),
     val pendingFields: Set<SettingsAppField> = emptySet(),
-    val errorMessage: String? = null,
 )
 
 data class SettingsFeedsState(
@@ -54,7 +52,7 @@ data class SettingsFeedsState(
     val searchQuery: String = "",
     val visibleAvailableFeeds: List<Feed> = emptyList(),
     val isLoading: Boolean = true,
-    val errorMessage: String? = null,
+    val isError: Boolean = false,
     val pendingFollowIds: Set<String> = emptySet(),
     val pendingUnfollowIds: Set<String> = emptySet(),
 )

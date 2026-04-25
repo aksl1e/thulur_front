@@ -26,12 +26,18 @@ import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
+
+sealed class SettingsSnackBarEvent {
+    data class Error(val message: String) : SettingsSnackBarEvent()
+}
 
 class SettingsViewModel(
     private val getUserSettingsUseCase: GetUserSettingsUseCase,
@@ -52,6 +58,9 @@ class SettingsViewModel(
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+
+    private val _snackBarEvents = Channel<SettingsSnackBarEvent>(Channel.BUFFERED)
+    val snackBarEvents = _snackBarEvents.receiveAsFlow()
 
     init {
         loadAll()
@@ -84,50 +93,41 @@ class SettingsViewModel(
         }
     }
 
-    fun onFollowFeedClick(feedId: String) {
+    fun onFollowFeedClick(identifier: String) {
         val feedsState = _uiState.value.feedsState
-        if (feedId in feedsState.pendingFollowIds || feedId in feedsState.pendingUnfollowIds) return
-
-        val feedToFollow = feedsState.catalogFeeds.firstOrNull { it.id == feedId } ?: return
+        if (identifier in feedsState.pendingFollowIds || identifier in feedsState.pendingUnfollowIds) return
 
         _uiState.update { state ->
             state.copy(
                 feedsState = state.feedsState.copy(
-                    pendingFollowIds = state.feedsState.pendingFollowIds + feedId,
-                    errorMessage = null,
+                    pendingFollowIds = state.feedsState.pendingFollowIds + identifier,
                 ),
             )
         }
 
         viewModelScope.launch {
             try {
-                followFeedUseCase(feedId = feedId)
+                followFeedUseCase(identifier = identifier)
                 _uiState.update { state ->
-                    val updatedFollowedFeeds = if (state.feedsState.followedFeeds.any { it.id == feedId }) {
-                        state.feedsState.followedFeeds
-                    } else {
-                        state.feedsState.followedFeeds + feedToFollow
-                    }
-
                     state.copy(
                         feedsState = state.feedsState.copy(
-                            followedFeeds = updatedFollowedFeeds,
-                            pendingFollowIds = state.feedsState.pendingFollowIds - feedId,
-                            errorMessage = null,
+                            pendingFollowIds = state.feedsState.pendingFollowIds - identifier,
+                            searchQuery = "",
                         ).recomputeVisibleAvailableFeeds(),
                     )
                 }
+                loadFeeds()
             } catch (exception: CancellationException) {
                 throw exception
             } catch (throwable: Throwable) {
                 _uiState.update { state ->
                     state.copy(
                         feedsState = state.feedsState.copy(
-                            pendingFollowIds = state.feedsState.pendingFollowIds - feedId,
-                            errorMessage = throwable.message ?: "Failed to follow feed.",
+                            pendingFollowIds = state.feedsState.pendingFollowIds - identifier,
                         ),
                     )
                 }
+                _snackBarEvents.send(SettingsSnackBarEvent.Error(throwable.message ?: "Failed to follow feed."))
             }
         }
     }
@@ -142,7 +142,6 @@ class SettingsViewModel(
             state.copy(
                 feedsState = state.feedsState.copy(
                     pendingUnfollowIds = state.feedsState.pendingUnfollowIds + feedId,
-                    errorMessage = null,
                 ),
             )
         }
@@ -155,7 +154,6 @@ class SettingsViewModel(
                         feedsState = state.feedsState.copy(
                             followedFeeds = state.feedsState.followedFeeds.filterNot { it.id == feedId },
                             pendingUnfollowIds = state.feedsState.pendingUnfollowIds - feedId,
-                            errorMessage = null,
                         ).recomputeVisibleAvailableFeeds(),
                     )
                 }
@@ -166,10 +164,10 @@ class SettingsViewModel(
                     state.copy(
                         feedsState = state.feedsState.copy(
                             pendingUnfollowIds = state.feedsState.pendingUnfollowIds - feedId,
-                            errorMessage = throwable.message ?: "Failed to unfollow feed.",
                         ),
                     )
                 }
+                _snackBarEvents.send(SettingsSnackBarEvent.Error(throwable.message ?: "Failed to unfollow feed."))
             }
         }
     }
@@ -181,7 +179,6 @@ class SettingsViewModel(
             state.copy(
                 accountState = state.accountState.copy(
                     terminatingSessionIds = state.accountState.terminatingSessionIds + sessionId,
-                    errorMessage = null,
                 ),
             )
         }
@@ -195,7 +192,6 @@ class SettingsViewModel(
                         accountState = state.accountState.copy(
                             sessions = refreshedSessions,
                             terminatingSessionIds = state.accountState.terminatingSessionIds - sessionId,
-                            errorMessage = null,
                         ),
                     )
                 }
@@ -206,10 +202,10 @@ class SettingsViewModel(
                     state.copy(
                         accountState = state.accountState.copy(
                             terminatingSessionIds = state.accountState.terminatingSessionIds - sessionId,
-                            errorMessage = throwable.message ?: "Failed to terminate session.",
                         ),
                     )
                 }
+                _snackBarEvents.send(SettingsSnackBarEvent.Error(throwable.message ?: "Failed to terminate session."))
             }
         }
     }
@@ -294,7 +290,6 @@ class SettingsViewModel(
                     contentState = SettingsContentState.Loading,
                     appState = state.appState.copy(
                         pendingFields = emptySet(),
-                        errorMessage = null,
                     ),
                 )
             }
@@ -336,7 +331,6 @@ class SettingsViewModel(
                 state.copy(
                     accountState = state.accountState.copy(
                         isLoading = true,
-                        errorMessage = null,
                     ),
                 )
             }
@@ -349,6 +343,9 @@ class SettingsViewModel(
                     val currentUserResult = currentUserDeferred.await()
                     val sessionsResult = sessionsDeferred.await()
 
+                    val errorMsg = currentUserResult.exceptionOrNull()?.message
+                        ?: sessionsResult.exceptionOrNull()?.message
+
                     _uiState.update { state ->
                         state.copy(
                             accountState = state.accountState.copy(
@@ -356,11 +353,11 @@ class SettingsViewModel(
                                 sessions = sessionsResult.getOrNull()?.map(AuthSession::toSettingsSessionState)
                                     ?: emptyList(),
                                 isLoading = false,
-                                errorMessage = currentUserResult.exceptionOrNull()?.message
-                                    ?: sessionsResult.exceptionOrNull()?.message,
                             ),
                         )
                     }
+
+                    errorMsg?.let { _snackBarEvents.send(SettingsSnackBarEvent.Error(it)) }
                 }
             } catch (exception: CancellationException) {
                 throw exception
@@ -375,7 +372,7 @@ class SettingsViewModel(
                 state.copy(
                     feedsState = state.feedsState.copy(
                         isLoading = true,
-                        errorMessage = null,
+                        isError = false,
                     ),
                 )
             }
@@ -388,6 +385,9 @@ class SettingsViewModel(
                     val followedFeedsResult = followedFeedsDeferred.await()
                     val allFeedsResult = allFeedsDeferred.await()
 
+                    val errorMsg = followedFeedsResult.exceptionOrNull()?.message
+                        ?: allFeedsResult.exceptionOrNull()?.message
+
                     _uiState.update { state ->
                         val updatedFollowedFeeds = followedFeedsResult.getOrNull() ?: state.feedsState.followedFeeds
                         val updatedCatalogFeeds = allFeedsResult.getOrNull() ?: state.feedsState.catalogFeeds
@@ -397,13 +397,14 @@ class SettingsViewModel(
                                 followedFeeds = updatedFollowedFeeds,
                                 catalogFeeds = updatedCatalogFeeds,
                                 isLoading = false,
-                                errorMessage = followedFeedsResult.exceptionOrNull()?.message
-                                    ?: allFeedsResult.exceptionOrNull()?.message,
+                                isError = errorMsg != null,
                                 pendingFollowIds = emptySet(),
                                 pendingUnfollowIds = emptySet(),
                             ).recomputeVisibleAvailableFeeds(),
                         )
                     }
+
+                    errorMsg?.let { _snackBarEvents.send(SettingsSnackBarEvent.Error(it)) }
                 }
             } catch (exception: CancellationException) {
                 throw exception
@@ -425,7 +426,6 @@ class SettingsViewModel(
                 appState = state.appState.copy(
                     values = optimisticValues,
                     pendingFields = state.appState.pendingFields + field,
-                    errorMessage = null,
                 ),
             )
         }
@@ -446,7 +446,6 @@ class SettingsViewModel(
                                 pendingFields = pendingFields,
                             ),
                             pendingFields = pendingFields,
-                            errorMessage = null,
                         ),
                     )
                 }
@@ -464,10 +463,10 @@ class SettingsViewModel(
                                 pendingFields = pendingFields,
                             ),
                             pendingFields = pendingFields,
-                            errorMessage = throwable.message ?: "Failed to update setting.",
                         ),
                     )
                 }
+                _snackBarEvents.send(SettingsSnackBarEvent.Error(throwable.message ?: "Failed to update setting."))
             }
         }
     }

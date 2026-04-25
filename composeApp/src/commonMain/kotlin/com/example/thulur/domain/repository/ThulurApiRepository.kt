@@ -57,7 +57,7 @@ interface ThulurApiRepository {
     /**
      * Follows a single feed for the current user.
      */
-    suspend fun followFeed(feedId: String)
+    suspend fun followFeed(identifier: String)
 
     /**
      * Unfollows a single feed for the current user.
