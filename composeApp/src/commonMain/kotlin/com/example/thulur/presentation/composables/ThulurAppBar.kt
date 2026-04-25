@@ -44,6 +44,7 @@ fun ThulurAppBar(
     forwardButton: (@Composable () -> Unit)? = null,
     endPrimaryContent: (@Composable () -> Unit)? = null,
     endSecondaryContent: (@Composable () -> Unit)? = null,
+    chatNameContent: (@Composable () -> Unit)? = null,
     brandContent: @Composable () -> Unit = { DefaultThulurAppBarBrand() },
 ) {
     val colors = ThulurTheme.SemanticColors.appBar
@@ -51,7 +52,6 @@ fun ThulurAppBar(
     val appBarHeight = 100.thulurDp()
     val backAreaWidth = 225.thulurDp()
     val backAreaPadding = 10.thulurDp()
-    val backItemSpacing = 10.thulurDp()
     val actionSpacing = 25.thulurDp()
     val contentHorizontalPadding = 30.thulurDp()
 
@@ -62,6 +62,7 @@ fun ThulurAppBar(
             .background(colors.containerColor),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // Back area — left rail with back button
         Box(
             modifier = Modifier
                 .width(backAreaWidth)
@@ -81,29 +82,41 @@ fun ThulurAppBar(
             }
         }
 
-        Row(
+        // Content area — Box allows independent left/center/right alignment
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = contentHorizontalPadding),
-            verticalAlignment = Alignment.CenterVertically,
         ) {
+            // Left: title + optional forward button
             Row(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.align(Alignment.CenterStart),
                 horizontalArrangement = Arrangement.spacedBy(actionSpacing),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 BasicText(
                     text = title,
-                    modifier = Modifier.weight(1f, fill = false),
                     style = typography.appBarTitle.copy(color = colors.titleColor),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-
                 forwardButton?.invoke()
             }
 
+            // Center: optional thread name — perfectly centered between title and brand
+            // Only rendered when chatNameContent is provided (e.g. in ChatScreen)
+            // MainFeedScreen and SettingsScreen are unaffected since they never pass it
+            if (chatNameContent != null) {
+                Box(
+                    modifier = Modifier.align(Alignment.Center),
+                ) {
+                    chatNameContent()
+                }
+            }
+
+            // Right: end actions + brand
             Row(
+                modifier = Modifier.align(Alignment.CenterEnd),
                 horizontalArrangement = Arrangement.spacedBy(actionSpacing),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
