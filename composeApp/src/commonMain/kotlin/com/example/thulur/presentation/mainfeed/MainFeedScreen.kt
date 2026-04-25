@@ -29,6 +29,7 @@ import androidx.compose.material.icons.outlined.ArrowCircleRight
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.animation.core.tween
@@ -38,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.thulur.domain.model.MainFeedThread
+import com.example.thulur.presentation.composables.DesktopScrollCoordinator
 import com.example.thulur.presentation.composables.ThulurAppBar
 import com.example.thulur.presentation.composables.ThulurButton
 import com.example.thulur.presentation.composables.ThulurButtonContentDirection
@@ -46,6 +48,7 @@ import com.example.thulur.presentation.composables.ThulurThreadArticleData
 import com.example.thulur.presentation.composables.ThulurThreadItem
 import com.example.thulur.presentation.composables.TopicsViewMode
 import com.example.thulur.presentation.composables.TopicsSwitch
+import com.example.thulur.presentation.composables.desktopScrollRootObserver
 import com.example.thulur.presentation.mainfeed.thread_history.ThreadHistoryRoute
 import com.example.thulur.presentation.theme.ThemeMode
 import com.example.thulur.presentation.theme.ThulurColorRole
@@ -302,6 +305,7 @@ private fun MainFeedSuccessContent(
 ) {
     val typography = ThulurTheme.SemanticTypography
     val moreArticlesColors = ThulurTheme.SemanticColors.threadItem.moreArticlesButton
+    val desktopScrollCoordinator = remember { DesktopScrollCoordinator() }
     val listState = rememberLazyListState(
         initialFirstVisibleItemIndex = scrollIndex,
         initialFirstVisibleItemScrollOffset = scrollOffset,
@@ -315,7 +319,9 @@ private fun MainFeedSuccessContent(
 
     LazyColumn(
         state = listState,
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .desktopScrollRootObserver(desktopScrollCoordinator),
         verticalArrangement = Arrangement.spacedBy(20.dp),
         contentPadding = PaddingValues(
             top = contentStartPadding,
@@ -328,6 +334,7 @@ private fun MainFeedSuccessContent(
             val moreArticlesLabel = thread.firstSeen?.toMoreArticlesDateLabel()
 
             ThulurThreadItem(
+                threadId = thread.id,
                 title = thread.name,
                 summary = thread.summary,
                 onShowWholeSubjectClick = {
@@ -339,6 +346,7 @@ private fun MainFeedSuccessContent(
                 articles = thread.articles.map { article -> article.toThulurThreadArticleData() },
                 leadingLaneWidth = leadingLaneWidth,
                 contentStartPadding = contentStartPadding,
+                desktopScrollCoordinator = desktopScrollCoordinator,
                 articlesLeadingContent = if (areArticlesVisible && moreArticlesLabel != null) {
                     {
                         ThulurButton(

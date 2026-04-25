@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -50,7 +51,8 @@ data class ThulurThreadArticleData(
 )
 
 @Composable
-fun ThulurThreadItem(
+internal fun ThulurThreadItem(
+    threadId: String,
     title: String,
     summary: String?,
     onShowWholeSubjectClick: () -> Unit,
@@ -61,6 +63,7 @@ fun ThulurThreadItem(
     modifier: Modifier = Modifier,
     leadingLaneWidth: Dp = 0.dp,
     contentStartPadding: Dp = 0.dp,
+    desktopScrollCoordinator: DesktopScrollCoordinator? = null,
     articlesLeadingContent: (@Composable () -> Unit)? = null,
 ) {
     val colors = ThulurTheme.SemanticColors.threadItem
@@ -166,7 +169,16 @@ fun ThulurThreadItem(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
-                        .desktopHorizontalWheelScroll(articlesRowState),
+                        .desktopScrollRegionObserver(
+                            coordinator = desktopScrollCoordinator,
+                            owner = DesktopScrollOwner.Row(threadId),
+                            pass = PointerEventPass.Main,
+                        )
+                        .desktopHorizontalWheelScroll(
+                            state = articlesRowState,
+                            coordinator = desktopScrollCoordinator,
+                            rowId = threadId,
+                        ),
                     state = articlesRowState,
                     contentPadding = PaddingValues(0.thulurDp()),
                     horizontalArrangement = Arrangement.spacedBy(15.thulurDp()),
@@ -235,6 +247,7 @@ private fun ThulurThreadItemPreview() {
     ProvideThulurDesignScale(scale = ThulurDesignScale()) {
         ThulurTheme(mode = ThemeMode.Light) {
             ThulurThreadItem(
+                threadId = "preview-thread",
                 title = "3I/Atlas in Solar System",
                 summary = "Mysterious visitor from the deep cosmos is currently tearing through our solar system at a staggering speed.",
                 onShowWholeSubjectClick = {},
