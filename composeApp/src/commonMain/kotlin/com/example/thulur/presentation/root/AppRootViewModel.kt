@@ -59,6 +59,9 @@ class AppRootViewModel(
     fun backToDailyFeed() {
         updateAuthenticatedDestination(AppRootAuthenticatedDestination.DailyFeed)
     }
+    fun openChat() {
+        updateAuthenticatedDestination(AppRootAuthenticatedDestination.Chat)
+    }
 
     fun updateTheme(theme: ThemeMode) {
         val current = _uiState.value as? AppRootUiState.Ready ?: return
