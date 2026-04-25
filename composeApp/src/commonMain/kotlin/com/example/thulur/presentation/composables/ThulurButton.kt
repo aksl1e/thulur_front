@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.LocalContentColor
@@ -73,6 +74,7 @@ fun ThulurButton(
     supportingTextStyle: TextStyle? = null,
     shape: Shape = RoundedCornerShape(0.dp),
     contentPadding: PaddingValues = PaddingValues(15.thulurDp()),
+    iconSize: Dp? = null,
     spacing: Dp = 8.thulurDp(),
     contentDirection: ThulurButtonContentDirection = ThulurButtonContentDirection.Horizontal,
     contentHorizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
@@ -152,7 +154,7 @@ fun ThulurButton(
                             horizontalArrangement = Arrangement.spacedBy(spacing),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            leadingIcon?.invoke()
+                            leadingIcon?.let { IconSlot(it, iconSize) }
                             ButtonTextBlock(
                                 text = text,
                                 supportingText = supportingText,
@@ -163,7 +165,7 @@ fun ThulurButton(
                                 spacing = spacing,
                                 horizontalAlignment = contentHorizontalAlignment,
                             )
-                            trailingIcon?.invoke()
+                            trailingIcon?.let { IconSlot(it, iconSize) }
                         }
                     }
 
@@ -177,8 +179,8 @@ fun ThulurButton(
                                     horizontalArrangement = Arrangement.spacedBy(spacing),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    leadingIcon?.invoke()
-                                    trailingIcon?.invoke()
+                                    leadingIcon?.let { IconSlot(it, iconSize) }
+                                    trailingIcon?.let { IconSlot(it, iconSize) }
                                 }
                             }
 
@@ -256,6 +258,15 @@ private fun ThulurButtonTooltip(
                 overflow = TextOverflow.Ellipsis,
             )
         }
+    }
+}
+
+@Composable
+private fun IconSlot(icon: @Composable () -> Unit, size: Dp?) {
+    if (size != null) {
+        Box(modifier = Modifier.size(size)) { icon() }
+    } else {
+        icon()
     }
 }
 

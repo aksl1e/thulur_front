@@ -8,7 +8,7 @@ import com.example.thulur.domain.repository.ThulurApiRepository
 class FollowFeedUseCase(
     private val thulurApiRepository: ThulurApiRepository,
 ) {
-    suspend operator fun invoke(feedId: String) {
-        thulurApiRepository.followFeed(feedId = feedId)
+    suspend operator fun invoke(identifier: String) {
+        thulurApiRepository.followFeed(identifier = identifier)
     }
 }

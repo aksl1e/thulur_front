@@ -78,8 +78,8 @@ class RemoteThulurApiRepository(
     override suspend fun getAllFeeds(): List<Feed> =
         thulurApi.getAllFeeds().map(FeedDto::toDomain)
 
-    override suspend fun followFeed(feedId: String) {
-        thulurApi.followFeed(feedId = feedId)
+    override suspend fun followFeed(identifier: String) {
+        thulurApi.followFeed(identifier = identifier)
     }
 
     override suspend fun unfollowFeed(feedId: String) {

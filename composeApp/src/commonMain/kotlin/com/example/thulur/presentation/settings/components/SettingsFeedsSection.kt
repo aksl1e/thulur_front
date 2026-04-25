@@ -7,17 +7,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.thulur.domain.model.Feed
 import com.example.thulur.presentation.composables.ThulurButton
@@ -32,6 +31,7 @@ import com.example.thulur.presentation.theme.ProvideThulurDesignScale
 import com.example.thulur.presentation.theme.ThemeMode
 import com.example.thulur.presentation.theme.ThulurTheme
 import com.example.thulur.presentation.theme.thulurDp
+import org.koin.viewmodel.defaultExtras
 
 @Composable
 fun SettingsFeedsSection(
@@ -45,27 +45,26 @@ fun SettingsFeedsSection(
     val colors = ThulurTheme.SemanticColors.settingsScreen
     val typography = ThulurTheme.SemanticTypography
     val hasAnyData = state.followedFeeds.isNotEmpty() || state.catalogFeeds.isNotEmpty()
+    val sectionSpacing = 56.thulurDp()
+    val subsectionSpacing = 24.thulurDp()
 
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(24.thulurDp()),
-    ) {
-        when {
-            state.isLoading && !hasAnyData -> {
-                BasicText(
-                    text = "Loading feeds...",
-                    style = typography.settingsBody.copy(
-                        color = colors.bodyMutedColor,
-                    ),
-                )
-            }
+    when {
+        state.isLoading && !hasAnyData -> {
+            BasicText(
+                text = "Loading feeds...",
+                style = typography.settingsBody.copy(color = colors.bodyMutedColor),
+                modifier = modifier,
+            )
+        }
 
-            state.errorMessage != null && !hasAnyData -> {
+        state.isError && !hasAnyData -> {
+            Column(
+                modifier = modifier,
+                verticalArrangement = Arrangement.spacedBy(subsectionSpacing),
+            ) {
                 BasicText(
-                    text = state.errorMessage,
-                    style = typography.settingsBody.copy(
-                        color = colors.errorColor,
-                    ),
+                    text = "Failed to load feeds.",
+                    style = typography.settingsBody.copy(color = colors.errorColor),
                 )
                 ThulurButton(
                     text = "Retry",
@@ -77,31 +76,52 @@ fun SettingsFeedsSection(
                     contentPadding = PaddingValues(),
                 )
             }
+        }
 
-            else -> {
-                state.errorMessage?.let { message ->
-                    BasicText(
-                        text = message,
-                        style = typography.settingsBody.copy(
-                            color = colors.errorColor,
-                        ),
-                    )
-                }
-
+        else -> {
+            Column(
+                modifier = modifier,
+                verticalArrangement = Arrangement.spacedBy(sectionSpacing),
+            ) {
                 UserFeedsSection(
                     feeds = state.followedFeeds,
                     pendingFeedIds = state.pendingUnfollowIds,
                     onUnfollowFeedClick = onUnfollowFeedClick,
+                    subsectionSpacing = subsectionSpacing,
+                    description = "Unfollowed feeds will disappear in your next daily feed"
                 )
-
                 AddNewFeedSection(
                     searchQuery = state.searchQuery,
                     availableFeeds = state.visibleAvailableFeeds,
                     pendingFollowIds = state.pendingFollowIds,
                     onFeedSearchQueryChanged = onFeedSearchQueryChanged,
                     onFollowFeedClick = onFollowFeedClick,
+                    subsectionSpacing = subsectionSpacing,
+                    description = "Followed feeds will appear in your next daily feed",
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun FeedsSectionHeader(
+    title: String,
+    description: String? = null,
+) {
+    val colors = ThulurTheme.SemanticColors.settingsScreen
+    val typography = ThulurTheme.SemanticTypography
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.thulurDp())) {
+        BasicText(
+            text = title,
+            style = typography.settingsSectionTitle.copy(color = colors.sectionTitleColor),
+        )
+        description?.let {
+            BasicText(
+                text = it,
+                style = typography.settingsBody.copy(color = colors.bodyMutedColor),
+            )
         }
     }
 }
@@ -111,26 +131,22 @@ private fun UserFeedsSection(
     feeds: List<Feed>,
     pendingFeedIds: Set<String>,
     onUnfollowFeedClick: (String) -> Unit,
+    subsectionSpacing: Dp,
+    description: String? = null,
 ) {
     val colors = ThulurTheme.SemanticColors.settingsScreen
     val typography = ThulurTheme.SemanticTypography
 
-    Column(
-        verticalArrangement = Arrangement.spacedBy(24.thulurDp()),
-    ) {
-        BasicText(
-            text = "Your feeds",
-            style = typography.settingsSectionTitle.copy(
-                color = colors.sectionTitleColor,
-            ),
+    Column(verticalArrangement = Arrangement.spacedBy(subsectionSpacing)) {
+        FeedsSectionHeader(
+            title = "Your feeds",
+            description = description,
         )
 
         if (feeds.isEmpty()) {
             BasicText(
                 text = "No followed feeds yet.",
-                style = typography.settingsBody.copy(
-                    color = colors.bodyMutedColor,
-                ),
+                style = typography.settingsBody.copy(color = colors.bodyMutedColor),
             )
         } else {
             FeedList(
@@ -155,18 +171,16 @@ private fun AddNewFeedSection(
     pendingFollowIds: Set<String>,
     onFeedSearchQueryChanged: (String) -> Unit,
     onFollowFeedClick: (String) -> Unit,
+    subsectionSpacing: Dp,
+    description: String? = null,
 ) {
     val colors = ThulurTheme.SemanticColors.settingsScreen
     val typography = ThulurTheme.SemanticTypography
 
-    Column(
-        verticalArrangement = Arrangement.spacedBy(20.thulurDp()),
-    ) {
-        BasicText(
-            text = "Add new feed",
-            style = typography.settingsSectionTitle.copy(
-                color = colors.sectionTitleColor,
-            ),
+    Column(verticalArrangement = Arrangement.spacedBy(subsectionSpacing)) {
+        FeedsSectionHeader(
+            title = "Follow new feed",
+            description = description,
         )
 
         ThulurTextField(
@@ -181,13 +195,14 @@ private fun AddNewFeedSection(
 
         if (searchQuery.isNotBlank() && availableFeeds.isEmpty()) {
             FeedInfoCard(
-                text = "No feeds found for this query.",
+                text = "No built in match for \"$searchQuery\". You can add it outside the database.",
+                actionLabel = "Follow external feed",
+                onActionClick = { onFollowFeedClick(searchQuery) },
+                isPending = searchQuery in pendingFollowIds,
             )
         }
 
-        Column(
-            verticalArrangement = Arrangement.spacedBy(16.thulurDp()),
-        ) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.thulurDp())) {
             BasicText(
                 text = "Available feeds",
                 style = typography.settingsSubsectionTitle.copy(
@@ -198,9 +213,7 @@ private fun AddNewFeedSection(
             when {
                 availableFeeds.isEmpty() && searchQuery.isBlank() -> BasicText(
                     text = "No available feeds.",
-                    style = typography.settingsBody.copy(
-                        color = colors.bodyMutedColor,
-                    ),
+                    style = typography.settingsBody.copy(color = colors.bodyMutedColor),
                 )
 
                 availableFeeds.isNotEmpty() -> FeedList(
@@ -231,13 +244,9 @@ private fun FeedList(
     showUrl: Boolean,
     showChips: Boolean,
 ) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(12.thulurDp()),
-    ) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.thulurDp())) {
         feeds.forEach { feed ->
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.thulurDp()),
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.thulurDp())) {
                 FeedItem(
                     feed = feed,
                     actionLabel = actionLabel,
@@ -271,50 +280,25 @@ private fun FeedItem(
     val typography = ThulurTheme.SemanticTypography
     val chips = feed.toSettingsFeedChips()
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 5.thulurDp()),
-        horizontalArrangement = Arrangement.spacedBy(20.thulurDp()),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(6.thulurDp()),
-        ) {
-            BasicText(
-                text = feed.toSettingsFeedTitle(),
-                style = typography.settingsSubsectionTitle.copy(
-                    color = colors.bodyColor,
-                ),
+    AppSettingItem(
+        title = feed.toSettingsFeedTitle(),
+        supportingText = if (showUrl) feed.url else null,
+        action = {
+            ThulurButton(
+                text = if (isPending) pendingActionLabel else actionLabel,
+                onClick = onActionClick,
+                enabled = !isPending,
+                colorRole = actionColorRole,
+                useContainerStates = false,
+                stateColorsOverride = actionStateColors,
+                textStyle = typography.settingsAction,
+                contentPadding = PaddingValues(),
             )
+        },
+    )
 
-            if (showUrl) {
-                BasicText(
-                    text = feed.url,
-                    style = typography.settingsBody.copy(
-                        color = colors.bodyMutedColor,
-                    ),
-                )
-            }
-
-            if (showChips && chips.isNotEmpty()) {
-                FeedChipsRow(
-                    chips = chips,
-                )
-            }
-        }
-
-        ThulurButton(
-            text = if (isPending) pendingActionLabel else actionLabel,
-            onClick = onActionClick,
-            enabled = !isPending,
-            colorRole = actionColorRole,
-            useContainerStates = false,
-            stateColorsOverride = actionStateColors,
-            textStyle = typography.settingsAction,
-            contentPadding = PaddingValues(),
-        )
+    if (showChips && chips.isNotEmpty()) {
+        FeedChipsRow(chips = chips)
     }
 }
 
@@ -351,9 +335,7 @@ private fun FeedTagItem(
     ) {
         BasicText(
             text = label,
-            style = typography.settingsMeta.copy(
-                color = colors.bodyMutedColor,
-            ),
+            style = typography.settingsMeta.copy(color = colors.bodyMutedColor),
         )
     }
 }
@@ -361,22 +343,34 @@ private fun FeedTagItem(
 @Composable
 private fun FeedInfoCard(
     text: String,
+    actionLabel: String,
+    onActionClick: () -> Unit,
+    isPending: Boolean,
 ) {
     val colors = ThulurTheme.SemanticColors.settingsScreen
     val typography = ThulurTheme.SemanticTypography
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.thulurDp()))
             .background(colors.railColor)
             .padding(16.thulurDp()),
+        verticalArrangement = Arrangement.spacedBy(8.thulurDp()),
     ) {
         BasicText(
             text = text,
-            style = typography.settingsBody.copy(
-                color = colors.bodyMutedColor,
-            ),
+            style = typography.settingsBody.copy(color = colors.bodyMutedColor),
+        )
+        ThulurButton(
+            text = if (isPending) "Adding..." else actionLabel,
+            onClick = onActionClick,
+            enabled = !isPending,
+            colorRole = ThulurColorRole.Primary,
+            useContainerStates = false,
+            stateColorsOverride = colors.inlineActionButton,
+            textStyle = typography.settingsAction,
+            contentPadding = PaddingValues(),
         )
     }
 }

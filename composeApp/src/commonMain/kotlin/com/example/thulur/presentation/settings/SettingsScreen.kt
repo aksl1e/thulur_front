@@ -22,6 +22,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -33,6 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.thulur.presentation.composables.ThulurAppBar
 import com.example.thulur.presentation.composables.ThulurButton
+import com.example.thulur.presentation.composables.ThulurSnackBar
+import com.example.thulur.presentation.composables.ThulurSnackBarState
 import com.example.thulur.presentation.composables.ThulurTextField
 import com.example.thulur.presentation.composables.ThulurTimeSelector
 import com.example.thulur.presentation.settings.components.AppSettingItem
@@ -68,22 +72,52 @@ fun SettingsRoute(
         }
     }
 
-    SettingsScreen(
-        uiState = uiState,
-        onBackClick = onBackClick,
-        onRetryLoad = viewModel::retryLoad,
-        onSectionSelected = viewModel::onSectionSelected,
-        onTerminateSessionClick = viewModel::onTerminateSessionClick,
-        onRetryFeedsLoad = viewModel::retryFeedsLoad,
-        onFeedSearchQueryChanged = viewModel::onFeedSearchQueryChanged,
-        onFollowFeedClick = viewModel::onFollowFeedClick,
-        onUnfollowFeedClick = viewModel::onUnfollowFeedClick,
-        onThemeSelected = viewModel::onThemeSelected,
-        onLanguageSelected = viewModel::onLanguageSelected,
-        onNotificationsEnabledChanged = viewModel::onNotificationsEnabledChanged,
-        onSuggestionsOutsideChanged = viewModel::onSuggestionsOutsideChanged,
-        onFeedScheduleChanged = viewModel::onFeedScheduleChanged,
-    )
+    var snackBarId by remember { mutableLongStateOf(0L) }
+    var snackBarMessage by remember { mutableStateOf("") }
+    var showSnackBar by remember { mutableStateOf(false) }
+
+    LaunchedEffect(viewModel) {
+        viewModel.snackBarEvents.collect { event ->
+            snackBarId++
+            showSnackBar = true
+            when (event) {
+                is SettingsSnackBarEvent.Error -> {
+                    snackBarMessage = event.message
+                }
+            }
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        SettingsScreen(
+            uiState = uiState,
+            onBackClick = onBackClick,
+            onRetryLoad = viewModel::retryLoad,
+            onSectionSelected = viewModel::onSectionSelected,
+            onTerminateSessionClick = viewModel::onTerminateSessionClick,
+            onRetryFeedsLoad = viewModel::retryFeedsLoad,
+            onFeedSearchQueryChanged = viewModel::onFeedSearchQueryChanged,
+            onFollowFeedClick = viewModel::onFollowFeedClick,
+            onUnfollowFeedClick = viewModel::onUnfollowFeedClick,
+            onThemeSelected = viewModel::onThemeSelected,
+            onLanguageSelected = viewModel::onLanguageSelected,
+            onNotificationsEnabledChanged = viewModel::onNotificationsEnabledChanged,
+            onSuggestionsOutsideChanged = viewModel::onSuggestionsOutsideChanged,
+            onFeedScheduleChanged = viewModel::onFeedScheduleChanged,
+        )
+
+        if (showSnackBar) {
+            key(snackBarId) {
+                ThulurSnackBar(
+                    message = snackBarMessage,
+                    state = ThulurSnackBarState.Error,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(horizontal = 24.thulurDp(), vertical = 24.thulurDp()),
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -213,18 +247,11 @@ private fun SettingsAccountSection(
             ),
         )
 
-        when {
-            state.isLoading -> BasicText(
+        if (state.isLoading) {
+            BasicText(
                 text = "Loading account information...",
                 style = typography.settingsBody.copy(
                     color = colors.bodyMutedColor,
-                ),
-            )
-
-            state.errorMessage != null -> BasicText(
-                text = state.errorMessage,
-                style = typography.settingsBody.copy(
-                    color = colors.errorColor,
                 ),
             )
         }
@@ -348,15 +375,6 @@ private fun SettingsAppSection(
             }
 
             SettingsContentState.Ready -> {
-                state.errorMessage?.let { message ->
-                    BasicText(
-                        text = message,
-                        style = typography.settingsBody.copy(
-                            color = colors.errorColor,
-                        ),
-                    )
-                }
-
                 AppSettingItem(
                     title = "Feed Schedule",
                     supportingText = "Select time when feed should be ready. If today’s feed was made, changes will apply on the next day",
