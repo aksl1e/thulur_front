@@ -3,9 +3,15 @@ package com.example.thulur.domain.usecase
 import com.example.thulur.domain.model.Article
 import com.example.thulur.domain.model.ArticleParagraph
 import com.example.thulur.domain.model.ArticleQuality
-import com.example.thulur.domain.model.MainFeedThread
+import com.example.thulur.domain.model.AuthSession
+import com.example.thulur.domain.model.CurrentUser
+import com.example.thulur.domain.model.DailyFeed
+import com.example.thulur.domain.model.DailyFeedThread
+import com.example.thulur.domain.model.Feed
+import com.example.thulur.domain.model.PatchUserSettings
 import com.example.thulur.domain.model.ThreadHistory
 import com.example.thulur.domain.model.ThreadHistoryDay
+import com.example.thulur.domain.model.UserSettings
 import com.example.thulur.domain.repository.ThulurApiRepository
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -52,7 +58,7 @@ private class TrackingThreadHistoryRepository(
 ) : ThulurApiRepository {
     var requestedThreadId: String? = null
 
-    override suspend fun getMainFeed(day: LocalDate?): List<MainFeedThread> =
+    override suspend fun getDailyFeed(day: LocalDate?): DailyFeed =
         error("Not used in this test")
 
     override suspend fun getArticleParagraphs(articleId: String): List<ArticleParagraph> =
@@ -62,4 +68,34 @@ private class TrackingThreadHistoryRepository(
         requestedThreadId = threadId
         return history
     }
+
+    override suspend fun getUserSettings(): UserSettings =
+        error("Not used in this test")
+
+    override suspend fun patchUserSettings(patch: PatchUserSettings): UserSettings =
+        error("Not used in this test")
+
+    override suspend fun getFollowedFeeds(): List<Feed> =
+        error("Not used in this test")
+
+    override suspend fun getAllFeeds(): List<Feed> =
+        error("Not used in this test")
+
+    override suspend fun followFeed(identifier: String) =
+        error("Not used in this test")
+
+    override suspend fun unfollowFeed(feedId: String) =
+        error("Not used in this test")
+
+    override suspend fun getCurrentUser(): CurrentUser =
+        error("Not used in this test")
+
+    override suspend fun getAuthSessions(): List<AuthSession> =
+        error("Not used in this test")
+
+    override suspend fun terminateAuthSession(sessionId: String) =
+        error("Not used in this test")
+
+    override suspend fun rateArticle(articleId: String, rating: Int) =
+        error("Not used in this test")
 }

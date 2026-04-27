@@ -4,7 +4,7 @@ import com.example.thulur.domain.auth.PasskeyAuthenticationErrorCode
 import com.example.thulur.domain.auth.PasskeyAuthenticationException
 import com.example.thulur_api.ThulurApi
 import com.example.thulur_api.dtos.AuthSessionDto
-import com.example.thulur_api.dtos.DailyFeedThreadDto
+import com.example.thulur_api.dtos.DailyFeedDto
 import com.example.thulur_api.dtos.FeedDto
 import com.example.thulur_api.dtos.ParagraphDto
 import com.example.thulur_api.dtos.UpdateUserSettingsDto
@@ -168,7 +168,7 @@ private class FakeDesktopAuthApi(
 
     override suspend fun getDailyFeed(
         day: LocalDate?,
-    ): List<DailyFeedThreadDto> = error("Not used in this test")
+    ): DailyFeedDto = error("Not used in this test")
 
     override suspend fun getArticleParagraphs(
         articleId: String,
@@ -183,7 +183,7 @@ private class FakeDesktopAuthApi(
 
     override suspend fun getAllFeeds(): List<FeedDto> = error("Not used in this test")
 
-    override suspend fun followFeed(feedId: String) = error("Not used in this test")
+    override suspend fun followFeed(identifier: String) = error("Not used in this test")
 
     override suspend fun unfollowFeed(feedId: String) = error("Not used in this test")
 
@@ -228,6 +228,9 @@ private class FakeDesktopAuthApi(
         exchangedState = state
         return AuthTokenDto(token = exchangeToken)
     }
+
+    override suspend fun rateArticle(articleId: String, rating: Int) =
+        error("Not used in this test")
 }
 
 private fun httpGet(

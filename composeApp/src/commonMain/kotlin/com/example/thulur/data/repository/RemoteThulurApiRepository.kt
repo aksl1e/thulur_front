@@ -5,8 +5,9 @@ import com.example.thulur.domain.model.ArticleParagraph
 import com.example.thulur.domain.model.ArticleQuality
 import com.example.thulur.domain.model.AuthSession
 import com.example.thulur.domain.model.CurrentUser
+import com.example.thulur.domain.model.DailyFeed
 import com.example.thulur.domain.model.Feed
-import com.example.thulur.domain.model.MainFeedThread
+import com.example.thulur.domain.model.DailyFeedThread
 import com.example.thulur.domain.model.PatchUserSettings
 import com.example.thulur.domain.model.UserSettings
 import com.example.thulur.domain.model.ThreadHistory
@@ -28,34 +29,38 @@ import kotlinx.datetime.LocalDate.Companion.parse
 class RemoteThulurApiRepository(
     private val thulurApi: ThulurApi,
 ) : ThulurApiRepository {
-    override suspend fun getMainFeed(day: LocalDate?): List<MainFeedThread> {
-        return thulurApi
+    override suspend fun getDailyFeed(day: LocalDate?): DailyFeed =
+        thulurApi
             .getDailyFeed(day = day)
-            .map { threadDto ->
-                MainFeedThread(
-                    id = threadDto.threadId,
-                    name = threadDto.threadName,
-                    topicId = threadDto.topicId,
-                    topicName = threadDto.topicName,
-                    mainFeedScore = threadDto.mainFeedScore,
-                    firstSeen = threadDto.threadFirstSeen.toMainFeedDateOrNull(),
-                    summary = threadDto.threadSummary,
-                    articles = threadDto.articles.map { articleDto ->
-                        Article(
-                            id = articleDto.articleId,
-                            feedId = articleDto.feedId,
-                            title = articleDto.title,
-                            url = articleDto.url,
-                            published = articleDto.published,
-                            displaySummary = articleDto.displaySummary,
-                            isRead = articleDto.isRead,
-                            isSuggestion = articleDto.isSuggestion,
-                            quality = articleDto.qualityTier.toArticleQuality(),
+            .let { dailyFeedDto ->
+                DailyFeed(
+                    isDefault = dailyFeedDto.isDefault,
+                    threads = dailyFeedDto.threads.map { threadDto ->
+                        DailyFeedThread(
+                            id = threadDto.threadId,
+                            name = threadDto.threadName,
+                            topicId = threadDto.topicId,
+                            topicName = threadDto.topicName,
+                            dailyFeedScore = threadDto.dailyFeedScore,
+                            firstSeen = threadDto.threadFirstSeen.toDailyFeedDateOrNull(),
+                            summary = threadDto.threadSummary,
+                            articles = threadDto.articles.map { articleDto ->
+                                Article(
+                                    id = articleDto.articleId,
+                                    feedId = articleDto.feedId,
+                                    title = articleDto.title,
+                                    url = articleDto.url,
+                                    published = articleDto.published,
+                                    displaySummary = articleDto.displaySummary,
+                                    isRead = articleDto.isRead,
+                                    isSuggestion = articleDto.isSuggestion,
+                                    quality = articleDto.qualityTier.toArticleQuality(),
+                                )
+                            },
                         )
                     },
                 )
             }
-    }
 
     override suspend fun getArticleParagraphs(articleId: String): List<ArticleParagraph> =
         thulurApi.getArticleParagraphs(articleId = articleId).map { paragraphDto ->
@@ -116,7 +121,7 @@ class RemoteThulurApiRepository(
         }
 }
 
-private fun String?.toMainFeedDateOrNull(): LocalDate? = when (this) {
+private fun String?.toDailyFeedDateOrNull(): LocalDate? = when (this) {
     null,
     NOT_SHOWN_SENTINEL_DATE,
     -> null
@@ -138,7 +143,9 @@ private fun ArticleDto.toArticle(): Article = Article(
 
 private fun String?.toArticleQuality(): ArticleQuality = when (this?.lowercase()) {
     "trash" -> ArticleQuality.Trash
-    "quality" -> ArticleQuality.Important
+    "quality",
+    "important",
+    -> ArticleQuality.Important
     "normal",
     null,
     -> ArticleQuality.Default

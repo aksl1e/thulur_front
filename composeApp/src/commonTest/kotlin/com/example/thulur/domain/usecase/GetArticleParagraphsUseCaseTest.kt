@@ -3,8 +3,9 @@ package com.example.thulur.domain.usecase
 import com.example.thulur.domain.model.ArticleParagraph
 import com.example.thulur.domain.model.AuthSession
 import com.example.thulur.domain.model.CurrentUser
+import com.example.thulur.domain.model.DailyFeed
 import com.example.thulur.domain.model.Feed
-import com.example.thulur.domain.model.MainFeedThread
+import com.example.thulur.domain.model.DailyFeedThread
 import com.example.thulur.domain.model.PatchUserSettings
 import com.example.thulur.domain.model.UserSettings
 import com.example.thulur.domain.model.ThreadHistory
@@ -42,7 +43,7 @@ private class TrackingRepository(
 ) : ThulurApiRepository {
     var requestedArticleId: String? = null
 
-    override suspend fun getMainFeed(day: LocalDate?): List<MainFeedThread> =
+    override suspend fun getDailyFeed(day: LocalDate?): DailyFeed =
         error("Not used in this test")
 
     override suspend fun getArticleParagraphs(articleId: String): List<ArticleParagraph> {
@@ -62,7 +63,7 @@ private class TrackingRepository(
     override suspend fun getAllFeeds(): List<Feed> =
         error("Not used in this test")
 
-    override suspend fun followFeed(feedId: String) =
+    override suspend fun followFeed(identifier: String) =
         error("Not used in this test")
 
     override suspend fun unfollowFeed(feedId: String) =
@@ -78,5 +79,8 @@ private class TrackingRepository(
         error("Not used in this test")
 
     override suspend fun getThreadHistory(threadId: String): ThreadHistory =
+        error("Not used in this test")
+
+    override suspend fun rateArticle(articleId: String, rating: Int) =
         error("Not used in this test")
 }

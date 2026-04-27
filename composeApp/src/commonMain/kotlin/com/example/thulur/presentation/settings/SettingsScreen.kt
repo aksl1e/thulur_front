@@ -154,7 +154,7 @@ fun SettingsScreen(
     ) {
         ThulurAppBar(
             title = "Settings",
-            backLabel = "Main Feed",
+            backLabel = "Daily Feed",
             onBackClick = onBackClick,
         )
 

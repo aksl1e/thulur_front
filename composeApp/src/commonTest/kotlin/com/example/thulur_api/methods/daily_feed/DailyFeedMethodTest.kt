@@ -26,7 +26,7 @@ class DailyFeedMethodTest {
             engine = MockEngine {
                 capturedRequest = it
                 respond(
-                    content = "[]",
+                    content = """{"is_default": true, "threads": []}""",
                     status = HttpStatusCode.OK,
                     headers = jsonHeaders,
                 )
@@ -59,7 +59,7 @@ class DailyFeedMethodTest {
             engine = MockEngine {
                 capturedRequest = it
                 respond(
-                    content = "[]",
+                    content = """{"is_default": false, "threads": []}""",
                     status = HttpStatusCode.OK,
                     headers = jsonHeaders,
                 )
@@ -93,31 +93,34 @@ class DailyFeedMethodTest {
             engine = MockEngine {
                 respond(
                     content = """
-                        [
-                          {
-                            "thread_id": "thread-1",
-                            "thread_name": "Thread 1",
-                            "topic_id": null,
-                            "topic_name": null,
-                            "main_feed_score": 0.8,
-                            "thread_first_seen": "9999-12-31",
-                            "thread_summary": null,
-                            "articles": [
-                              {
-                                "article_id": "article-1",
-                                "feed_id": "feed-1",
-                                "title": "Article",
-                                "url": "https://example.com",
-                                "published": null,
-                                "quality_tier": "important",
-                                "novelty_paragraphs_ids": ["p1", "p2"],
-                                "display_summary": "Visible summary",
-                                "is_read": false,
-                                "is_suggestion": false
-                              }
-                            ]
-                          }
-                        ]
+                        {
+                          "is_default": true,
+                          "threads": [
+                            {
+                              "thread_id": "thread-1",
+                              "thread_name": "Thread 1",
+                              "topic_id": null,
+                              "topic_name": null,
+                              "main_feed_score": 0.8,
+                              "thread_first_seen": "9999-12-31",
+                              "thread_summary": null,
+                              "articles": [
+                                {
+                                  "article_id": "article-1",
+                                  "feed_id": "feed-1",
+                                  "title": "Article",
+                                  "url": "https://example.com",
+                                  "published": null,
+                                  "quality_tier": "important",
+                                  "novelty_paragraphs_ids": ["p1", "p2"],
+                                  "display_summary": "Visible summary",
+                                  "is_read": false,
+                                  "is_suggestion": false
+                                }
+                              ]
+                            }
+                          ]
+                        }
                     """.trimIndent(),
                     status = HttpStatusCode.OK,
                     headers = jsonHeaders,
@@ -140,10 +143,11 @@ class DailyFeedMethodTest {
             config = ThulurApiConfig(),
         ).execute()
 
-        assertEquals(1, response.size)
-        assertEquals(1, response.first().articles.size)
-        assertEquals("important", response.first().articles.first().qualityTier)
-        assertEquals("Visible summary", response.first().articles.first().displaySummary)
+        assertEquals(true, response.isDefault)
+        assertEquals(1, response.threads.size)
+        assertEquals(1, response.threads.first().articles.size)
+        assertEquals("important", response.threads.first().articles.first().qualityTier)
+        assertEquals("Visible summary", response.threads.first().articles.first().displaySummary)
     }
 }
 

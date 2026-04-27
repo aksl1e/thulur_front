@@ -2,7 +2,7 @@ package com.example.thulur_api
 
 import com.example.thulur_api.config.ThulurApiConfig
 import com.example.thulur_api.dtos.AuthSessionDto
-import com.example.thulur_api.dtos.DailyFeedThreadDto
+import com.example.thulur_api.dtos.DailyFeedDto
 import com.example.thulur_api.dtos.FeedDto
 import com.example.thulur_api.dtos.ParagraphDto
 import com.example.thulur_api.dtos.UpdateUserSettingsDto
@@ -46,7 +46,7 @@ interface ThulurApi {
      */
     suspend fun getDailyFeed(
         day: LocalDate? = null,
-    ): List<DailyFeedThreadDto>
+    ): DailyFeedDto
 
     /**
      * Returns raw paragraph metadata for a single article.
@@ -205,7 +205,7 @@ class RemoteThulurApi(
 
     override suspend fun getDailyFeed(
         day: LocalDate?,
-    ): List<DailyFeedThreadDto> = dailyFeedMethod.execute(
+    ): DailyFeedDto = dailyFeedMethod.execute(
         day = day,
     )
 

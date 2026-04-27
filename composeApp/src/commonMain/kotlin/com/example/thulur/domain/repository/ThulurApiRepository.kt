@@ -3,9 +3,10 @@ package com.example.thulur.domain.repository
 import com.example.thulur.domain.model.ArticleParagraph
 import com.example.thulur.domain.model.AuthSession
 import com.example.thulur.domain.model.CurrentUser
+import com.example.thulur.domain.model.DailyFeed
 import com.example.thulur.domain.model.Feed
 import com.example.thulur.domain.model.ThreadHistory
-import com.example.thulur.domain.model.MainFeedThread
+import com.example.thulur.domain.model.DailyFeedThread
 import com.example.thulur.domain.model.PatchUserSettings
 import com.example.thulur.domain.model.UserSettings
 import kotlinx.datetime.LocalDate
@@ -18,11 +19,11 @@ import kotlinx.datetime.LocalDate
  */
 interface ThulurApiRepository {
     /**
-     * Loads the Main Feed for the current user.
+     * Loads the Daily Feed for the current user.
      *
      * @param day Optional day filter. When `null`, backend default behavior is used.
      */
-    suspend fun getMainFeed(day: LocalDate? = null): List<MainFeedThread>
+    suspend fun getDailyFeed(day: LocalDate? = null): DailyFeed
 
     /**
      * Loads paragraph metadata for a single article.

@@ -5,9 +5,11 @@ import com.example.thulur.data.session.InMemorySecureTokenStore
 import com.example.thulur.domain.model.ArticleParagraph
 import com.example.thulur.domain.model.AuthSession
 import com.example.thulur.domain.model.CurrentUser
+import com.example.thulur.domain.model.DailyFeed
 import com.example.thulur.domain.model.Feed
-import com.example.thulur.domain.model.MainFeedThread
+import com.example.thulur.domain.model.DailyFeedThread
 import com.example.thulur.domain.model.PatchUserSettings
+import com.example.thulur.domain.model.ThreadHistory
 import com.example.thulur.domain.model.UserSettings
 import com.example.thulur.domain.repository.ThulurApiRepository
 import com.example.thulur.domain.theme.ThemeStore
@@ -155,12 +157,12 @@ class AppRootViewModelTest {
         advanceUntilIdle()
 
         viewModel.openSettings()
-        viewModel.backToMainFeed()
+        viewModel.backToDailyFeed()
 
         assertEquals(
             AppRootUiState.Ready(
                 sessionInstanceId = 1,
-                destination = AppRootAuthenticatedDestination.MainFeed,
+                destination = AppRootAuthenticatedDestination.DailyFeed,
             ),
             viewModel.uiState.value,
         )
@@ -181,7 +183,7 @@ class AppRootViewModelTest {
         assertEquals(
             AppRootUiState.Ready(
                 sessionInstanceId = 2,
-                destination = AppRootAuthenticatedDestination.MainFeed,
+                destination = AppRootAuthenticatedDestination.DailyFeed,
             ),
             viewModel.uiState.value,
         )
@@ -210,14 +212,16 @@ private object StubSettingsRepository : ThulurApiRepository {
         updatedAt = "",
     )
 
-    override suspend fun getMainFeed(day: LocalDate?): List<MainFeedThread> = error("not used")
+    override suspend fun getDailyFeed(day: LocalDate?): DailyFeed = error("not used")
     override suspend fun getArticleParagraphs(articleId: String): List<ArticleParagraph> = error("not used")
     override suspend fun patchUserSettings(patch: PatchUserSettings): UserSettings = error("not used")
     override suspend fun getFollowedFeeds(): List<Feed> = error("not used")
     override suspend fun getAllFeeds(): List<Feed> = error("not used")
-    override suspend fun followFeed(feedId: String): Unit = error("not used")
+    override suspend fun followFeed(identifier: String): Unit = error("not used")
     override suspend fun unfollowFeed(feedId: String): Unit = error("not used")
     override suspend fun getCurrentUser(): CurrentUser = error("not used")
     override suspend fun getAuthSessions(): List<AuthSession> = error("not used")
     override suspend fun terminateAuthSession(sessionId: String): Unit = error("not used")
+    override suspend fun getThreadHistory(threadId: String): ThreadHistory = error("not used")
+    override suspend fun rateArticle(articleId: String, rating: Int): Unit = error("not used")
 }

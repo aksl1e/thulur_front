@@ -3,8 +3,9 @@ package com.example.thulur.presentation.settings
 import com.example.thulur.domain.model.ArticleParagraph
 import com.example.thulur.domain.model.AuthSession
 import com.example.thulur.domain.model.CurrentUser
+import com.example.thulur.domain.model.DailyFeed
 import com.example.thulur.domain.model.Feed
-import com.example.thulur.domain.model.MainFeedThread
+import com.example.thulur.domain.model.DailyFeedThread
 import com.example.thulur.domain.model.PatchUserSettings
 import com.example.thulur.domain.model.UserSettings
 import com.example.thulur.domain.repository.ThulurApiRepository
@@ -80,12 +81,11 @@ class SettingsViewModelTest {
         assertEquals("hello@example.com", viewModel.uiState.value.accountState.currentEmail)
         assertEquals(expectedSettingsSessions(), viewModel.uiState.value.accountState.sessions)
         assertEquals(false, viewModel.uiState.value.accountState.isLoading)
-        assertEquals(null, viewModel.uiState.value.accountState.errorMessage)
         assertEquals(sampleFollowedFeeds(), viewModel.uiState.value.feedsState.followedFeeds)
         assertEquals(sampleAllFeeds(), viewModel.uiState.value.feedsState.catalogFeeds)
         assertEquals(expectedAvailableFeeds(), viewModel.uiState.value.feedsState.visibleAvailableFeeds)
         assertEquals(false, viewModel.uiState.value.feedsState.isLoading)
-        assertEquals(null, viewModel.uiState.value.feedsState.errorMessage)
+        assertEquals(false, viewModel.uiState.value.feedsState.isError)
         assertEquals(1, repository.getUserSettingsCallCount)
         assertEquals(1, repository.getCurrentUserCallCount)
         assertEquals(1, repository.getAuthSessionsCallCount)
@@ -135,7 +135,6 @@ class SettingsViewModelTest {
         advanceUntilIdle()
 
         assertEquals(SettingsContentState.Ready, viewModel.uiState.value.contentState)
-        assertEquals("Account offline", viewModel.uiState.value.accountState.errorMessage)
         assertEquals(null, viewModel.uiState.value.accountState.currentEmail)
         assertEquals(expectedSettingsSessions(), viewModel.uiState.value.accountState.sessions)
         assertEquals(sampleFollowedFeeds(), viewModel.uiState.value.feedsState.followedFeeds)
@@ -310,7 +309,6 @@ class SettingsViewModelTest {
         advanceUntilIdle()
 
         assertEquals(true, viewModel.uiState.value.appState.values.notificationsEnabled)
-        assertEquals("Nope", viewModel.uiState.value.appState.errorMessage)
         assertTrue(viewModel.uiState.value.appState.pendingFields.isEmpty())
     }
 
@@ -357,7 +355,6 @@ class SettingsViewModelTest {
         advanceUntilIdle()
 
         assertEquals(expectedSettingsSessions(), viewModel.uiState.value.accountState.sessions)
-        assertEquals("Terminate failed", viewModel.uiState.value.accountState.errorMessage)
         assertTrue(viewModel.uiState.value.accountState.terminatingSessionIds.isEmpty())
     }
 
@@ -472,7 +469,7 @@ class SettingsViewModelTest {
 
         assertEquals(SettingsContentState.Ready, viewModel.uiState.value.contentState)
         assertEquals("hello@example.com", viewModel.uiState.value.accountState.currentEmail)
-        assertEquals("Feeds offline", viewModel.uiState.value.feedsState.errorMessage)
+        assertEquals(true, viewModel.uiState.value.feedsState.isError)
         assertEquals(sampleFollowedFeeds(), viewModel.uiState.value.feedsState.followedFeeds)
         assertTrue(viewModel.uiState.value.feedsState.catalogFeeds.isEmpty())
     }
@@ -493,7 +490,6 @@ class SettingsViewModelTest {
         viewModel.onFollowFeedClick("feed-available-1")
         advanceUntilIdle()
 
-        assertEquals("Follow failed", viewModel.uiState.value.feedsState.errorMessage)
         assertEquals(sampleFollowedFeeds(), viewModel.uiState.value.feedsState.followedFeeds)
         assertEquals(expectedAvailableFeeds(), viewModel.uiState.value.feedsState.visibleAvailableFeeds)
         assertTrue(viewModel.uiState.value.feedsState.pendingFollowIds.isEmpty())
@@ -515,7 +511,6 @@ class SettingsViewModelTest {
         viewModel.onUnfollowFeedClick("feed-followed-1")
         advanceUntilIdle()
 
-        assertEquals("Unfollow failed", viewModel.uiState.value.feedsState.errorMessage)
         assertEquals(sampleFollowedFeeds(), viewModel.uiState.value.feedsState.followedFeeds)
         assertEquals(expectedAvailableFeeds(), viewModel.uiState.value.feedsState.visibleAvailableFeeds)
         assertTrue(viewModel.uiState.value.feedsState.pendingUnfollowIds.isEmpty())
@@ -566,7 +561,7 @@ private class FakeSettingsRepository(
     val followedFeedIds = mutableListOf<String>()
     val unfollowedFeedIds = mutableListOf<String>()
 
-    override suspend fun getMainFeed(day: LocalDate?): List<MainFeedThread> =
+    override suspend fun getDailyFeed(day: LocalDate?): DailyFeed =
         error("Not used in this test")
 
     override suspend fun getArticleParagraphs(articleId: String): List<ArticleParagraph> =
@@ -622,15 +617,15 @@ private class FakeSettingsRepository(
         return currentAllFeeds
     }
 
-    override suspend fun followFeed(feedId: String) {
-        followedFeedIds += feedId
+    override suspend fun followFeed(identifier: String) {
+        followedFeedIds += identifier
         nextFollowFailure?.let { throwable ->
             nextFollowFailure = null
             throw throwable
         }
 
-        val feed = currentAllFeeds.firstOrNull { it.id == feedId } ?: return
-        if (currentFollowedFeeds.none { it.id == feedId }) {
+        val feed = currentAllFeeds.firstOrNull { it.id == identifier } ?: return
+        if (currentFollowedFeeds.none { it.id == identifier }) {
             currentFollowedFeeds = currentFollowedFeeds + feed
         }
     }
@@ -674,6 +669,12 @@ private class FakeSettingsRepository(
 
         currentAuthSessions = currentAuthSessions.filterNot { it.sessionId == sessionId }
     }
+
+    override suspend fun getThreadHistory(threadId: String) =
+        error("Not used in this test")
+
+    override suspend fun rateArticle(articleId: String, rating: Int) =
+        error("Not used in this test")
 }
 
 private fun sampleUserSettings(): UserSettings = UserSettings(

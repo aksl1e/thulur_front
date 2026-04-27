@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.thulur.presentation.auth.AuthRoute
-import com.example.thulur.presentation.mainfeed.MainFeedRoute
+import com.example.thulur.presentation.dailyfeed.DailyFeedRoute
 import com.example.thulur.presentation.settings.SettingsRoute
 import com.example.thulur.presentation.theme.ThemeMode
 import com.example.thulur.presentation.theme.ThulurTheme
@@ -27,14 +27,14 @@ fun AppRootRoute(
             AppRootUiState.Loading -> RootLoadingScreen()
             is AppRootUiState.Unready -> AuthRoute()
             is AppRootUiState.Ready -> when (state.destination) {
-                AppRootAuthenticatedDestination.MainFeed -> MainFeedRoute(
+                AppRootAuthenticatedDestination.DailyFeed -> DailyFeedRoute(
                     sessionInstanceId = state.sessionInstanceId,
                     onOpenSettings = viewModel::openSettings,
                 )
 
                 AppRootAuthenticatedDestination.Settings -> SettingsRoute(
                     sessionInstanceId = state.sessionInstanceId,
-                    onBackClick = viewModel::backToMainFeed,
+                    onBackClick = viewModel::backToDailyFeed,
                     onThemeApplied = viewModel::updateTheme,
                 )
             }

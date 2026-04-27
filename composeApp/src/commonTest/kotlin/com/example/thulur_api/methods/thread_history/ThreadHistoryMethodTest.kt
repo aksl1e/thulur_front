@@ -116,7 +116,7 @@ class ThreadHistoryMethodTest {
         assertEquals(1, response.days.size)
         assertEquals("2026-04-17", response.days.first().day)
         assertEquals("Summary", response.days.first().threadSummary)
-        assertEquals(listOf("p-1", "p-2"), response.days.first().articles.first().noveltyParagraphsIds)
+        assertEquals("Visible summary", response.days.first().articles.first().displaySummary)
     }
 
     @Test

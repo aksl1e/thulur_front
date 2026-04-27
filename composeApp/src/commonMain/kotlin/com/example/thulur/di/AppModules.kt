@@ -16,7 +16,7 @@ import com.example.thulur.domain.usecase.GetArticleParagraphsUseCase
 import com.example.thulur.domain.usecase.GetAuthSessionsUseCase
 import com.example.thulur.domain.usecase.GetCurrentUserUseCase
 import com.example.thulur.domain.usecase.GetFollowedFeedsUseCase
-import com.example.thulur.domain.usecase.GetMainFeedUseCase
+import com.example.thulur.domain.usecase.GetDailyFeedUseCase
 import com.example.thulur.domain.usecase.GetUserSettingsUseCase
 import com.example.thulur.domain.usecase.TerminateAuthSessionUseCase
 import com.example.thulur.domain.usecase.UnfollowFeedUseCase
@@ -24,7 +24,7 @@ import com.example.thulur.domain.usecase.PatchUserSettingsUseCase
 import com.example.thulur.domain.usecase.GetThreadHistoryUseCase
 import com.example.thulur.domain.usecase.RateArticleUseCase
 import com.example.thulur.presentation.auth.AuthViewModel
-import com.example.thulur.presentation.mainfeed.MainFeedViewModel
+import com.example.thulur.presentation.dailyfeed.DailyFeedViewModel
 import com.example.thulur.presentation.root.AppRootViewModel
 import com.example.thulur.presentation.settings.SettingsViewModel
 import com.example.thulur_api.RemoteThulurApi
@@ -60,7 +60,7 @@ val dataModule = module {
 }
 
 val domainModule = module {
-    factory { GetMainFeedUseCase(thulurApiRepository = get()) }
+    factory { GetDailyFeedUseCase(thulurApiRepository = get()) }
     factory { GetArticleParagraphsUseCase(thulurApiRepository = get()) }
     factory { GetUserSettingsUseCase(thulurApiRepository = get()) }
     factory { PatchUserSettingsUseCase(thulurApiRepository = get()) }
@@ -78,7 +78,7 @@ val domainModule = module {
 val presentationModule = module {
     viewModelOf(::AppRootViewModel)
     viewModelOf(::AuthViewModel)
-    viewModelOf(::MainFeedViewModel)
+    viewModelOf(::DailyFeedViewModel)
     viewModelOf(::SettingsViewModel)
 }
 

@@ -22,7 +22,7 @@ data class DailyFeedThreadDto(
     val topicName: String?,
     /** Thread's main feed score used for sorting inside the feed. */
     @SerialName("main_feed_score")
-    val mainFeedScore: Double,
+    val dailyFeedScore: Double,
     /**
      * Date from the last 7 days telling whether the thread was already shown.
      *

@@ -6,11 +6,13 @@ import com.example.thulur.domain.model.CurrentUser
 import com.example.thulur.domain.model.Feed
 import com.example.thulur.domain.model.Article
 import com.example.thulur.domain.model.ArticleQuality
+import com.example.thulur.domain.model.DailyFeed
 import com.example.thulur.domain.model.PatchUserSettings
 import com.example.thulur.domain.model.UserSettings
 import com.example.thulur_api.ThulurApi
 import com.example.thulur_api.dtos.AuthSessionDto
 import com.example.thulur_api.dtos.ArticleDto
+import com.example.thulur_api.dtos.DailyFeedDto
 import com.example.thulur_api.dtos.DailyFeedThreadDto
 import com.example.thulur_api.dtos.FeedDto
 import com.example.thulur_api.dtos.ParagraphDto
@@ -33,27 +35,32 @@ class RemoteThulurApiRepositoryTest {
     fun `maps quality tiers and sentinel first seen`() = runTest {
         val repository = RemoteThulurApiRepository(
             thulurApi = FakeThulurApi(
-                threads = listOf(
-                    DailyFeedThreadDto(
-                        threadId = "thread-1",
-                        threadName = "Thread 1",
-                        topicId = "topic-1",
-                        topicName = "Topic 1",
-                        mainFeedScore = 0.9,
-                        threadFirstSeen = "9999-12-31",
-                        threadSummary = "Summary",
-                        articles = listOf(
-                            article(qualityTier = "trash", id = "trash"),
-                            article(qualityTier = "default", id = "default"),
-                            article(qualityTier = "important", id = "important"),
+                dailyFeed = dailyFeedDto(
+                    isDefault = true,
+                    threads = listOf(
+                        DailyFeedThreadDto(
+                            threadId = "thread-1",
+                            threadName = "Thread 1",
+                            topicId = "topic-1",
+                            topicName = "Topic 1",
+                            dailyFeedScore = 0.9,
+                            threadFirstSeen = "9999-12-31",
+                            threadSummary = "Summary",
+                            articles = listOf(
+                                article(qualityTier = "trash", id = "trash"),
+                                article(qualityTier = "default", id = "default"),
+                                article(qualityTier = "important", id = "important"),
+                            ),
                         ),
                     ),
                 ),
             ),
         )
 
-        val thread = repository.getMainFeed().single()
+        val feed = repository.getDailyFeed()
+        val thread = feed.threads.single()
 
+        assertEquals(true, feed.isDefault)
         assertNull(thread.firstSeen)
         assertEquals(ArticleQuality.Trash, thread.articles[0].quality)
         assertEquals(ArticleQuality.Default, thread.articles[1].quality)
@@ -64,25 +71,27 @@ class RemoteThulurApiRepositoryTest {
     fun `defaults quality tier when backend returns null or unknown value`() = runTest {
         val repository = RemoteThulurApiRepository(
             thulurApi = FakeThulurApi(
-                threads = listOf(
-                    DailyFeedThreadDto(
-                        threadId = "thread-1",
-                        threadName = "Thread 1",
-                        topicId = null,
-                        topicName = null,
-                        mainFeedScore = 0.9,
-                        threadFirstSeen = "9999-12-31",
-                        threadSummary = "Summary",
-                        articles = listOf(
-                            article(qualityTier = null, id = "null-tier"),
-                            article(qualityTier = "unexpected", id = "unknown-tier"),
+                dailyFeed = dailyFeedDto(
+                    threads = listOf(
+                        DailyFeedThreadDto(
+                            threadId = "thread-1",
+                            threadName = "Thread 1",
+                            topicId = null,
+                            topicName = null,
+                            dailyFeedScore = 0.9,
+                            threadFirstSeen = "9999-12-31",
+                            threadSummary = "Summary",
+                            articles = listOf(
+                                article(qualityTier = null, id = "null-tier"),
+                                article(qualityTier = "unexpected", id = "unknown-tier"),
+                            ),
                         ),
                     ),
                 ),
             ),
         )
 
-        val thread = repository.getMainFeed().single()
+        val thread = repository.getDailyFeed().threads.single()
 
         assertEquals(ArticleQuality.Default, thread.articles[0].quality)
         assertEquals(ArticleQuality.Default, thread.articles[1].quality)
@@ -92,23 +101,28 @@ class RemoteThulurApiRepositoryTest {
     fun `parses regular first seen date`() = runTest {
         val repository = RemoteThulurApiRepository(
             thulurApi = FakeThulurApi(
-                threads = listOf(
-                    DailyFeedThreadDto(
-                        threadId = "thread-1",
-                        threadName = "Thread 1",
-                        topicId = null,
-                        topicName = null,
-                        mainFeedScore = 0.4,
-                        threadFirstSeen = "2026-03-20",
-                        threadSummary = null,
-                        articles = listOf(article()),
+                dailyFeed = dailyFeedDto(
+                    isDefault = false,
+                    threads = listOf(
+                        DailyFeedThreadDto(
+                            threadId = "thread-1",
+                            threadName = "Thread 1",
+                            topicId = null,
+                            topicName = null,
+                            dailyFeedScore = 0.4,
+                            threadFirstSeen = "2026-03-20",
+                            threadSummary = null,
+                            articles = listOf(article()),
+                        ),
                     ),
                 ),
             ),
         )
 
-        val thread = repository.getMainFeed().single()
+        val feed = repository.getDailyFeed()
+        val thread = feed.threads.single()
 
+        assertEquals(false, feed.isDefault)
         assertEquals(LocalDate(2026, 3, 20), thread.firstSeen)
     }
 
@@ -116,7 +130,7 @@ class RemoteThulurApiRepositoryTest {
     fun `maps article paragraphs into app facing model`() = runTest {
         val repository = RemoteThulurApiRepository(
             thulurApi = FakeThulurApi(
-                threads = emptyList(),
+                dailyFeed = dailyFeedDto(),
                 paragraphs = listOf(
                     ParagraphDto(idx = 0, text = "First paragraph", isNovel = true),
                     ParagraphDto(idx = 1, text = "Second paragraph", isNovel = false),
@@ -139,7 +153,7 @@ class RemoteThulurApiRepositoryTest {
     fun `maps thread history into app facing model and ignores legacy novelty fields`() = runTest {
         val repository = RemoteThulurApiRepository(
             thulurApi = FakeThulurApi(
-                threads = emptyList(),
+                dailyFeed = dailyFeedDto(),
                 history = ThreadHistoryDto(
                     threadId = "thread-1",
                     threadName = "Thread 1",
@@ -175,7 +189,7 @@ class RemoteThulurApiRepositoryTest {
     fun `maps user settings into app facing model`() = runTest {
         val repository = RemoteThulurApiRepository(
             thulurApi = FakeThulurApi(
-                threads = emptyList(),
+                dailyFeed = dailyFeedDto(),
                 settings = userSettingsDto(),
             ),
         )
@@ -201,7 +215,7 @@ class RemoteThulurApiRepositoryTest {
     @Test
     fun `update user settings maps domain update to dto and returns mapped settings`() = runTest {
         val api = FakeThulurApi(
-            threads = emptyList(),
+            dailyFeed = dailyFeedDto(),
             settings = userSettingsDto(),
         )
         val repository = RemoteThulurApiRepository(thulurApi = api)
@@ -230,7 +244,7 @@ class RemoteThulurApiRepositoryTest {
     fun `maps followed and all feeds into app facing model`() = runTest {
         val repository = RemoteThulurApiRepository(
             thulurApi = FakeThulurApi(
-                threads = emptyList(),
+                dailyFeed = dailyFeedDto(),
                 followedFeeds = listOf(feedDto(id = "followed-feed")),
                 allFeeds = listOf(feedDto(id = "all-feed", language = null, tags = emptyList())),
             ),
@@ -267,10 +281,10 @@ class RemoteThulurApiRepositoryTest {
 
     @Test
     fun `follow and unfollow feed delegate to transport`() = runTest {
-        val api = FakeThulurApi(threads = emptyList())
+        val api = FakeThulurApi(dailyFeed = dailyFeedDto())
         val repository = RemoteThulurApiRepository(thulurApi = api)
 
-        repository.followFeed(feedId = "feed-1")
+        repository.followFeed(identifier = "feed-1")
         repository.unfollowFeed(feedId = "feed-2")
 
         assertEquals("feed-1", api.followedFeedId)
@@ -281,7 +295,7 @@ class RemoteThulurApiRepositoryTest {
     fun `maps current user into app facing model`() = runTest {
         val repository = RemoteThulurApiRepository(
             thulurApi = FakeThulurApi(
-                threads = emptyList(),
+                dailyFeed = dailyFeedDto(),
                 currentUser = userDto(),
             ),
         )
@@ -303,7 +317,7 @@ class RemoteThulurApiRepositoryTest {
     @Test
     fun `maps auth sessions into app facing model and delegates terminate`() = runTest {
         val api = FakeThulurApi(
-            threads = emptyList(),
+            dailyFeed = dailyFeedDto(),
             authSessions = listOf(authSessionDto()),
         )
         val repository = RemoteThulurApiRepository(thulurApi = api)
@@ -384,8 +398,16 @@ private fun authSessionDto() = AuthSessionDto(
     lastSeenAt = "2026-04-18T09:00:00Z",
 )
 
+private fun dailyFeedDto(
+    isDefault: Boolean = true,
+    threads: List<DailyFeedThreadDto> = emptyList(),
+) = DailyFeedDto(
+    isDefault = isDefault,
+    threads = threads,
+)
+
 private class FakeThulurApi(
-    private val threads: List<DailyFeedThreadDto>,
+    private val dailyFeed: DailyFeedDto,
     private val paragraphs: List<ParagraphDto> = emptyList(),
     private val settings: UserSettingsDto = userSettingsDto(),
     private val followedFeeds: List<FeedDto> = emptyList(),
@@ -409,7 +431,7 @@ private class FakeThulurApi(
 
     override suspend fun getDailyFeed(
         day: LocalDate?,
-    ): List<DailyFeedThreadDto> = threads
+    ): DailyFeedDto = dailyFeed
 
     override suspend fun getArticleParagraphs(
         articleId: String,
@@ -430,8 +452,8 @@ private class FakeThulurApi(
 
     override suspend fun getAllFeeds(): List<FeedDto> = allFeeds
 
-    override suspend fun followFeed(feedId: String) {
-        followedFeedId = feedId
+    override suspend fun followFeed(identifier: String) {
+        followedFeedId = identifier
     }
 
     override suspend fun unfollowFeed(feedId: String) {
@@ -459,5 +481,8 @@ private class FakeThulurApi(
         deviceName: String?,
         platform: String?,
     ): AuthTokenDto =
+        error("Not used in this test")
+
+    override suspend fun rateArticle(articleId: String, rating: Int) =
         error("Not used in this test")
 }

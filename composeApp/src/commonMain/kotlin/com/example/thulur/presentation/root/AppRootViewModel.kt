@@ -56,8 +56,8 @@ class AppRootViewModel(
         updateAuthenticatedDestination(AppRootAuthenticatedDestination.Settings)
     }
 
-    fun backToMainFeed() {
-        updateAuthenticatedDestination(AppRootAuthenticatedDestination.MainFeed)
+    fun backToDailyFeed() {
+        updateAuthenticatedDestination(AppRootAuthenticatedDestination.DailyFeed)
     }
 
     fun updateTheme(theme: ThemeMode) {

@@ -3,8 +3,9 @@ package com.example.thulur.domain.usecase
 import com.example.thulur.domain.model.ArticleParagraph
 import com.example.thulur.domain.model.AuthSession
 import com.example.thulur.domain.model.CurrentUser
+import com.example.thulur.domain.model.DailyFeed
 import com.example.thulur.domain.model.Feed
-import com.example.thulur.domain.model.MainFeedThread
+import com.example.thulur.domain.model.DailyFeedThread
 import com.example.thulur.domain.model.PatchUserSettings
 import com.example.thulur.domain.model.UserSettings
 import com.example.thulur.domain.repository.ThulurApiRepository
@@ -62,7 +63,7 @@ class SettingsAndFeedsUseCaseTest {
     fun `follow feed delegates id to repository`() = runTest {
         val repository = SettingsFeedsTrackingRepository()
 
-        FollowFeedUseCase(repository)(feedId = "feed-1")
+        FollowFeedUseCase(repository)(identifier = "feed-1")
 
         assertEquals("feed-1", repository.followedFeedId)
     }
@@ -117,7 +118,7 @@ private class SettingsFeedsTrackingRepository : ThulurApiRepository {
     var unfollowedFeedId: String? = null
     var terminatedSessionId: String? = null
 
-    override suspend fun getMainFeed(day: LocalDate?): List<MainFeedThread> =
+    override suspend fun getDailyFeed(day: LocalDate?): DailyFeed =
         error("Not used in this test")
 
     override suspend fun getArticleParagraphs(articleId: String): List<ArticleParagraph> =
@@ -143,8 +144,8 @@ private class SettingsFeedsTrackingRepository : ThulurApiRepository {
         return listOf(sampleFeed("all-feed"))
     }
 
-    override suspend fun followFeed(feedId: String) {
-        followedFeedId = feedId
+    override suspend fun followFeed(identifier: String) {
+        followedFeedId = identifier
     }
 
     override suspend fun unfollowFeed(feedId: String) {
@@ -164,6 +165,12 @@ private class SettingsFeedsTrackingRepository : ThulurApiRepository {
     override suspend fun terminateAuthSession(sessionId: String) {
         terminatedSessionId = sessionId
     }
+
+    override suspend fun getThreadHistory(threadId: String) =
+        error("Not used in this test")
+
+    override suspend fun rateArticle(articleId: String, rating: Int) =
+        error("Not used in this test")
 }
 
 private fun sampleUserSettings() = UserSettings(
