@@ -78,7 +78,6 @@ compose.desktop {
         )
 
         if (System.getProperty("os.name").contains("Mac")) {
-            jvmArgs("--add-opens java.desktop/sun.awt=ALL-UNNAMED")
             jvmArgs("--add-opens", "java.desktop/sun.lwawt=ALL-UNNAMED")
             jvmArgs("--add-opens", "java.desktop/sun.lwawt.macosx=ALL-UNNAMED")
         }
