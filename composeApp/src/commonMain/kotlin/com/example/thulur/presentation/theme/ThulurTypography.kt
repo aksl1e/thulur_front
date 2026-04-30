@@ -29,7 +29,6 @@ data class ThulurTypography(
     val labelLarge: TextStyle,
     val labelMedium: TextStyle,
     val labelSmall: TextStyle,
-
 )
 
 @Composable
