@@ -8,12 +8,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 //import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Send
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.example.thulur.presentation.composables.ThulurButton
 import com.example.thulur.presentation.composables.ThulurTextField
@@ -60,23 +62,8 @@ fun ChatInputSection(
                 placeholder = "Ask Chatbot",
                 enabled = enabled,
                 modifier = Modifier.matchParentSize(),
-                stateColorsOverride = colors.inputField.copy(
-                    rest = colors.inputField.rest.copy(
-                        borderColor = colors.inputField.rest.borderColor.copy(alpha = 0f),
-                        containerColor = colors.inputField.rest.containerColor.copy(alpha = 0.96f),
-                    ),
-                    focused = colors.inputField.focused.copy(
-                        borderColor = colors.inputField.focused.borderColor.copy(alpha = 0f),
-                        containerColor = colors.inputField.focused.containerColor.copy(alpha = 1f),
-                    ),
-                    error = colors.inputField.error.copy(
-                        borderColor = colors.inputField.error.borderColor.copy(alpha = 0f),
-                    ),
-                    disabled = colors.inputField.disabled.copy(
-                        borderColor = colors.inputField.disabled.borderColor.copy(alpha = 0f),
-                    ),
-                ),
-
+                stateColorsOverride = colors.inputField,
+                shape = RoundedCornerShape(15.thulurDp()),
                 // miejsce na ikonę send po prawej
                 contentPadding = PaddingValues(
                     start = 15.thulurDp(),

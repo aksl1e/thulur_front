@@ -48,7 +48,6 @@ class ChatViewModel(
                     message = throwable.message ?: "Failed to load threads.",
                 )
             }
-
             _uiState.update { state ->
                 state.copy(
                     contentState = contentState,

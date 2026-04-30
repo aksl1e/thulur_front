@@ -61,16 +61,19 @@ internal fun chatViewModelKey(sessionInstanceId: Int): String =
 fun ChatScreen(
     uiState: ChatUiState,
     onBackClick: () -> Unit,
-    onThreadClick: (MainFeedThread) -> Unit,
+    onThreadClick: (MainFeedThread) -> Unit, // change to onSectionClick
 ) {
     val colors = ThulurTheme.SemanticColors.settingsScreen
     val leftRailWidth = 225.thulurDp()
     val contentPadding = 30.thulurDp()
-
+    val contentStartPadding = 100.thulurDp()
+    val contentEndPadding = 100.thulurDp()
+    val contentBottomPadding = 15.thulurDp()
     // Local state for the input field
-    var inputValue by remember { mutableStateOf("") }
+    var inputValue by remember { mutableStateOf("") } // To uiState
 
     // Each message is a Pair of (text, isUser) — true = user, false = AI
+    // messeges is temporary will be deleted
     val messages = remember {
         mutableStateListOf(
             "Lorem ipsum dolor sit amet, consectetur adipiscing elit." to true,
@@ -93,7 +96,7 @@ fun ChatScreen(
             .safeContentPadding(),
     ) {
         ThulurAppBar(
-            title = "Discuss", // fallback title if no thread is selected
+            title = "Chat", // fallback title if no thread is selected
             backLabel = "Main Feed",
             onBackClick = onBackClick,
             // Shows the selected thread name in the center — falls back to title if null
@@ -118,7 +121,7 @@ fun ChatScreen(
             modifier = Modifier.fillMaxSize(),
         ) {
             // ---- Left rail: thread selector ----
-            Box(
+            Column(
                 modifier = Modifier
                     .width(leftRailWidth)
                     .fillMaxHeight()
@@ -173,7 +176,13 @@ fun ChatScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(colors.screenBackground),
+                    .background(colors.screenBackground)
+                    .padding(
+                        start = contentStartPadding,
+                        top = contentPadding,
+                        end = contentEndPadding,
+                        bottom = contentBottomPadding,
+                    ),
             ) {
                 // Message list — grows to fill available space above the input bar
                 LazyColumn(
@@ -182,6 +191,7 @@ fun ChatScreen(
                         .weight(1f)
                         .fillMaxWidth()
                         .padding(horizontal = contentPadding),
+                        //.verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(12.thulurDp()),
                     contentPadding = PaddingValues(vertical = contentPadding),
                 ) {
