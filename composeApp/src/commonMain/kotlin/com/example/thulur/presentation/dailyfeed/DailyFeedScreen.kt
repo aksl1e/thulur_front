@@ -69,7 +69,7 @@ fun DailyFeedRoute(
     sessionInstanceId: Int,
     onOpenSettings: () -> Unit,
     viewModel: DailyFeedViewModel = koinViewModel(key = dailyFeedViewModelKey(sessionInstanceId)),
-    onOpenChat: () -> Unit,
+    onOpenChat: (List<DailyFeedThread>) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = dailyFeedColors()
@@ -110,7 +110,11 @@ fun DailyFeedRoute(
                 onShowWholeSubjectClick = viewModel::onShowWholeSubjectClick,
                 onArticleClick = viewModel::onArticleClick,
                 onSettingsClick = onOpenSettings,
-                onChatClick = onOpenChat,
+                onChatClick = {
+                    val threads = (state.contentState as? DailyFeedContentState.Success)?.threads
+                        ?: emptyList()
+                    onOpenChat(threads)
+                },
                 onFeedScrollStateChange = viewModel::onFeedScrollStateChange,
             )
         }

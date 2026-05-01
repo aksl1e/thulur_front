@@ -37,7 +37,7 @@ fun UserChatBox(
                         bottomEnd = 18.thulurDp(),
                     )
                 )
-                .background(colors.aiBubbleContainer) // dawny kolor AI
+                .background(colors.aiBubbleContainer)
                 .padding(
                     horizontal = 16.thulurDp(),
                     vertical = 11.thulurDp(),

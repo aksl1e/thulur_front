@@ -30,7 +30,7 @@ fun AppRootRoute(
                 AppRootAuthenticatedDestination.DailyFeed -> DailyFeedRoute(
                     sessionInstanceId = state.sessionInstanceId,
                     onOpenSettings = viewModel::openSettings,
-                    onOpenChat = viewModel::openChat,
+                    onOpenChat = { threads -> viewModel.openChat(threads) },
                 )
 
                 AppRootAuthenticatedDestination.Settings -> SettingsRoute(
@@ -40,6 +40,7 @@ fun AppRootRoute(
                 )
                 AppRootAuthenticatedDestination.Chat -> ChatRoute(
                     sessionInstanceId = state.sessionInstanceId,
+                    threads = state.chatThreads,
                     onBackClick = viewModel::backToDailyFeed,
                 )
             }

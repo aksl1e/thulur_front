@@ -14,46 +14,42 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 import kotlin.time.Clock
 
-class ChatViewModel(
-    private val getDailyFeedUseCase: GetDailyFeedUseCase,
-) : ViewModel() {
+class ChatViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChatUiState())
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
 
-    init {
-        loadThreads()
+    fun initWithThreads(threads: List<DailyFeedThread>) {
+        if (_uiState.value.contentState != ChatContentState.Loading) return // already initialized
+        val contentState = if (threads.isEmpty()) {
+            ChatContentState.Empty
+        } else {
+            ChatContentState.Success(threads)
+        }
+        _uiState.update {
+            it.copy(
+                contentState = contentState,
+                selectedThreadId = (contentState as? ChatContentState.Success)?.threads?.firstOrNull()?.id,
+            )
+        }
     }
 
     fun onThreadClick(thread: DailyFeedThread) {
         _uiState.update { it.copy(selectedThreadId = thread.id) }
     }
 
-    private fun loadThreads() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(contentState = ChatContentState.Loading) }
+    fun onInputValueChange(value: String) {
+        _uiState.update { it.copy(inputValue = value) }
+    }
 
-            val contentState = try {
-                val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-                val threads = getDailyFeedUseCase(day = today).threads
-                if (threads.isEmpty()) {
-                    ChatContentState.Empty
-                } else {
-                    ChatContentState.Success(threads)
-                }
-            } catch (exception: CancellationException) {
-                throw exception
-            } catch (throwable: Throwable) {
-                ChatContentState.Error(
-                    message = throwable.message ?: "Failed to load threads.",
-                )
-            }
-            _uiState.update { state ->
-                state.copy(
-                    contentState = contentState,
-                    selectedThreadId = (contentState as? ChatContentState.Success)?.threads?.firstOrNull()?.id,
-                )
-            }
+    fun onSendClick() {
+        val text = _uiState.value.inputValue.trim()
+        if (text.isBlank()) return
+        _uiState.update {
+            it.copy(
+                messages = it.messages + Message(text = text, isUser = true),
+                inputValue = "",
+            )
         }
     }
 }

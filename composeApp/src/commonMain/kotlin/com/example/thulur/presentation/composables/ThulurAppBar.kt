@@ -102,10 +102,6 @@ fun ThulurAppBar(
                 )
                 forwardButton?.invoke()
             }
-
-            // Center: optional thread name — perfectly centered between title and brand
-            // Only rendered when chatNameContent is provided (e.g. in ChatScreen)
-            // MainFeedScreen and SettingsScreen are unaffected since they never pass it
             if (chatNameContent != null) {
                 Box(
                     modifier = Modifier.align(Alignment.Center),
