@@ -1,16 +1,18 @@
 package com.example.thulur.presentation.chat.components
 
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-//import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.outlined.Send
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -47,13 +49,14 @@ fun ChatInputSection(
                 vertical = 12.thulurDp(),
             ),
         horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.Bottom,  // changed from CenterVertically so button stays at bottom
     ) {
 
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(46.thulurDp()),
+                .fillMaxWidth()  // removed fixed height so it expands with content
+                .wrapContentHeight()
+                .heightIn(min = 46.thulurDp(), max = 160.thulurDp()),
         ) {
 
             ThulurTextField(
@@ -61,20 +64,22 @@ fun ChatInputSection(
                 onValueChange = onValueChange,
                 placeholder = "Ask Chatbot",
                 enabled = enabled,
-                modifier = Modifier.matchParentSize(),
+                singleLine = false,  // allows multiline
+                modifier = Modifier.fillMaxWidth(),
                 stateColorsOverride = colors.inputField,
-                shape = RoundedCornerShape(15.thulurDp()),
-                // miejsce na ikonę send po prawej
+                shape = RoundedCornerShape(20.thulurDp()),
                 contentPadding = PaddingValues(
-                    start = 15.thulurDp(),
-                    end = 44.thulurDp(),
+                    start = 20.thulurDp(),
+                    end = 56.thulurDp(),  // increased to avoid text running under send button
+                    top = 12.thulurDp(),
+                    bottom = 12.thulurDp(),
                 ),
             )
 
             Box(
                 modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(end = 12.thulurDp()),
+                    .align(Alignment.BottomEnd)  // changed from CenterEnd so it stays at bottom as field grows
+                    .padding(end = 12.thulurDp(), bottom = 5.thulurDp()),
             ) {
                 ThulurButton(
                     onClick = onSendClick,
@@ -85,9 +90,9 @@ fun ChatInputSection(
                     contentPadding = PaddingValues(0.dp),
                     leadingIcon = {
                         Icon(
-                            imageVector = Icons.Outlined.Send,
+                            imageVector = Icons.Filled.Send,
                             contentDescription = "Send",
-                            modifier = Modifier.height(18.thulurDp()),
+                            modifier = Modifier.height(36.thulurDp()),
                         )
                     },
                 )

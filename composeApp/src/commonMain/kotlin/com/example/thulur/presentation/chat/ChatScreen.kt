@@ -1,8 +1,13 @@
 package com.example.thulur.presentation.chat
 
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.thulur.presentation.theme.ProvideThulurDesignScale
+import com.example.thulur.presentation.theme.ThulurDesignScale
+import com.example.thulur.presentation.theme.ThemeMode
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -42,15 +47,21 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun ChatRoute(
     sessionInstanceId: Int,
+    threads: List<DailyFeedThread>,
     onBackClick: () -> Unit,
     viewModel: ChatViewModel = koinViewModel(key = chatViewModelKey(sessionInstanceId)),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    LaunchedEffect(threads) {
+        viewModel.initWithThreads(threads)
+    }
     ChatScreen(
         uiState = uiState,
         onBackClick = onBackClick,
         onThreadClick = viewModel::onThreadClick,
+        onInputValueChange = viewModel::onInputValueChange,
+        onSendClick = viewModel::onSendClick,
     )
 }
 
@@ -61,16 +72,19 @@ internal fun chatViewModelKey(sessionInstanceId: Int): String =
 fun ChatScreen(
     uiState: ChatUiState,
     onBackClick: () -> Unit,
-    onThreadClick: (DailyFeedThread) -> Unit, // change to onSectionClick
+    onThreadClick: (DailyFeedThread) -> Unit,
+    onInputValueChange: (String) -> Unit,
+    onSendClick: () -> Unit,
 ) {
     val colors = ThulurTheme.SemanticColors.settingsScreen
+    val semanticTypography = ThulurTheme.SemanticTypography
     val leftRailWidth = 225.thulurDp()
     val contentPadding = 30.thulurDp()
     val contentStartPadding = 100.thulurDp()
     val contentEndPadding = 100.thulurDp()
     val contentBottomPadding = 15.thulurDp()
     // Local state for the input field
-    var inputValue by remember { mutableStateOf("") } // To uiState
+    //var inputValue by remember { mutableStateOf("") } // Do uiState
 
     // Each message is a Pair of (text, isUser) — true = user, false = AI
     // messeges is temporary will be deleted
@@ -105,7 +119,7 @@ fun ChatScreen(
                     BasicText(
                         text = selectedThreadName,
                         modifier = Modifier.weight(1f, fill = false),
-                        style = ThulurTheme.SemanticTypography.appBarBackLabel.copy(
+                        style = semanticTypography.appBarBackLabel.copy(
                             color = ThulurTheme.SemanticColors.appBar.titleColor,
                         ),
                         maxLines = 1,
@@ -146,15 +160,16 @@ fun ChatScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .verticalScroll(rememberScrollState()),
+                                .padding(
+                                    start = contentPadding,
+                                    top = 70.thulurDp(),
+                                )
                         ) {
                             // "Chats" label above the thread list — matches reference design
                             BasicText(
                                 text = "Chats",
                                 modifier = Modifier.padding(
-                                    start = 16.thulurDp(),
-                                    top = contentPadding,
-                                    bottom = 10.thulurDp(),
+                                    bottom = 20.thulurDp(),
                                 ),
                                 style = ThulurTheme.SemanticTypography.settingsSubsectionTitle.copy(
                                     color = ThulurTheme.SemanticColors.chatScreen.chatsLabelColor,
@@ -195,17 +210,16 @@ fun ChatScreen(
                     verticalArrangement = Arrangement.spacedBy(12.thulurDp()),
                     contentPadding = PaddingValues(vertical = contentPadding),
                 ) {
-                    items(messages) { (text, isUser) ->
-                        if (isUser) {
-                            // User message bubble
+
+                    items(uiState.messages) { message ->
+                        if (message.isUser) {
                             UserChatBox(
-                                message = text,
+                                message = message.text,
                                 modifier = Modifier.fillMaxWidth(),
                             )
                         } else {
-                            // AI message bubble
                             AiChatBox(
-                                message = text,
+                                message = message.text,
                                 modifier = Modifier.fillMaxWidth(),
                             )
                         }
@@ -214,16 +228,42 @@ fun ChatScreen(
 
                 // Input bar — pinned to the bottom of the content area
                 ChatInputSection(
-                    value = inputValue,
-                    onValueChange = { inputValue = it },
-                    onSendClick = {
-                        if (inputValue.isNotBlank()) {
-                            messages.add(inputValue to true)
-                            inputValue = ""
-                        }
-                    },
+                    value = uiState.inputValue,
+                    onValueChange = onInputValueChange,
+                    onSendClick = onSendClick,
                 )
             }
+        }
+    }
+}
+@Preview
+@Composable
+private fun ChatScreenLightPreview() {
+    ProvideThulurDesignScale(scale = ThulurDesignScale()) {
+        ThulurTheme(mode = ThemeMode.Light) {
+            ChatScreen(
+                uiState = ChatUiState(),
+                onBackClick = {},
+                onThreadClick = {},
+                onInputValueChange = {},
+                onSendClick = {},
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun ChatScreenDarkPreview() {
+    ProvideThulurDesignScale(scale = ThulurDesignScale()) {
+        ThulurTheme(mode = ThemeMode.Dark) {
+            ChatScreen(
+                uiState = ChatUiState(),
+                onBackClick = {},
+                onThreadClick = {},
+                onInputValueChange = {},
+                onSendClick = {},
+            )
         }
     }
 }

@@ -42,7 +42,7 @@ fun AiChatBox(
                 imageVector = Icons.Filled.AutoAwesome,
                 contentDescription = null,
                 tint = colors.aiBubbleContent,
-                modifier = Modifier.size(18.thulurDp()),
+                modifier = Modifier.size(28.thulurDp()),
             )
         }
 

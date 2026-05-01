@@ -2,9 +2,11 @@ package com.example.thulur.presentation.root
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.thulur.domain.model.DailyFeedThread
 import com.example.thulur.domain.session.CurrentSessionProvider
 import com.example.thulur.domain.theme.ThemeStore
 import com.example.thulur.domain.usecase.GetUserSettingsUseCase
+import com.example.thulur.presentation.dailyfeed.DailyFeedContentState
 import com.example.thulur.presentation.theme.ThemeMode
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -59,8 +61,12 @@ class AppRootViewModel(
     fun backToDailyFeed() {
         updateAuthenticatedDestination(AppRootAuthenticatedDestination.DailyFeed)
     }
-    fun openChat() {
-        updateAuthenticatedDestination(AppRootAuthenticatedDestination.Chat)
+    fun openChat(threads: List<DailyFeedThread>) {
+        val current = _uiState.value as? AppRootUiState.Ready ?: return
+        _uiState.value = current.copy(
+            destination = AppRootAuthenticatedDestination.Chat,
+            chatThreads = threads,
+        )
     }
 
     fun updateTheme(theme: ThemeMode) {
