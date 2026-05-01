@@ -5,14 +5,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.example.thulur.domain.model.MainFeedThread
+import com.example.thulur.domain.model.DailyFeedThread
 import com.example.thulur.presentation.theme.thulurDp
 
 @Composable
 fun ThreadSectionSelector(
-    threads: List<MainFeedThread>,
+    threads: List<DailyFeedThread>,
     selectedThreadId: String?,
-    onThreadSelected: (MainFeedThread) -> Unit,
+    onThreadSelected: (DailyFeedThread) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(

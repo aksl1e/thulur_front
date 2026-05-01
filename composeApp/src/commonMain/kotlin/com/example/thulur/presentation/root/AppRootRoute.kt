@@ -38,9 +38,9 @@ fun AppRootRoute(
                     onBackClick = viewModel::backToDailyFeed,
                     onThemeApplied = viewModel::updateTheme,
                 )
-                AppRootAuthenticatedDestination.Chat -> ChatRoute( // 👈 new branch
+                AppRootAuthenticatedDestination.Chat -> ChatRoute(
                     sessionInstanceId = state.sessionInstanceId,
-                    onBackClick = viewModel::backToMainFeed,
+                    onBackClick = viewModel::backToDailyFeed,
                 )
             }
         }

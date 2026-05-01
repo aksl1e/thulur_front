@@ -29,7 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.thulur.domain.model.MainFeedThread
+import com.example.thulur.domain.model.DailyFeedThread
 import com.example.thulur.presentation.chat.components.AiChatBox
 import com.example.thulur.presentation.chat.components.ChatInputSection
 import com.example.thulur.presentation.chat.components.ThreadSectionSelector
@@ -61,7 +61,7 @@ internal fun chatViewModelKey(sessionInstanceId: Int): String =
 fun ChatScreen(
     uiState: ChatUiState,
     onBackClick: () -> Unit,
-    onThreadClick: (MainFeedThread) -> Unit, // change to onSectionClick
+    onThreadClick: (DailyFeedThread) -> Unit, // change to onSectionClick
 ) {
     val colors = ThulurTheme.SemanticColors.settingsScreen
     val leftRailWidth = 225.thulurDp()
