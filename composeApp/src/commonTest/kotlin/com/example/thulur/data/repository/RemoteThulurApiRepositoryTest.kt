@@ -127,6 +127,37 @@ class RemoteThulurApiRepositoryTest {
     }
 
     @Test
+    fun `maps daily feed article image url into app facing model`() = runTest {
+        val repository = RemoteThulurApiRepository(
+            thulurApi = FakeThulurApi(
+                dailyFeed = dailyFeedDto(
+                    threads = listOf(
+                        DailyFeedThreadDto(
+                            threadId = "thread-1",
+                            threadName = "Thread 1",
+                            topicId = null,
+                            topicName = null,
+                            dailyFeedScore = 0.4,
+                            threadFirstSeen = "2026-03-20",
+                            threadSummary = null,
+                            articles = listOf(
+                                article(
+                                    id = "article-1",
+                                    imageUrl = "https://example.com/article-1.jpg",
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        )
+
+        val article = repository.getDailyFeed().threads.single().articles.single()
+
+        assertEquals("https://example.com/article-1.jpg", article.imageUrl)
+    }
+
+    @Test
     fun `maps article paragraphs into app facing model`() = runTest {
         val repository = RemoteThulurApiRepository(
             thulurApi = FakeThulurApi(
@@ -165,6 +196,7 @@ class RemoteThulurApiRepositoryTest {
                                 article(
                                     qualityTier = "important",
                                     id = "article-1",
+                                    imageUrl = "https://example.com/article-1.jpg",
                                 ),
                             ),
                         ),
@@ -183,6 +215,7 @@ class RemoteThulurApiRepositoryTest {
         assertEquals("article-1", history.days.single().articles.single().id)
         assertEquals(ArticleQuality.Important, history.days.single().articles.single().quality)
         assertEquals("Display summary", history.days.single().articles.single().displaySummary)
+        assertEquals("https://example.com/article-1.jpg", history.days.single().articles.single().imageUrl)
     }
 
     @Test
@@ -345,11 +378,13 @@ class RemoteThulurApiRepositoryTest {
 private fun article(
     qualityTier: String? = "default",
     id: String = "article",
+    imageUrl: String? = null,
 ) = ArticleDto(
     articleId = id,
     feedId = "feed-1",
     title = "Title",
     url = "https://example.com/$id",
+    imageUrl = imageUrl,
     published = null,
     qualityTier = qualityTier,
     displaySummary = "Display summary",

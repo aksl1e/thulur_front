@@ -8,6 +8,7 @@ data class Article(
     val feedId: String,
     val title: String,
     val url: String,
+    val imageUrl: String? = null,
     val published: String?,
     val displaySummary: String?,
     val isRead: Boolean,

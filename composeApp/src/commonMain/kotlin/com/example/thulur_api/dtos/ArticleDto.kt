@@ -20,6 +20,9 @@ data class ArticleDto(
     /** Article's url. */
     @SerialName("url")
     val url: String,
+    /** Article's preview image url. */
+    @SerialName("url_image")
+    val imageUrl: String? = null,
     /** Article's publication date from RSS. */
     @SerialName("published")
     val published: String?,

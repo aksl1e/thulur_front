@@ -110,6 +110,7 @@ class DailyFeedMethodTest {
                                   "feed_id": "feed-1",
                                   "title": "Article",
                                   "url": "https://example.com",
+                                  "url_image": "https://example.com/image.jpg",
                                   "published": null,
                                   "quality_tier": "important",
                                   "novelty_paragraphs_ids": ["p1", "p2"],
@@ -148,6 +149,7 @@ class DailyFeedMethodTest {
         assertEquals(1, response.threads.first().articles.size)
         assertEquals("important", response.threads.first().articles.first().qualityTier)
         assertEquals("Visible summary", response.threads.first().articles.first().displaySummary)
+        assertEquals("https://example.com/image.jpg", response.threads.first().articles.first().imageUrl)
     }
 }
 
