@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.Composable
@@ -26,6 +25,7 @@ import com.example.thulur.presentation.theme.ThulurTextFieldSemanticColors
 import com.example.thulur.presentation.theme.ThulurTextFieldStateSemanticColors
 import com.example.thulur.presentation.theme.ThulurTheme
 import com.example.thulur.presentation.theme.rememberThulurTextFieldSemanticColors
+import com.example.thulur.presentation.theme.thulurDefaultShape
 import com.example.thulur.presentation.theme.thulurDp
 
 typealias ThulurTextFieldColors = ThulurTextFieldSemanticColors
@@ -42,7 +42,7 @@ fun ThulurTextField(
     textStyle: TextStyle = ThulurTheme.Typography.bodyLarge,
     placeholderStyle: TextStyle = textStyle,
     stateColorsOverride: ThulurTextFieldStateSemanticColors = ThulurTheme.SemanticColors.authScreen.emailField,
-    shape: Shape = RoundedCornerShape(7.thulurDp()),
+    shape: Shape = thulurDefaultShape(),
     contentPadding: PaddingValues = PaddingValues(start = 15.thulurDp()),
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {

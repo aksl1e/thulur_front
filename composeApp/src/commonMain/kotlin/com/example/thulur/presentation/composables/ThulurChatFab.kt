@@ -20,6 +20,7 @@ import com.example.thulur.presentation.theme.ThulurDesignScale
 import com.example.thulur.presentation.theme.ProvideThulurDesignScale
 import com.example.thulur.presentation.theme.ThemeMode
 import com.example.thulur.presentation.theme.ThulurTheme
+import com.example.thulur.presentation.theme.thulurDefaultChatCornerRadius
 import com.example.thulur.presentation.theme.thulurDp
 
 @Composable
@@ -32,7 +33,7 @@ fun ThulurChatFab(
 ) {
     val colors = ThulurTheme.SemanticColors.chatFab
     val typography = ThulurTheme.SemanticTypography
-    val shape = RoundedCornerShape(40.thulurDp())
+    val shape = RoundedCornerShape(thulurDefaultChatCornerRadius())
 
     CompositionLocalProvider(LocalContentColor provides colors.contentColor) {
         Row(

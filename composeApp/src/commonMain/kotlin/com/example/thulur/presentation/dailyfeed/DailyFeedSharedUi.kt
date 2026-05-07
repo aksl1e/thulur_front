@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
@@ -15,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.thulur.presentation.theme.ThemeMode
 import com.example.thulur.presentation.theme.ThulurTheme
+import com.example.thulur.presentation.theme.thulurDefaultShape
 
 data class DailyFeedColors(
     val surface: Color,
@@ -33,10 +33,12 @@ internal fun DailyFeedStatusCard(
     colors: DailyFeedColors,
     modifier: Modifier = Modifier,
 ) {
+    val shape = thulurDefaultShape()
+
     Column(
         modifier = modifier
-            .background(colors.surfaceContainer, RoundedCornerShape(28.dp))
-            .border(1.dp, colors.outline, RoundedCornerShape(28.dp))
+            .background(colors.surfaceContainer, shape)
+            .border(1.dp, colors.outline, shape)
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -59,10 +61,12 @@ internal fun DailyFeedErrorCard(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val shape = thulurDefaultShape()
+
     Column(
         modifier = modifier
-            .background(colors.surfaceContainer, RoundedCornerShape(28.dp))
-            .border(1.dp, colors.outline, RoundedCornerShape(28.dp))
+            .background(colors.surfaceContainer, shape)
+            .border(1.dp, colors.outline, shape)
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -83,9 +87,11 @@ internal fun RetryButton(
     colors: DailyFeedColors,
     onRetry: () -> Unit,
 ) {
+    val shape = thulurDefaultShape()
+
     androidx.compose.foundation.layout.Box(
         modifier = Modifier
-            .background(colors.accent, RoundedCornerShape(999.dp))
+            .background(colors.accent, shape)
             .clickable(onClick = onRetry)
             .padding(horizontal = 18.dp, vertical = 10.dp),
     ) {

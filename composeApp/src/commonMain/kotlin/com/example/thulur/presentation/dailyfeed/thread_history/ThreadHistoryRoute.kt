@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
@@ -372,7 +371,6 @@ private fun ThreadHistoryBottomActionRow(
             enabled = canGoToPreviousDay,
             colorRole = ThulurColorRole.Slate,
             useContainerStates = false,
-            shape = RoundedCornerShape(1000.thulurDp()),
             contentDescription = "Previous day",
             tooltipText = "Previous day",
             leadingIcon = {
@@ -394,7 +392,6 @@ private fun ThreadHistoryBottomActionRow(
             enabled = canGoToNextDay,
             colorRole = ThulurColorRole.Slate,
             useContainerStates = false,
-            shape = RoundedCornerShape(1000.thulurDp()),
             contentDescription = "Next day",
             tooltipText = "Next day",
             leadingIcon = {

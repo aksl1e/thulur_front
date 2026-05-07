@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
@@ -32,6 +31,7 @@ import com.example.thulur.presentation.theme.ThulurDesignScale
 import com.example.thulur.presentation.theme.ThulurSnackBarSemanticColors
 import com.example.thulur.presentation.theme.ThulurTheme
 import com.example.thulur.presentation.theme.rememberThulurSnackBarSemanticColors
+import com.example.thulur.presentation.theme.thulurDefaultShape
 import com.example.thulur.presentation.theme.thulurDp
 import kotlinx.coroutines.delay
 
@@ -73,10 +73,12 @@ fun ThulurSnackBar(
         exit = slideOutVertically { it },
         modifier = modifier,
     ) {
+        val shape = thulurDefaultShape()
+
         Box(
             modifier = Modifier
                 .fillMaxWidth(0.5f)
-                .clip(RoundedCornerShape(15.thulurDp()))
+                .clip(shape)
                 .background(colors.containerColor)
                 .padding(horizontal = 10.thulurDp(), vertical = 5.thulurDp()),
         ) {

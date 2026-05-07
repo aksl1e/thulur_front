@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
@@ -33,6 +32,7 @@ import com.example.thulur.presentation.theme.ThemeMode
 import com.example.thulur.presentation.theme.ThulurDesignScale
 import com.example.thulur.presentation.theme.ThulurTheme
 import com.example.thulur.presentation.theme.thulurDp
+import com.example.thulur.presentation.theme.thulurDefaultShape
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -63,7 +63,7 @@ fun AuthScreen(
 
     val colors = ThulurTheme.SemanticColors.authScreen
     val typography = ThulurTheme.SemanticTypography
-    val cardShape = RoundedCornerShape(20.thulurDp())
+    val cardShape = thulurDefaultShape()
 
     Column(
         modifier = Modifier
@@ -148,7 +148,6 @@ fun AuthScreen(
                         modifier = Modifier.fillMaxWidth(),
                         enabled = uiState.isContinueEnabled,
                         textStyle = typography.authPrimaryAction,
-                        shape = RoundedCornerShape(7.thulurDp()),
                         contentPadding = PaddingValues(vertical = 15.thulurDp()),
                         stateColorsOverride = colors.continueButton,
                     )

@@ -976,7 +976,7 @@ fun rememberThulurSettingsScreenSemanticColors(): ThulurSettingsScreenSemanticCo
                     contentColor = error.s300,
                 ),
             ),
-            dropdownMenuContainerColor = slate.s50,
+            dropdownMenuContainerColor = slate.s100,
             dropdownMenuContentColor = slate.s900,
             switchCheckedThumbColor = slate.s50,
             switchCheckedTrackColor = primary.s500,

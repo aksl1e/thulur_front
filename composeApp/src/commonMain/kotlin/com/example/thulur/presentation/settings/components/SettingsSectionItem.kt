@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.LocalContentColor
 import androidx.compose.runtime.Composable
@@ -31,12 +30,12 @@ import com.example.thulur.presentation.theme.ThulurDesignScale
 import com.example.thulur.presentation.theme.ProvideThulurDesignScale
 import com.example.thulur.presentation.theme.ThemeMode
 import com.example.thulur.presentation.theme.ThulurTheme
+import com.example.thulur.presentation.theme.thulurDefaultShape
 import com.example.thulur.presentation.theme.thulurDp
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.unit.dp
 
 @Composable
 fun SettingsSectionItem(
@@ -51,12 +50,7 @@ fun SettingsSectionItem(
     val colors = ThulurTheme.SemanticColors.settingsSectionItem
     val typography = ThulurTheme.SemanticTypography
     val interactionSource = remember { MutableInteractionSource() }
-    val shape = RoundedCornerShape(
-        topStart = 15.thulurDp(),
-        bottomStart = 15.thulurDp(),
-        topEnd = 0.thulurDp(),
-        bottomEnd = 0.thulurDp(),
-    )
+    val shape = thulurDefaultShape()
     val isHovered by interactionSource.collectIsHoveredAsState()
     val isPressed by interactionSource.collectIsPressedAsState()
     val resolvedColors = when {

@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
@@ -44,6 +43,7 @@ import com.example.thulur.presentation.theme.ThulurDesignScale
 import com.example.thulur.presentation.theme.ProvideThulurDesignScale
 import com.example.thulur.presentation.theme.ThemeMode
 import com.example.thulur.presentation.theme.ThulurTheme
+import com.example.thulur.presentation.theme.thulurDefaultShape
 import com.example.thulur.presentation.theme.thulurDp
 
 enum class ThulurArticleItemVariant {
@@ -70,8 +70,8 @@ fun ThulurArticleItem(
     val articleItemColors = ThulurTheme.SemanticColors.articleItem
     val colors = articleItemColors.colorsFor(variant)
     val typography = ThulurTheme.SemanticTypography
-    val containerShape = RoundedCornerShape(30.thulurDp())
-    val imageShape = RoundedCornerShape(10.thulurDp())
+    val containerShape = thulurDefaultShape()
+    val imageShape = thulurDefaultShape()
     val resolvedImageUrl = imageUrl?.takeIf(String::isNotBlank)
     var imageState by remember(resolvedImageUrl) {
         mutableStateOf<AsyncImagePainter.State>(AsyncImagePainter.State.Empty)

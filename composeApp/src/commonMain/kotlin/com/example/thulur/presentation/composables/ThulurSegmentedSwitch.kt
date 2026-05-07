@@ -37,6 +37,7 @@ import com.example.thulur.presentation.theme.ProvideThulurDesignScale
 import com.example.thulur.presentation.theme.ThulurSegmentedSwitchSemanticColors
 import com.example.thulur.presentation.theme.ThemeMode
 import com.example.thulur.presentation.theme.ThulurTheme
+import com.example.thulur.presentation.theme.thulurDefaultCornerRadius
 import com.example.thulur.presentation.theme.rememberThulurSegmentedSwitchSemanticColors
 import com.example.thulur.presentation.theme.thulurDp
 
@@ -72,7 +73,7 @@ fun <T> ThulurSegmentedSwitch(
     optionLabel: (T) -> String,
     textStyle: TextStyle = ThulurTheme.Typography.bodyLarge,
     colorsOverride: ThulurSegmentedSwitchSemanticColors? = null,
-    cornerRadius: Dp = 25.thulurDp(),
+    cornerRadius: Dp = thulurDefaultCornerRadius(),
     horizontalItemPadding: Dp = 16.thulurDp(),
     verticalItemPadding: Dp = 0.dp,
 ) {

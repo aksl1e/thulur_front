@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.Icon
 import androidx.compose.material.LocalContentColor
@@ -39,6 +38,7 @@ import com.example.thulur.presentation.theme.ThulurDesignScale
 import com.example.thulur.presentation.theme.ProvideThulurDesignScale
 import com.example.thulur.presentation.theme.ThemeMode
 import com.example.thulur.presentation.theme.ThulurTheme
+import com.example.thulur.presentation.theme.thulurDefaultShape
 import com.example.thulur.presentation.theme.thulurDp
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -94,6 +94,7 @@ private fun TimeSelectorSegment(
     val typography = ThulurTheme.SemanticTypography
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
+    val shape = thulurDefaultShape()
     val containerColor = when {
         !enabled -> colors.segmentDisabledContainerColor
         isHovered -> colors.segmentHoveredContainerColor
@@ -109,7 +110,7 @@ private fun TimeSelectorSegment(
         modifier = Modifier
             .width(56.thulurDp())
             .height(64.thulurDp())
-            .clip(RoundedCornerShape(18.thulurDp()))
+            .clip(shape)
             .background(containerColor)
             .hoverable(
                 enabled = enabled,

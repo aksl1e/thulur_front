@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.runtime.Composable
@@ -26,6 +25,7 @@ import com.example.thulur.domain.usecase.GetArticleParagraphsUseCase
 import com.example.thulur.domain.usecase.RateArticleUseCase
 import com.example.thulur.presentation.composables.ThulurAppBar
 import com.example.thulur.presentation.theme.ThulurTheme
+import com.example.thulur.presentation.theme.thulurDefaultShape
 import org.koin.compose.koinInject
 
 @Composable
@@ -137,13 +137,14 @@ private fun ArticleReaderErrorState(
     modifier: Modifier = Modifier,
 ) {
     val colors = ThulurTheme.Colors
+    val shape = thulurDefaultShape()
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .background(
                 color = colors.slate.s50,
-                shape = RoundedCornerShape(24.dp),
+                shape = shape,
             )
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),

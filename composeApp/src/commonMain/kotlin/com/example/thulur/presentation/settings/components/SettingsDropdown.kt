@@ -2,7 +2,6 @@ package com.example.thulur.presentation.settings.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -11,10 +10,10 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
+import com.example.thulur.presentation.theme.thulurDefaultShape
 
 @Composable
 fun SettingsDropdown(
@@ -31,9 +30,11 @@ fun SettingsDropdown(
         onDismissRequest = onDismissRequest,
         properties = PopupProperties(focusable = true),
     ) {
+        val shape = thulurDefaultShape()
+
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
+                .clip(shape)
                 .background(containerColor)
                 .then(modifier),
         ) {

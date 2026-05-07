@@ -19,7 +19,6 @@ import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
@@ -112,7 +111,6 @@ internal fun ThulurThreadItem(
                                 modifier = Modifier.width(30.thulurDp()).height(30.thulurDp()),
                             )
                         },
-                        shape = RoundedCornerShape(1000.thulurDp()),
                         stateColorsOverride = colors.showWholeSubjectButton,
                         contentDescription = "Show whole subject",
                         tooltipText = "Show whole subject",
@@ -130,7 +128,6 @@ internal fun ThulurThreadItem(
                                 modifier = Modifier.width(30.thulurDp()).height(30.thulurDp()),
                             )
                         },
-                        shape = RoundedCornerShape(1000.thulurDp()),
                         stateColorsOverride = colors.toggleArticlesButton,
                         contentDescription = if (areArticlesVisible) "Hide Articles" else "Show Articles",
                         tooltipText = if (areArticlesVisible) "Hide Articles" else "Show Articles",

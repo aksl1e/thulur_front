@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.LocalContentColor
 import androidx.compose.runtime.Composable
@@ -51,6 +50,7 @@ import com.example.thulur.presentation.theme.ThulurButtonStateSemanticColors
 import com.example.thulur.presentation.theme.ThemeMode
 import com.example.thulur.presentation.theme.ThulurTheme
 import com.example.thulur.presentation.theme.rememberThulurButtonSemanticColors
+import com.example.thulur.presentation.theme.thulurDefaultShape
 import com.example.thulur.presentation.theme.thulurDp
 
 enum class ThulurButtonContentDirection {
@@ -72,7 +72,7 @@ fun ThulurButton(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     textStyle: TextStyle = ThulurTheme.Typography.bodyLarge,
     supportingTextStyle: TextStyle? = null,
-    shape: Shape = RoundedCornerShape(0.dp),
+    shape: Shape = thulurDefaultShape(),
     contentPadding: PaddingValues = PaddingValues(15.thulurDp()),
     iconSize: Dp? = null,
     spacing: Dp = 8.thulurDp(),
@@ -236,11 +236,13 @@ private fun ThulurButtonTooltip(
         alignment = Alignment.TopCenter,
         offset = IntOffset(0, -(tooltipHeightPx + tooltipGapPx)),
     ) {
+        val shape = thulurDefaultShape()
+
         Box(
             modifier = Modifier
                 .alpha(opacity)
                 .onSizeChanged { tooltipHeightPx = it.height }
-                .clip(RoundedCornerShape(10.thulurDp()))
+                .clip(shape)
                 .background(tooltipColors.containerColor)
                 .padding(
                     horizontal = 10.thulurDp(),

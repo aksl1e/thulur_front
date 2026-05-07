@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -30,6 +29,7 @@ import com.example.thulur.presentation.theme.ThulurDesignScale
 import com.example.thulur.presentation.theme.ProvideThulurDesignScale
 import com.example.thulur.presentation.theme.ThemeMode
 import com.example.thulur.presentation.theme.ThulurTheme
+import com.example.thulur.presentation.theme.thulurDefaultShape
 import com.example.thulur.presentation.theme.thulurDp
 import org.koin.viewmodel.defaultExtras
 
@@ -323,10 +323,11 @@ private fun FeedTagItem(
 ) {
     val colors = ThulurTheme.SemanticColors.settingsScreen
     val typography = ThulurTheme.SemanticTypography
+    val shape = thulurDefaultShape()
 
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(8.thulurDp()))
+            .clip(shape)
             .background(colors.railColor)
             .padding(
                 horizontal = 10.thulurDp(),
@@ -349,11 +350,12 @@ private fun FeedInfoCard(
 ) {
     val colors = ThulurTheme.SemanticColors.settingsScreen
     val typography = ThulurTheme.SemanticTypography
+    val shape = thulurDefaultShape()
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.thulurDp()))
+            .clip(shape)
             .background(colors.railColor)
             .padding(16.thulurDp()),
         verticalArrangement = Arrangement.spacedBy(8.thulurDp()),
