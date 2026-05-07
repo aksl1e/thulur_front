@@ -1,8 +1,9 @@
-package com.example.thulur.presentation.dailyfeed
+package com.example.thulur.presentation.dailyfeed.article_reader
 
 import com.example.thulur.domain.model.ArticleParagraph
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlin.math.abs
 
 private val articleReaderJson = Json {
     prettyPrint = false
@@ -28,7 +29,7 @@ internal fun orderArticleReaderCandidateIndices(
     candidateIndices: Iterable<Int>,
     paragraphIdx: Int,
 ): List<Int> = candidateIndices.sortedBy { candidateIndex ->
-    kotlin.math.abs(candidateIndex - paragraphIdx)
+    abs(candidateIndex - paragraphIdx)
 }
 
 internal fun buildArticleReaderInjectionScript(

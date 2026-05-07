@@ -12,6 +12,7 @@ import com.example.thulur.domain.model.UserSettings
 import com.example.thulur.domain.repository.ThulurApiRepository
 import com.example.thulur.domain.usecase.GetArticleParagraphsUseCase
 import com.example.thulur.domain.usecase.RateArticleUseCase
+import com.example.thulur.presentation.dailyfeed.article_reader.ArticleReaderViewModel
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test

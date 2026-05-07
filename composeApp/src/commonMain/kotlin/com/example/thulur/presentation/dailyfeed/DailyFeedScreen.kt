@@ -33,9 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.animation.core.tween
-import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.thulur.domain.model.DailyFeedThread
@@ -49,13 +47,12 @@ import com.example.thulur.presentation.composables.ThulurThreadItem
 import com.example.thulur.presentation.composables.TopicsViewMode
 import com.example.thulur.presentation.composables.TopicsSwitch
 import com.example.thulur.presentation.composables.desktopScrollRootObserver
+import com.example.thulur.presentation.dailyfeed.article_reader.ArticleReaderRoute
 import com.example.thulur.presentation.dailyfeed.thread_history.ThreadHistoryRoute
-import com.example.thulur.presentation.theme.ThemeMode
 import com.example.thulur.presentation.theme.ThulurColorRole
 import com.example.thulur.presentation.theme.ThulurTheme
 import com.example.thulur.presentation.theme.thulurDp
 import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone

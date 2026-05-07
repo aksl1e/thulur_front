@@ -1,4 +1,4 @@
-package com.example.thulur.presentation.dailyfeed
+package com.example.thulur.presentation.dailyfeed.article_reader
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -6,12 +6,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
 import com.example.thulur.domain.model.ArticleParagraph
+import kotlinx.serialization.Serializable
 import java.awt.BorderLayout
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
 import kotlinx.serialization.json.Json
+import org.cef.CefClient
 import org.cef.browser.CefBrowser
+import org.cef.browser.CefFrame
 import org.cef.browser.CefMessageRouter
 import org.cef.callback.CefQueryCallback
 import org.cef.handler.CefLifeSpanHandlerAdapter
@@ -80,7 +83,7 @@ private class JcefArticleWebViewController(
     private val disposed = AtomicBoolean(false)
     private val bridgeHandler = ArticleReaderBridgeHandler()
 
-    private var client: org.cef.CefClient? = null
+    private var client: CefClient? = null
     private var browser: CefBrowser? = null
     private var messageRouter: CefMessageRouter? = null
 
@@ -187,14 +190,14 @@ private class JcefArticleWebViewController(
         }
     }
 
-    private fun configureClient(client: org.cef.CefClient) {
+    private fun configureClient(client: CefClient) {
         messageRouter = CefMessageRouter.create().also { router ->
             router.addHandler(bridgeHandler, true)
             client.addMessageRouter(router)
         }
 
         client.addLoadHandler(object : CefLoadHandlerAdapter() {
-            override fun onLoadEnd(browser: CefBrowser, frame: org.cef.browser.CefFrame, httpStatusCode: Int) {
+            override fun onLoadEnd(browser: CefBrowser, frame: CefFrame, httpStatusCode: Int) {
                 if (disposed.get() || !frame.isMain()) return
 
                 articleReaderDebugLog(
@@ -212,7 +215,7 @@ private class JcefArticleWebViewController(
 
             override fun onLoadError(
                 browser: CefBrowser,
-                frame: org.cef.browser.CefFrame,
+                frame: CefFrame,
                 errorCode: CefLoadHandler.ErrorCode,
                 errorText: String,
                 failedUrl: String,
@@ -228,7 +231,7 @@ private class JcefArticleWebViewController(
         client.addLifeSpanHandler(object : CefLifeSpanHandlerAdapter() {
             override fun onBeforePopup(
                 browser: CefBrowser,
-                frame: org.cef.browser.CefFrame,
+                frame: CefFrame,
                 targetUrl: String,
                 targetFrameName: String,
             ): Boolean {
@@ -322,7 +325,7 @@ private class JcefArticleWebViewController(
     private inner class ArticleReaderBridgeHandler : CefMessageRouterHandlerAdapter() {
         override fun onQuery(
             browser: CefBrowser,
-            frame: org.cef.browser.CefFrame,
+            frame: CefFrame,
             queryId: Long,
             request: String,
             persistent: Boolean,
@@ -335,13 +338,13 @@ private fun articleReaderDebugLog(message: String) {
     println("[ThulurArticleReader][JCEF] $message")
 }
 
-@kotlinx.serialization.Serializable
+@Serializable
 internal data class ArticleReaderBridgeMessage(
     val type: String,
     val data: ArticleReaderBridgeMessageData? = null,
 )
 
-@kotlinx.serialization.Serializable
+@Serializable
 internal data class ArticleReaderBridgeMessageData(
     val value: Double? = null,
     val rate: Int? = null,

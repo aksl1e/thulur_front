@@ -1,4 +1,4 @@
-package com.example.thulur.presentation.dailyfeed
+package com.example.thulur.presentation.dailyfeed.article_reader
 
 import com.example.thulur.domain.model.ArticleParagraph
 

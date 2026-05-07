@@ -1,9 +1,10 @@
-package com.example.thulur.presentation.dailyfeed
+package com.example.thulur.presentation.dailyfeed.article_reader
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.thulur.domain.usecase.GetArticleParagraphsUseCase
 import com.example.thulur.domain.usecase.RateArticleUseCase
+import com.example.thulur.presentation.dailyfeed.OpenArticle
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

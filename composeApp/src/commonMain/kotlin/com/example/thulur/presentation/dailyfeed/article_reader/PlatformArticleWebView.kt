@@ -1,4 +1,4 @@
-package com.example.thulur.presentation.dailyfeed
+package com.example.thulur.presentation.dailyfeed.article_reader
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier

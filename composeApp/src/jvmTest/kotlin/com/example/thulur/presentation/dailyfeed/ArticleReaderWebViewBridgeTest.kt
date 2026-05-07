@@ -1,5 +1,6 @@
 package com.example.thulur.presentation.dailyfeed
 
+import com.example.thulur.presentation.dailyfeed.article_reader.parseArticleReaderBridgeMessage
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

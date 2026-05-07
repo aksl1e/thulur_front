@@ -1,8 +1,9 @@
-package com.example.thulur.presentation.dailyfeed
+package com.example.thulur.presentation.dailyfeed.article_reader
 
 import me.friwi.jcefmaven.CefAppBuilder
 import me.friwi.jcefmaven.MavenCefAppHandlerAdapter
 import org.cef.CefApp
+import org.cef.CefClient
 import java.io.File
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
@@ -26,7 +27,7 @@ internal object JcefBrowserRuntime {
         future.getNow(null)?.getOrNull()?.dispose()
     }
 
-    fun createClientAsync(): CompletableFuture<Result<org.cef.CefClient>> = startInitialization()
+    fun createClientAsync(): CompletableFuture<Result<CefClient>> = startInitialization()
         .thenApply { result ->
             if (result.isSuccess) {
                 runCatching {

@@ -1,4 +1,4 @@
-package com.example.thulur.presentation.dailyfeed
+package com.example.thulur.presentation.dailyfeed.article_reader
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -24,9 +24,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.thulur.domain.usecase.GetArticleParagraphsUseCase
 import com.example.thulur.domain.usecase.RateArticleUseCase
 import com.example.thulur.presentation.composables.ThulurAppBar
+import com.example.thulur.presentation.dailyfeed.OpenArticle
 import com.example.thulur.presentation.theme.ThulurTheme
 import com.example.thulur.presentation.theme.thulurDefaultShape
 import org.koin.compose.koinInject
+import kotlin.reflect.KClass
 
 @Composable
 fun ArticleReaderRoute(
@@ -167,7 +169,7 @@ private fun articleReaderViewModelFactory(
 ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(
-        modelClass: kotlin.reflect.KClass<T>,
+        modelClass: KClass<T>,
         extras: CreationExtras,
     ): T = ArticleReaderViewModel(
         openArticle = openArticle,
