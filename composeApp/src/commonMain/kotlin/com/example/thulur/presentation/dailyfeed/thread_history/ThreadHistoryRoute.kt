@@ -44,6 +44,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.ViewModelProvider
 import com.example.thulur.domain.model.ThreadHistoryDay
+import com.example.thulur.domain.session.ReadArticlesCache
 import com.example.thulur.domain.usecase.GetThreadHistoryUseCase
 import com.example.thulur.presentation.composables.ThulurAppBar
 import com.example.thulur.presentation.composables.ThulurButton
@@ -73,10 +74,12 @@ fun ThreadHistoryRoute(
     onArticleClick: (ThulurThreadArticleData) -> Unit,
 ) {
     val getThreadHistoryUseCase = koinInject<GetThreadHistoryUseCase>()
-    val factory = remember(openThreadHistory, getThreadHistoryUseCase) {
+    val readArticlesCache = koinInject<ReadArticlesCache>()
+    val factory = remember(openThreadHistory, getThreadHistoryUseCase, readArticlesCache) {
         threadHistoryViewModelFactory(
             openThreadHistory = openThreadHistory,
             getThreadHistoryUseCase = getThreadHistoryUseCase,
+            readArticlesCache = readArticlesCache,
         )
     }
     val viewModel: ThreadHistoryViewModel = viewModel(
@@ -418,6 +421,7 @@ internal fun LocalDate.toThreadHistoryDayLabel(): String {
 private fun threadHistoryViewModelFactory(
     openThreadHistory: OpenThreadHistory,
     getThreadHistoryUseCase: GetThreadHistoryUseCase,
+    readArticlesCache: ReadArticlesCache,
 ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(
@@ -426,6 +430,7 @@ private fun threadHistoryViewModelFactory(
     ): T = ThreadHistoryViewModel(
         openThreadHistory = openThreadHistory,
         getThreadHistoryUseCase = getThreadHistoryUseCase,
+        readArticlesCache = readArticlesCache,
     ) as T
 }
 

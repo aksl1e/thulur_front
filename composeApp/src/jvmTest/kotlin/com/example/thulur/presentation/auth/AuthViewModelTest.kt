@@ -1,6 +1,7 @@
 package com.example.thulur.presentation.auth
 
 import com.example.thulur.data.session.CurrentSessionProviderImpl
+import com.example.thulur.data.session.InMemoryReadArticlesCache
 import com.example.thulur.data.session.InMemorySecureTokenStore
 import com.example.thulur.domain.auth.PasskeyAuthenticationErrorCode
 import com.example.thulur.domain.auth.PasskeyAuthenticationException
@@ -36,7 +37,7 @@ class AuthViewModelTest {
     @Test
     fun `blank email does not start auth flow`() = runTest {
         val authenticator = FakePasskeyAuthenticator()
-        val sessionProvider = CurrentSessionProviderImpl(InMemorySecureTokenStore())
+        val sessionProvider = createSessionProvider(InMemorySecureTokenStore())
         val viewModel = AuthViewModel(
             passkeyAuthenticator = authenticator,
             currentSessionProvider = sessionProvider,
@@ -53,7 +54,7 @@ class AuthViewModelTest {
     @Test
     fun `successful login stores token`() = runTest {
         val authenticator = FakePasskeyAuthenticator(loginResult = Result.success("login-token"))
-        val sessionProvider = CurrentSessionProviderImpl(InMemorySecureTokenStore())
+        val sessionProvider = createSessionProvider(InMemorySecureTokenStore())
         val viewModel = AuthViewModel(
             passkeyAuthenticator = authenticator,
             currentSessionProvider = sessionProvider,
@@ -81,7 +82,7 @@ class AuthViewModelTest {
             ),
             registerResult = Result.success("register-token"),
         )
-        val sessionProvider = CurrentSessionProviderImpl(InMemorySecureTokenStore())
+        val sessionProvider = createSessionProvider(InMemorySecureTokenStore())
         val viewModel = AuthViewModel(
             passkeyAuthenticator = authenticator,
             currentSessionProvider = sessionProvider,
@@ -107,7 +108,7 @@ class AuthViewModelTest {
                 ),
             ),
         )
-        val sessionProvider = CurrentSessionProviderImpl(InMemorySecureTokenStore())
+        val sessionProvider = createSessionProvider(InMemorySecureTokenStore())
         val viewModel = AuthViewModel(
             passkeyAuthenticator = authenticator,
             currentSessionProvider = sessionProvider,
@@ -133,7 +134,7 @@ class AuthViewModelTest {
             ),
             registerResult = Result.failure(IllegalStateException("Registration failed")),
         )
-        val sessionProvider = CurrentSessionProviderImpl(InMemorySecureTokenStore())
+        val sessionProvider = createSessionProvider(InMemorySecureTokenStore())
         val viewModel = AuthViewModel(
             passkeyAuthenticator = authenticator,
             currentSessionProvider = sessionProvider,
@@ -150,7 +151,7 @@ class AuthViewModelTest {
     @Test
     fun `storage write failure keeps runtime authenticated session`() = runTest {
         val authenticator = FakePasskeyAuthenticator(loginResult = Result.success("login-token"))
-        val sessionProvider = CurrentSessionProviderImpl(FailingWriteSecureTokenStore())
+        val sessionProvider = createSessionProvider(FailingWriteSecureTokenStore())
         val viewModel = AuthViewModel(
             passkeyAuthenticator = authenticator,
             currentSessionProvider = sessionProvider,
@@ -164,6 +165,12 @@ class AuthViewModelTest {
         assertNull(viewModel.uiState.value.errorMessage)
     }
 }
+
+private fun createSessionProvider(tokenStore: SecureTokenStore): CurrentSessionProviderImpl =
+    CurrentSessionProviderImpl(
+        tokenStore = tokenStore,
+        readArticlesCache = InMemoryReadArticlesCache(),
+    )
 
 private class FakePasskeyAuthenticator(
     private val loginResult: Result<String> = Result.success("login-token"),

@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.ViewModelProvider
+import com.example.thulur.domain.session.ReadArticlesCache
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.thulur.domain.usecase.GetArticleParagraphsUseCase
@@ -38,11 +39,13 @@ fun ArticleReaderRoute(
 ) {
     val getArticleParagraphsUseCase = koinInject<GetArticleParagraphsUseCase>()
     val rateArticleUseCase = koinInject<RateArticleUseCase>()
-    val factory = remember(openArticle, getArticleParagraphsUseCase, rateArticleUseCase) {
+    val readArticlesCache = koinInject<ReadArticlesCache>()
+    val factory = remember(openArticle, getArticleParagraphsUseCase, rateArticleUseCase, readArticlesCache) {
         articleReaderViewModelFactory(
             openArticle = openArticle,
             getArticleParagraphsUseCase = getArticleParagraphsUseCase,
             rateArticleUseCase = rateArticleUseCase,
+            readArticlesCache = readArticlesCache,
         )
     }
     val viewModel: ArticleReaderViewModel = viewModel(
@@ -166,6 +169,7 @@ private fun articleReaderViewModelFactory(
     openArticle: OpenArticle,
     getArticleParagraphsUseCase: GetArticleParagraphsUseCase,
     rateArticleUseCase: RateArticleUseCase,
+    readArticlesCache: ReadArticlesCache,
 ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(
@@ -175,5 +179,6 @@ private fun articleReaderViewModelFactory(
         openArticle = openArticle,
         getArticleParagraphsUseCase = getArticleParagraphsUseCase,
         rateArticleUseCase = rateArticleUseCase,
+        readArticlesCache = readArticlesCache,
     ) as T
 }

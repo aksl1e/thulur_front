@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.thulur.domain.model.ThreadHistory
 import com.example.thulur.domain.model.ThreadHistoryDay
+import com.example.thulur.domain.session.ReadArticlesCache
 import com.example.thulur.domain.usecase.GetThreadHistoryUseCase
+import com.example.thulur.presentation.dailyfeed.article_reader.applyCachedReadArticles
 import com.example.thulur.presentation.dailyfeed.OpenThreadHistory
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -18,6 +20,7 @@ import kotlinx.datetime.LocalDate
 class ThreadHistoryViewModel(
     private val openThreadHistory: OpenThreadHistory,
     private val getThreadHistoryUseCase: GetThreadHistoryUseCase,
+    private val readArticlesCache: ReadArticlesCache,
 ) : ViewModel() {
     private var loadJob: Job? = null
 
@@ -29,6 +32,7 @@ class ThreadHistoryViewModel(
     val uiState: StateFlow<ThreadHistoryUiState> = _uiState.asStateFlow()
 
     init {
+        observeReadArticles()
         load()
     }
 
@@ -39,6 +43,24 @@ class ThreadHistoryViewModel(
     fun onPreviousDayClick(): Boolean = changeVisibleDayBy(delta = 1)
 
     fun onNextDayClick(): Boolean = changeVisibleDayBy(delta = -1)
+
+    private fun observeReadArticles() {
+        viewModelScope.launch {
+            readArticlesCache.readArticles.collect { readArticles ->
+                _uiState.update { state ->
+                    val contentState = state.contentState as? ThreadHistoryContentState.Success ?: return@update state
+                    val updatedHistory = contentState.history.applyCachedReadArticles(readArticles)
+                    if (updatedHistory === contentState.history) {
+                        state
+                    } else {
+                        state.copy(
+                            contentState = contentState.copy(history = updatedHistory),
+                        )
+                    }
+                }
+            }
+        }
+    }
 
     private fun load() {
         loadJob?.cancel()

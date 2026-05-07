@@ -1,13 +1,14 @@
 package com.example.thulur.presentation.dailyfeed.thread_history
 
 import androidx.lifecycle.ViewModel
+import com.example.thulur.data.session.InMemoryReadArticlesCache
 import com.example.thulur.domain.model.Article
 import com.example.thulur.domain.model.ArticleParagraph
 import com.example.thulur.domain.model.ArticleQuality
-import com.example.thulur.domain.model.DailyFeed
-import com.example.thulur.domain.model.DailyFeedThread
 import com.example.thulur.domain.model.AuthSession
 import com.example.thulur.domain.model.CurrentUser
+import com.example.thulur.domain.model.DailyFeed
+import com.example.thulur.domain.model.DailyFeedThread
 import com.example.thulur.domain.model.Feed
 import com.example.thulur.domain.model.PatchUserSettings
 import com.example.thulur.domain.model.ThreadHistory
@@ -59,13 +60,9 @@ class ThreadHistoryViewModelTest {
                 ),
             ),
         )
-        val viewModel = ThreadHistoryViewModel(
-            openThreadHistory = OpenThreadHistory(
-                threadId = "thread-1",
-                threadName = "Thread 1",
-                initialDay = LocalDate(2026, 4, 14),
-            ),
-            getThreadHistoryUseCase = GetThreadHistoryUseCase(repository),
+        val viewModel = createViewModel(
+            repository = repository,
+            initialDay = LocalDate(2026, 4, 14),
         )
 
         advanceUntilIdle()
@@ -89,13 +86,9 @@ class ThreadHistoryViewModelTest {
                 ),
             ),
         )
-        val viewModel = ThreadHistoryViewModel(
-            openThreadHistory = OpenThreadHistory(
-                threadId = "thread-1",
-                threadName = "Thread 1",
-                initialDay = LocalDate(2026, 4, 14),
-            ),
-            getThreadHistoryUseCase = GetThreadHistoryUseCase(repository),
+        val viewModel = createViewModel(
+            repository = repository,
+            initialDay = LocalDate(2026, 4, 14),
         )
 
         advanceUntilIdle()
@@ -116,13 +109,9 @@ class ThreadHistoryViewModelTest {
                 ),
             ),
         )
-        val viewModel = ThreadHistoryViewModel(
-            openThreadHistory = OpenThreadHistory(
-                threadId = "thread-1",
-                threadName = "Thread 1",
-                initialDay = LocalDate(2026, 4, 14),
-            ),
-            getThreadHistoryUseCase = GetThreadHistoryUseCase(repository),
+        val viewModel = createViewModel(
+            repository = repository,
+            initialDay = LocalDate(2026, 4, 14),
         )
 
         advanceUntilIdle()
@@ -143,13 +132,9 @@ class ThreadHistoryViewModelTest {
                 ),
             ),
         )
-        val viewModel = ThreadHistoryViewModel(
-            openThreadHistory = OpenThreadHistory(
-                threadId = "thread-1",
-                threadName = "Thread 1",
-                initialDay = LocalDate(2026, 4, 17),
-            ),
-            getThreadHistoryUseCase = GetThreadHistoryUseCase(repository),
+        val viewModel = createViewModel(
+            repository = repository,
+            initialDay = LocalDate(2026, 4, 17),
         )
 
         advanceUntilIdle()
@@ -177,13 +162,9 @@ class ThreadHistoryViewModelTest {
                 ),
             ),
         )
-        val viewModel = ThreadHistoryViewModel(
-            openThreadHistory = OpenThreadHistory(
-                threadId = "thread-1",
-                threadName = "Thread 1",
-                initialDay = LocalDate(2026, 4, 17),
-            ),
-            getThreadHistoryUseCase = GetThreadHistoryUseCase(repository),
+        val viewModel = createViewModel(
+            repository = repository,
+            initialDay = LocalDate(2026, 4, 17),
         )
 
         advanceUntilIdle()
@@ -205,13 +186,9 @@ class ThreadHistoryViewModelTest {
                 ),
             ),
         )
-        val viewModel = ThreadHistoryViewModel(
-            openThreadHistory = OpenThreadHistory(
-                threadId = "thread-1",
-                threadName = "Thread 1",
-                initialDay = LocalDate(2026, 4, 17),
-            ),
-            getThreadHistoryUseCase = GetThreadHistoryUseCase(repository),
+        val viewModel = createViewModel(
+            repository = repository,
+            initialDay = LocalDate(2026, 4, 17),
         )
 
         advanceUntilIdle()
@@ -234,13 +211,9 @@ class ThreadHistoryViewModelTest {
                 sampleHistory(days = emptyList()),
             ),
         )
-        val viewModel = ThreadHistoryViewModel(
-            openThreadHistory = OpenThreadHistory(
-                threadId = "thread-1",
-                threadName = "Thread 1",
-                initialDay = LocalDate(2026, 4, 17),
-            ),
-            getThreadHistoryUseCase = GetThreadHistoryUseCase(repository),
+        val viewModel = createViewModel(
+            repository = repository,
+            initialDay = LocalDate(2026, 4, 17),
         )
 
         advanceUntilIdle()
@@ -253,13 +226,9 @@ class ThreadHistoryViewModelTest {
         val repository = TrackingRepository(
             historyResult = Result.failure(IllegalStateException("History failed")),
         )
-        val viewModel = ThreadHistoryViewModel(
-            openThreadHistory = OpenThreadHistory(
-                threadId = "thread-1",
-                threadName = "Thread 1",
-                initialDay = LocalDate(2026, 4, 17),
-            ),
-            getThreadHistoryUseCase = GetThreadHistoryUseCase(repository),
+        val viewModel = createViewModel(
+            repository = repository,
+            initialDay = LocalDate(2026, 4, 17),
         )
 
         advanceUntilIdle()
@@ -269,7 +238,53 @@ class ThreadHistoryViewModelTest {
             viewModel.uiState.value.contentState,
         )
     }
+
+    @Test
+    fun `read cache updates loaded history without refetch`() = runTest {
+        val readArticlesCache = InMemoryReadArticlesCache()
+        val repository = TrackingRepository(
+            historyResult = Result.success(
+                sampleHistory(
+                    days = listOf(
+                        day(
+                            date = LocalDate(2026, 4, 17),
+                            summary = "17 Apr summary",
+                            articleId = "article-17",
+                            isRead = false,
+                        ),
+                    ),
+                ),
+            ),
+        )
+        val viewModel = createViewModel(
+            repository = repository,
+            initialDay = LocalDate(2026, 4, 17),
+            readArticlesCache = readArticlesCache,
+        )
+
+        advanceUntilIdle()
+        readArticlesCache.markRead("article-17")
+        advanceUntilIdle()
+
+        val success = assertIs<ThreadHistoryContentState.Success>(viewModel.uiState.value.contentState)
+        assertEquals(true, success.visibleDay().articles.single().isRead)
+        assertEquals("thread-1", repository.requestedThreadId)
+    }
 }
+
+private fun createViewModel(
+    repository: TrackingRepository,
+    initialDay: LocalDate,
+    readArticlesCache: InMemoryReadArticlesCache = InMemoryReadArticlesCache(),
+): ThreadHistoryViewModel = ThreadHistoryViewModel(
+    openThreadHistory = OpenThreadHistory(
+        threadId = "thread-1",
+        threadName = "Thread 1",
+        initialDay = initialDay,
+    ),
+    getThreadHistoryUseCase = GetThreadHistoryUseCase(repository),
+    readArticlesCache = readArticlesCache,
+)
 
 private class TrackingRepository(
     private val historyResult: Result<ThreadHistory>,
@@ -330,6 +345,7 @@ private fun day(
     date: LocalDate,
     summary: String,
     articleId: String,
+    isRead: Boolean = false,
 ) = ThreadHistoryDay(
     day = date,
     threadSummary = summary,
@@ -341,7 +357,7 @@ private fun day(
             url = "https://example.com/$articleId",
             published = "2026-04-17T08:00:00",
             displaySummary = "Display $articleId",
-            isRead = false,
+            isRead = isRead,
             isSuggestion = false,
             quality = ArticleQuality.Default,
         ),

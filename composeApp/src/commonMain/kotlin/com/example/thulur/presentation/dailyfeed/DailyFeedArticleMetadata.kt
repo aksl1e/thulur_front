@@ -22,7 +22,8 @@ internal fun Article.toThulurThreadArticleData(): ThulurThreadArticleData {
         id = id,
         url = url,
         imageUrl = imageUrl,
-        variant = quality.toThulurArticleItemVariant(),
+        variant = toThulurArticleItemVariant(),
+        isRead = isRead,
         title = title,
         summary = displaySummary,
         sourceLabel = extractSourceLabel(url),
@@ -30,6 +31,12 @@ internal fun Article.toThulurThreadArticleData(): ThulurThreadArticleData {
         timeText = publishedMetadata.timeText,
         showDate = false,
     )
+}
+
+internal fun Article.toThulurArticleItemVariant(): ThulurArticleItemVariant = if (isRead) {
+    ThulurArticleItemVariant.Read
+} else {
+    quality.toThulurArticleItemVariant()
 }
 
 internal fun ArticleQuality.toThulurArticleItemVariant(): ThulurArticleItemVariant = when (this) {

@@ -10,7 +10,7 @@ import kotlinx.coroutines.test.runTest
 class CurrentSessionProviderImplTest {
     @Test
     fun `starts with no runtime token before load`() {
-        val provider = CurrentSessionProviderImpl(InMemorySecureTokenStore(initialToken = "token-1"))
+        val provider = createProvider(InMemorySecureTokenStore(initialToken = "token-1"))
 
         assertNull(provider.currentToken())
         assertNull(provider.currentSession())
@@ -19,7 +19,7 @@ class CurrentSessionProviderImplTest {
 
     @Test
     fun `load persisted token emits stored token`() = runTest {
-        val provider = CurrentSessionProviderImpl(InMemorySecureTokenStore(initialToken = "token-1"))
+        val provider = createProvider(InMemorySecureTokenStore(initialToken = "token-1"))
 
         provider.loadPersistedToken()
 
@@ -37,7 +37,7 @@ class CurrentSessionProviderImplTest {
     @Test
     fun `update token writes to store and emits runtime token`() = runTest {
         val tokenStore = InMemorySecureTokenStore()
-        val provider = CurrentSessionProviderImpl(tokenStore)
+        val provider = createProvider(tokenStore)
 
         provider.updateToken("token-1")
 
@@ -48,7 +48,10 @@ class CurrentSessionProviderImplTest {
     @Test
     fun `clear token resets runtime token and store`() = runTest {
         val tokenStore = InMemorySecureTokenStore(initialToken = "token-1")
-        val provider = CurrentSessionProviderImpl(tokenStore)
+        val readArticlesCache = InMemoryReadArticlesCache().apply {
+            markRead("article-1")
+        }
+        val provider = createProvider(tokenStore, readArticlesCache)
         provider.loadPersistedToken()
 
         provider.clearToken()
@@ -56,11 +59,12 @@ class CurrentSessionProviderImplTest {
         assertNull(provider.currentToken())
         assertNull(provider.currentSession())
         assertNull(tokenStore.readToken())
+        assertEquals(emptyMap(), readArticlesCache.readArticles.value)
     }
 
     @Test
     fun `storage read failure does not crash and leaves token empty`() = runTest {
-        val provider = CurrentSessionProviderImpl(FailingSecureTokenStore(failRead = true))
+        val provider = createProvider(FailingSecureTokenStore(failRead = true))
 
         provider.loadPersistedToken()
 
@@ -71,7 +75,7 @@ class CurrentSessionProviderImplTest {
 
     @Test
     fun `storage write failure keeps runtime token`() = runTest {
-        val provider = CurrentSessionProviderImpl(FailingSecureTokenStore(failWrite = true))
+        val provider = createProvider(FailingSecureTokenStore(failWrite = true))
 
         provider.updateToken("token-1")
 
@@ -84,7 +88,7 @@ class CurrentSessionProviderImplTest {
 
     @Test
     fun `load does not overwrite existing runtime token`() = runTest {
-        val provider = CurrentSessionProviderImpl(InMemorySecureTokenStore())
+        val provider = createProvider(InMemorySecureTokenStore())
         provider.updateToken("runtime-token")
 
         provider.loadPersistedToken()
@@ -98,9 +102,11 @@ class CurrentSessionProviderImplTest {
 
     @Test
     fun `new session gets a new instance id after clear`() = runTest {
-        val provider = CurrentSessionProviderImpl(InMemorySecureTokenStore())
+        val readArticlesCache = InMemoryReadArticlesCache()
+        val provider = createProvider(InMemorySecureTokenStore(), readArticlesCache)
 
         provider.updateToken("token-1")
+        readArticlesCache.markRead("article-1")
         assertEquals(
             CurrentSession(token = "token-1", instanceId = 1),
             provider.currentSession(),
@@ -113,21 +119,33 @@ class CurrentSessionProviderImplTest {
             CurrentSession(token = "token-2", instanceId = 2),
             provider.currentSession(),
         )
+        assertEquals(emptyMap(), readArticlesCache.readArticles.value)
     }
 
     @Test
     fun `token replacement inside active session keeps same instance id`() = runTest {
-        val provider = CurrentSessionProviderImpl(InMemorySecureTokenStore())
+        val readArticlesCache = InMemoryReadArticlesCache()
+        val provider = createProvider(InMemorySecureTokenStore(), readArticlesCache)
 
         provider.updateToken("token-1")
+        readArticlesCache.markRead("article-1")
         provider.updateToken("token-2")
 
         assertEquals(
             CurrentSession(token = "token-2", instanceId = 1),
             provider.currentSession(),
         )
+        assertEquals(mapOf("article-1" to true), readArticlesCache.readArticles.value)
     }
 }
+
+private fun createProvider(
+    tokenStore: SecureTokenStore,
+    readArticlesCache: InMemoryReadArticlesCache = InMemoryReadArticlesCache(),
+): CurrentSessionProviderImpl = CurrentSessionProviderImpl(
+    tokenStore = tokenStore,
+    readArticlesCache = readArticlesCache,
+)
 
 private class FailingSecureTokenStore(
     private val failRead: Boolean = false,

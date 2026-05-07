@@ -1,5 +1,6 @@
 package com.example.thulur.data.repository
 
+import com.example.thulur.data.session.InMemoryReadArticlesCache
 import com.example.thulur.domain.model.ArticleParagraph
 import com.example.thulur.domain.model.AuthSession
 import com.example.thulur.domain.model.CurrentUser
@@ -33,7 +34,7 @@ import kotlinx.datetime.LocalDate
 class RemoteThulurApiRepositoryTest {
     @Test
     fun `maps quality tiers and sentinel first seen`() = runTest {
-        val repository = RemoteThulurApiRepository(
+        val repository = createRepository(
             thulurApi = FakeThulurApi(
                 dailyFeed = dailyFeedDto(
                     isDefault = true,
@@ -69,7 +70,7 @@ class RemoteThulurApiRepositoryTest {
 
     @Test
     fun `defaults quality tier when backend returns null or unknown value`() = runTest {
-        val repository = RemoteThulurApiRepository(
+        val repository = createRepository(
             thulurApi = FakeThulurApi(
                 dailyFeed = dailyFeedDto(
                     threads = listOf(
@@ -99,7 +100,7 @@ class RemoteThulurApiRepositoryTest {
 
     @Test
     fun `parses regular first seen date`() = runTest {
-        val repository = RemoteThulurApiRepository(
+        val repository = createRepository(
             thulurApi = FakeThulurApi(
                 dailyFeed = dailyFeedDto(
                     isDefault = false,
@@ -128,7 +129,7 @@ class RemoteThulurApiRepositoryTest {
 
     @Test
     fun `maps daily feed article image url into app facing model`() = runTest {
-        val repository = RemoteThulurApiRepository(
+        val repository = createRepository(
             thulurApi = FakeThulurApi(
                 dailyFeed = dailyFeedDto(
                     threads = listOf(
@@ -159,7 +160,7 @@ class RemoteThulurApiRepositoryTest {
 
     @Test
     fun `maps article paragraphs into app facing model`() = runTest {
-        val repository = RemoteThulurApiRepository(
+        val repository = createRepository(
             thulurApi = FakeThulurApi(
                 dailyFeed = dailyFeedDto(),
                 paragraphs = listOf(
@@ -182,7 +183,7 @@ class RemoteThulurApiRepositoryTest {
 
     @Test
     fun `maps thread history into app facing model and ignores legacy novelty fields`() = runTest {
-        val repository = RemoteThulurApiRepository(
+        val repository = createRepository(
             thulurApi = FakeThulurApi(
                 dailyFeed = dailyFeedDto(),
                 history = ThreadHistoryDto(
@@ -220,7 +221,7 @@ class RemoteThulurApiRepositoryTest {
 
     @Test
     fun `maps user settings into app facing model`() = runTest {
-        val repository = RemoteThulurApiRepository(
+        val repository = createRepository(
             thulurApi = FakeThulurApi(
                 dailyFeed = dailyFeedDto(),
                 settings = userSettingsDto(),
@@ -251,7 +252,7 @@ class RemoteThulurApiRepositoryTest {
             dailyFeed = dailyFeedDto(),
             settings = userSettingsDto(),
         )
-        val repository = RemoteThulurApiRepository(thulurApi = api)
+        val repository = createRepository(thulurApi = api)
 
         val response = repository.patchUserSettings(
             patch = PatchUserSettings(
@@ -275,7 +276,7 @@ class RemoteThulurApiRepositoryTest {
 
     @Test
     fun `maps followed and all feeds into app facing model`() = runTest {
-        val repository = RemoteThulurApiRepository(
+        val repository = createRepository(
             thulurApi = FakeThulurApi(
                 dailyFeed = dailyFeedDto(),
                 followedFeeds = listOf(feedDto(id = "followed-feed")),
@@ -315,7 +316,7 @@ class RemoteThulurApiRepositoryTest {
     @Test
     fun `follow and unfollow feed delegate to transport`() = runTest {
         val api = FakeThulurApi(dailyFeed = dailyFeedDto())
-        val repository = RemoteThulurApiRepository(thulurApi = api)
+        val repository = createRepository(thulurApi = api)
 
         repository.followFeed(identifier = "feed-1")
         repository.unfollowFeed(feedId = "feed-2")
@@ -326,7 +327,7 @@ class RemoteThulurApiRepositoryTest {
 
     @Test
     fun `maps current user into app facing model`() = runTest {
-        val repository = RemoteThulurApiRepository(
+        val repository = createRepository(
             thulurApi = FakeThulurApi(
                 dailyFeed = dailyFeedDto(),
                 currentUser = userDto(),
@@ -353,7 +354,7 @@ class RemoteThulurApiRepositoryTest {
             dailyFeed = dailyFeedDto(),
             authSessions = listOf(authSessionDto()),
         )
-        val repository = RemoteThulurApiRepository(thulurApi = api)
+        val repository = createRepository(thulurApi = api)
 
         val sessions = repository.getAuthSessions()
         repository.terminateAuthSession(sessionId = "session-1")
@@ -373,12 +374,97 @@ class RemoteThulurApiRepositoryTest {
         )
         assertEquals("session-1", api.terminatedSessionId)
     }
+
+    @Test
+    fun `cached read state overrides unread backend value in feed and history`() = runTest {
+        val readArticlesCache = InMemoryReadArticlesCache().apply {
+            markRead("article-1")
+        }
+        val repository = createRepository(
+            thulurApi = FakeThulurApi(
+                dailyFeed = dailyFeedDto(
+                    threads = listOf(
+                        DailyFeedThreadDto(
+                            threadId = "thread-1",
+                            threadName = "Thread 1",
+                            topicId = null,
+                            topicName = null,
+                            dailyFeedScore = 0.4,
+                            threadFirstSeen = "2026-03-20",
+                            threadSummary = null,
+                            articles = listOf(article(id = "article-1", isRead = false)),
+                        ),
+                    ),
+                ),
+                history = ThreadHistoryDto(
+                    threadId = "thread-1",
+                    threadName = "Thread 1",
+                    days = listOf(
+                        ThreadHistoryDayDto(
+                            day = "2026-04-17",
+                            threadSummary = "Summary",
+                            articles = listOf(article(id = "article-1", isRead = false)),
+                        ),
+                    ),
+                ),
+            ),
+            readArticlesCache = readArticlesCache,
+        )
+
+        assertEquals(true, repository.getDailyFeed().threads.single().articles.single().isRead)
+        assertEquals(true, repository.getThreadHistory(threadId = "thread-1").days.single().articles.single().isRead)
+    }
+
+    @Test
+    fun `backend read state is preserved without cached override`() = runTest {
+        val repository = createRepository(
+            thulurApi = FakeThulurApi(
+                dailyFeed = dailyFeedDto(
+                    threads = listOf(
+                        DailyFeedThreadDto(
+                            threadId = "thread-1",
+                            threadName = "Thread 1",
+                            topicId = null,
+                            topicName = null,
+                            dailyFeedScore = 0.4,
+                            threadFirstSeen = "2026-03-20",
+                            threadSummary = null,
+                            articles = listOf(article(id = "article-1", isRead = true)),
+                        ),
+                    ),
+                ),
+                history = ThreadHistoryDto(
+                    threadId = "thread-1",
+                    threadName = "Thread 1",
+                    days = listOf(
+                        ThreadHistoryDayDto(
+                            day = "2026-04-17",
+                            threadSummary = "Summary",
+                            articles = listOf(article(id = "article-1", isRead = true)),
+                        ),
+                    ),
+                ),
+            ),
+        )
+
+        assertEquals(true, repository.getDailyFeed().threads.single().articles.single().isRead)
+        assertEquals(true, repository.getThreadHistory(threadId = "thread-1").days.single().articles.single().isRead)
+    }
 }
+
+private fun createRepository(
+    thulurApi: ThulurApi,
+    readArticlesCache: InMemoryReadArticlesCache = InMemoryReadArticlesCache(),
+): RemoteThulurApiRepository = RemoteThulurApiRepository(
+    thulurApi = thulurApi,
+    readArticlesCache = readArticlesCache,
+)
 
 private fun article(
     qualityTier: String? = "default",
     id: String = "article",
     imageUrl: String? = null,
+    isRead: Boolean = false,
 ) = ArticleDto(
     articleId = id,
     feedId = "feed-1",
@@ -388,7 +474,7 @@ private fun article(
     published = null,
     qualityTier = qualityTier,
     displaySummary = "Display summary",
-    isRead = false,
+    isRead = isRead,
     isSuggestion = false,
 )
 

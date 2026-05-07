@@ -77,6 +77,7 @@ data class ThulurThreadItemSemanticColors(
 data class ThulurArticleItemVariantSemanticColors(
     val textColor: Color,
     val imageContainerColor: Color,
+    val imageOverlayColor: Color = Color.Transparent,
     val imageLabelColor: Color,
     val outlineColor: Color = Color.Transparent,
 )
@@ -531,7 +532,8 @@ fun rememberThulurArticleItemSemanticColors(): ThulurArticleItemSemanticColors {
             trash = ThulurArticleItemVariantSemanticColors(
                 textColor = slate.s500,
                 imageContainerColor = slate.s100,
-                imageLabelColor = slate.s300,
+                imageOverlayColor = slate.s100.copy(alpha = 0.75f),
+                imageLabelColor = slate.s500,
             ),
             default = ThulurArticleItemVariantSemanticColors(
                 textColor = slate.s900,
@@ -556,8 +558,9 @@ fun rememberThulurArticleItemSemanticColors(): ThulurArticleItemSemanticColors {
             ),
             trash = ThulurArticleItemVariantSemanticColors(
                 textColor = slate.s500,
-                imageContainerColor = slate.s900,
-                imageLabelColor = slate.s700,
+                imageContainerColor = slate.s700,
+                imageOverlayColor = slate.s900.copy(alpha = 0.75f),
+                imageLabelColor = slate.s500,
             ),
             default = ThulurArticleItemVariantSemanticColors(
                 textColor = slate.s100,

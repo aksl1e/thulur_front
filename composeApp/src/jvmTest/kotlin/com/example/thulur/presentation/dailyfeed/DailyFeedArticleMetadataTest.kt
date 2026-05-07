@@ -63,6 +63,27 @@ class DailyFeedArticleMetadataTest {
     }
 
     @Test
+    fun `trash article maps to trash variant not read`() {
+        val article = Article(
+            id = "article-1",
+            feedId = "feed-1",
+            title = "Article",
+            url = "https://example.com/article-1",
+            imageUrl = null,
+            published = null,
+            displaySummary = "Summary",
+            isRead = false,
+            isSuggestion = false,
+            quality = ArticleQuality.Trash,
+        )
+
+        val result = article.toThulurThreadArticleData()
+
+        assertEquals(ThulurArticleItemVariant.Trash, result.variant)
+        assertEquals(false, result.isRead)
+    }
+
+    @Test
     fun `toThulurThreadArticleData keeps image url`() {
         val article = Article(
             id = "article-1",
@@ -80,5 +101,27 @@ class DailyFeedArticleMetadataTest {
         val result = article.toThulurThreadArticleData()
 
         assertEquals("https://example.com/article-1.jpg", result.imageUrl)
+        assertEquals(false, result.isRead)
+    }
+
+    @Test
+    fun `read article maps to read variant`() {
+        val article = Article(
+            id = "article-1",
+            feedId = "feed-1",
+            title = "Article",
+            url = "https://example.com/article-1",
+            imageUrl = null,
+            published = null,
+            displaySummary = "Summary",
+            isRead = true,
+            isSuggestion = false,
+            quality = ArticleQuality.Important,
+        )
+
+        val result = article.toThulurThreadArticleData()
+
+        assertEquals(ThulurArticleItemVariant.Read, result.variant)
+        assertEquals(true, result.isRead)
     }
 }

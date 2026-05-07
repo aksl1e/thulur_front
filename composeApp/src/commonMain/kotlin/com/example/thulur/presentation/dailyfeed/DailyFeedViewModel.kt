@@ -4,8 +4,10 @@ import com.example.thulur.domain.model.DailyFeed
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.thulur.domain.usecase.GetDailyFeedUseCase
+import com.example.thulur.domain.session.ReadArticlesCache
 import com.example.thulur.presentation.composables.ThulurThreadArticleData
 import com.example.thulur.presentation.composables.TopicsViewMode
+import com.example.thulur.presentation.dailyfeed.article_reader.applyCachedReadArticlesToThreads
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +28,7 @@ import kotlin.time.Clock
  */
 class DailyFeedViewModel(
     private val getDailyFeedUseCase: GetDailyFeedUseCase,
+    private val readArticlesCache: ReadArticlesCache,
 ) : ViewModel() {
     private val initialDay = currentDay()
     private var loadJob: Job? = null
@@ -38,6 +41,7 @@ class DailyFeedViewModel(
     val uiState: StateFlow<DailyFeedUiState> = _uiState.asStateFlow()
 
     init {
+        observeReadArticles()
         loadDay(initialDay)
     }
 
@@ -70,15 +74,13 @@ class DailyFeedViewModel(
     }
 
     fun onArticleClick(article: ThulurThreadArticleData) {
-        val isRead = (_uiState.value.contentState as? DailyFeedContentState.Success)
-            ?.threads?.flatMap { it.articles }?.find { it.id == article.id }?.isRead ?: false
         _uiState.update { state ->
             state.copy(
                 openArticle = OpenArticle(
                     articleId = article.id,
                     title = article.title,
                     url = article.url,
-                    isRead = isRead,
+                    isRead = article.isRead,
                 ),
             )
         }
@@ -128,6 +130,14 @@ class DailyFeedViewModel(
             state.copy(
                 articleVisibilityByThreadId = state.articleVisibilityByThreadId + (threadId to !currentValue),
             )
+        }
+    }
+
+    private fun observeReadArticles() {
+        viewModelScope.launch {
+            readArticlesCache.readArticles.collect { readArticles ->
+                _uiState.update { state -> state.applyCachedReadArticles(readArticles) }
+            }
         }
     }
 
@@ -184,4 +194,35 @@ class DailyFeedViewModel(
     }
 
     private fun currentDay(): LocalDate = Clock.System.todayIn(TimeZone.currentSystemDefault())
+}
+
+private fun DailyFeedUiState.applyCachedReadArticles(
+    readArticles: Map<String, Boolean>,
+): DailyFeedUiState {
+    val updatedOpenArticle = openArticle?.takeIf { readArticles[it.articleId] == true && !it.isRead }
+        ?.copy(isRead = true)
+        ?: openArticle
+
+    val successState = contentState as? DailyFeedContentState.Success
+    if (successState == null) {
+        return if (updatedOpenArticle != openArticle) {
+            copy(openArticle = updatedOpenArticle)
+        } else {
+            this
+        }
+    }
+
+    val updatedThreads = successState.threads.applyCachedReadArticlesToThreads(readArticles)
+    if (updatedThreads === successState.threads && updatedOpenArticle == openArticle) {
+        return this
+    }
+
+    return copy(
+        contentState = if (updatedThreads === successState.threads) {
+            contentState
+        } else {
+            DailyFeedContentState.Success(updatedThreads)
+        },
+        openArticle = updatedOpenArticle,
+    )
 }

@@ -2,6 +2,7 @@ package com.example.thulur.data.session
 
 import com.example.thulur.domain.session.CurrentSession
 import com.example.thulur.domain.session.CurrentSessionProvider
+import com.example.thulur.domain.session.ReadArticlesCache
 import com.example.thulur.domain.session.SecureTokenStore
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 
 class CurrentSessionProviderImpl(
     private val tokenStore: SecureTokenStore,
+    private val readArticlesCache: ReadArticlesCache,
 ) : CurrentSessionProvider {
     private val _sessionFlow = MutableStateFlow<CurrentSession?>(null)
     private var nextSessionInstanceId = 1
@@ -41,9 +43,14 @@ class CurrentSessionProviderImpl(
             return
         }
 
+        val currentSession = _sessionFlow.value
+        if (currentSession == null) {
+            readArticlesCache.clear()
+        }
+
         _sessionFlow.value = CurrentSession(
             token = normalizedToken,
-            instanceId = _sessionFlow.value?.instanceId ?: nextSessionInstanceId++,
+            instanceId = currentSession?.instanceId ?: nextSessionInstanceId++,
         )
         ignoreStorageFailure {
             tokenStore.writeToken(normalizedToken)
@@ -53,6 +60,7 @@ class CurrentSessionProviderImpl(
 
     override suspend fun clearToken() {
         _sessionFlow.value = null
+        readArticlesCache.clear()
         ignoreStorageFailure {
             tokenStore.clearToken()
         }

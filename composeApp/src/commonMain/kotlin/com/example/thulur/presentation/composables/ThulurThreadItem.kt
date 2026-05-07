@@ -42,6 +42,7 @@ data class ThulurThreadArticleData(
     val url: String,
     val imageUrl: String?,
     val variant: ThulurArticleItemVariant,
+    val isRead: Boolean = false,
     val title: String,
     val summary: String?,
     val sourceLabel: String?,
@@ -201,6 +202,9 @@ internal fun ThulurThreadItem(
                             onClick = { onArticleClick(article) },
                         )
                     }
+                    item () {
+                        Spacer(modifier = Modifier.width(controlSpacing))
+                    }
                 }
             }
         }
@@ -216,6 +220,7 @@ private fun ThulurThreadItemPreview() {
             url = "https://example.com/default",
             imageUrl = null,
             variant = ThulurArticleItemVariant.Default,
+            isRead = false,
             title = "Default Article",
             summary = "Field-level developments are now moving faster than policy responses in several areas.",
             sourceLabel = "wyborcza.pl",
@@ -227,6 +232,7 @@ private fun ThulurThreadItemPreview() {
             url = "https://example.com/trash",
             imageUrl = null,
             variant = ThulurArticleItemVariant.Trash,
+            isRead = false,
             title = "Trash Article",
             summary = "Field-level developments are now moving faster than policy responses in several areas.",
             sourceLabel = "wyborcza.pl",
@@ -238,6 +244,7 @@ private fun ThulurThreadItemPreview() {
             url = "https://example.com/important",
             imageUrl = "https://example.com/important.jpg",
             variant = ThulurArticleItemVariant.Important,
+            isRead = false,
             title = "Important Article",
             summary = "Field-level developments are now moving faster than policy responses in several areas.",
             sourceLabel = "wyborcza.pl",

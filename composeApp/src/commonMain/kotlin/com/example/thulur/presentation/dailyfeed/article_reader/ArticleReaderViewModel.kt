@@ -2,6 +2,7 @@ package com.example.thulur.presentation.dailyfeed.article_reader
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.thulur.domain.session.ReadArticlesCache
 import com.example.thulur.domain.usecase.GetArticleParagraphsUseCase
 import com.example.thulur.domain.usecase.RateArticleUseCase
 import com.example.thulur.presentation.dailyfeed.OpenArticle
@@ -16,6 +17,7 @@ class ArticleReaderViewModel(
     openArticle: OpenArticle,
     private val getArticleParagraphsUseCase: GetArticleParagraphsUseCase,
     private val rateArticleUseCase: RateArticleUseCase,
+    private val readArticlesCache: ReadArticlesCache,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(
         ArticleReaderUiState(
@@ -62,7 +64,13 @@ class ArticleReaderViewModel(
             println("[ThulurArticleReader] submitRate articleId=${state.articleId} rate=${state.rate}")
             viewModelScope.launch {
                 runCatching { rateArticleUseCase(articleId = state.articleId, rating = state.rate) }
-                    .onSuccess { println("[ThulurArticleReader] submitRate SUCCESS articleId=${state.articleId} rate=${state.rate}") }
+                    .onSuccess {
+                        readArticlesCache.markRead(state.articleId)
+                        _uiState.update { currentState ->
+                            currentState.copy(isArticleRead = true)
+                        }
+                        println("[ThulurArticleReader] submitRate SUCCESS articleId=${state.articleId} rate=${state.rate}")
+                    }
                     .onFailure { println("[ThulurArticleReader] submitRate FAILURE articleId=${state.articleId} rate=${state.rate} error=${it.message}") }
             }
         } else {

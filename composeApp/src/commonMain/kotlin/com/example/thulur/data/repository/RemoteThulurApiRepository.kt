@@ -13,6 +13,7 @@ import com.example.thulur.domain.model.UserSettings
 import com.example.thulur.domain.model.ThreadHistory
 import com.example.thulur.domain.model.ThreadHistoryDay
 import com.example.thulur.domain.repository.ThulurApiRepository
+import com.example.thulur.domain.session.ReadArticlesCache
 import com.example.thulur_api.dtos.ArticleDto
 import com.example.thulur_api.ThulurApi
 import com.example.thulur_api.dtos.AuthSessionDto
@@ -28,6 +29,7 @@ import kotlinx.datetime.LocalDate.Companion.parse
  */
 class RemoteThulurApiRepository(
     private val thulurApi: ThulurApi,
+    private val readArticlesCache: ReadArticlesCache,
 ) : ThulurApiRepository {
     override suspend fun getDailyFeed(day: LocalDate?): DailyFeed =
         thulurApi
@@ -45,18 +47,7 @@ class RemoteThulurApiRepository(
                             firstSeen = threadDto.threadFirstSeen.toDailyFeedDateOrNull(),
                             summary = threadDto.threadSummary,
                             articles = threadDto.articles.map { articleDto ->
-                                Article(
-                                    id = articleDto.articleId,
-                                    feedId = articleDto.feedId,
-                                    title = articleDto.title,
-                                    url = articleDto.url,
-                                    imageUrl = articleDto.imageUrl,
-                                    published = articleDto.published,
-                                    displaySummary = articleDto.displaySummary,
-                                    isRead = articleDto.isRead,
-                                    isSuggestion = articleDto.isSuggestion,
-                                    quality = articleDto.qualityTier.toArticleQuality(),
-                                )
+                                articleDto.toArticle(readArticlesCache)
                             },
                         )
                     },
@@ -115,7 +106,9 @@ class RemoteThulurApiRepository(
                     ThreadHistoryDay(
                         day = parse(dayDto.day),
                         threadSummary = dayDto.threadSummary,
-                        articles = dayDto.articles.map(ArticleDto::toArticle),
+                        articles = dayDto.articles.map { articleDto ->
+                            articleDto.toArticle(readArticlesCache)
+                        },
                     )
                 },
             )
@@ -130,7 +123,7 @@ private fun String?.toDailyFeedDateOrNull(): LocalDate? = when (this) {
     else -> parse(this)
 }
 
-private fun ArticleDto.toArticle(): Article = Article(
+private fun ArticleDto.toArticle(readArticlesCache: ReadArticlesCache): Article = Article(
     id = articleId,
     feedId = feedId,
     title = title,
@@ -138,7 +131,7 @@ private fun ArticleDto.toArticle(): Article = Article(
     imageUrl = imageUrl,
     published = published,
     displaySummary = displaySummary,
-    isRead = isRead,
+    isRead = isRead || readArticlesCache.isRead(articleId),
     isSuggestion = isSuggestion,
     quality = qualityTier.toArticleQuality(),
 )

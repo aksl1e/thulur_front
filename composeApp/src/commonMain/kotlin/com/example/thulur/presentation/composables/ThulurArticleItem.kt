@@ -33,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -48,6 +49,7 @@ import com.example.thulur.presentation.theme.thulurDp
 
 enum class ThulurArticleItemVariant {
     Trash,
+    Read,
     Default,
     Important,
 }
@@ -92,12 +94,30 @@ fun ThulurArticleItem(
     val titleStyle = when (variant) {
         ThulurArticleItemVariant.Important -> typography.articleItemImportantTitle
         ThulurArticleItemVariant.Trash,
+        ThulurArticleItemVariant.Read,
         ThulurArticleItemVariant.Default -> typography.articleItemTitle
     }
     val summaryStyle = when (variant) {
         ThulurArticleItemVariant.Important -> typography.articleItemImportantSummary
         ThulurArticleItemVariant.Trash,
+        ThulurArticleItemVariant.Read,
         ThulurArticleItemVariant.Default -> typography.articleItemSummary
+    }
+    val shouldShowImageOverlay = when (variant) {
+        ThulurArticleItemVariant.Trash,
+        ThulurArticleItemVariant.Read,
+        -> true
+
+        ThulurArticleItemVariant.Default,
+        ThulurArticleItemVariant.Important,
+        -> false
+    }
+    val imageOverlayLabel = when (variant) {
+        ThulurArticleItemVariant.Read -> "Read"
+        ThulurArticleItemVariant.Trash,
+        ThulurArticleItemVariant.Default,
+        ThulurArticleItemVariant.Important,
+        -> null
     }
 
     Box(
@@ -160,11 +180,13 @@ fun ThulurArticleItem(
                     .clip(imageShape)
                     .background(colors.imageContainerColor),
             ) {
-                ArticleImagePlaceholder(
-                    imageLabel = imageLabel,
-                    labelColor = colors.imageLabelColor,
-                    modifier = Modifier.fillMaxSize(),
-                )
+                if (!shouldShowImageOverlay) {
+                    ArticleImagePlaceholder(
+                        imageLabel = imageLabel,
+                        labelColor = colors.imageLabelColor,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
 
                 if (resolvedImageUrl != null) {
                     AsyncImage(
@@ -174,6 +196,22 @@ fun ThulurArticleItem(
                         contentScale = ContentScale.Crop,
                         onState = { state -> imageState = state },
                     )
+                }
+
+                if (shouldShowImageOverlay) {
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .background(colors.imageOverlayColor),
+                    )
+
+                    imageOverlayLabel?.let { overlayLabel ->
+                        BasicText(
+                            text = overlayLabel,
+                            style = typography.articleItemTitle.copy(color = colors.imageLabelColor),
+                            modifier = Modifier.align(Alignment.Center),
+                        )
+                    }
                 }
 
                 if (imageState is AsyncImagePainter.State.Loading) {
@@ -215,6 +253,7 @@ fun ThulurArticleItem(
                     dateText = dateText,
                     timeText = timeText,
                     showDate = showDate,
+                    contentColor = colors.textColor,
                 )
             }
         }
@@ -247,6 +286,7 @@ private fun ArticleItemBottomRow(
     dateText: String?,
     timeText: String?,
     showDate: Boolean,
+    contentColor: Color,
 ) {
     val hasSource = sourceLabel != null
     val hasDateTime = timeText != null
@@ -257,11 +297,16 @@ private fun ArticleItemBottomRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            ArticleItemLink(sourceLabel = sourceLabel)
+            ArticleItemLink(
+                sourceLabel = sourceLabel,
+                contentColor = contentColor,
+            )
             ThulurDateTime(
                 dateText = dateText,
                 timeText = timeText,
                 showDate = showDate,
+                dateColorOverride = contentColor,
+                timeColorOverride = contentColor,
             )
         }
 
@@ -269,7 +314,10 @@ private fun ArticleItemBottomRow(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            ArticleItemLink(sourceLabel = sourceLabel)
+            ArticleItemLink(
+                sourceLabel = sourceLabel,
+                contentColor = contentColor,
+            )
         }
 
         hasDateTime -> Row(
@@ -281,14 +329,18 @@ private fun ArticleItemBottomRow(
                 dateText = dateText,
                 timeText = timeText,
                 showDate = showDate,
+                dateColorOverride = contentColor,
+                timeColorOverride = contentColor,
             )
         }
     }
 }
 
 @Composable
-private fun ArticleItemLink(sourceLabel: String) {
-    val colors = ThulurTheme.SemanticColors.articleItem
+private fun ArticleItemLink(
+    sourceLabel: String,
+    contentColor: Color,
+) {
     val typography = ThulurTheme.SemanticTypography
 
     Row(
@@ -298,11 +350,11 @@ private fun ArticleItemLink(sourceLabel: String) {
         Icon(
             imageVector = Icons.Outlined.Link,
             contentDescription = null,
-            tint = colors.linkColor,
+            tint = contentColor,
         )
         BasicText(
             text = sourceLabel,
-            style = typography.articleItemLink.copy(color = colors.linkColor),
+            style = typography.articleItemLink.copy(color = contentColor),
         )
     }
 }
@@ -311,6 +363,7 @@ private fun ArticleItemLink(sourceLabel: String) {
 @ReadOnlyComposable
 private fun ThulurArticleItemVariant.width() = when (this) {
     ThulurArticleItemVariant.Trash -> 250.thulurDp()
+    ThulurArticleItemVariant.Read -> 250.thulurDp()
     ThulurArticleItemVariant.Default -> 275.thulurDp()
     ThulurArticleItemVariant.Important -> 300.thulurDp()
 }
@@ -321,6 +374,7 @@ private fun com.example.thulur.presentation.theme.ThulurArticleItemSemanticColor
     variant: ThulurArticleItemVariant,
 ): ThulurArticleItemVariantSemanticColors = when (variant) {
     ThulurArticleItemVariant.Trash -> trash
+    ThulurArticleItemVariant.Read -> trash
     ThulurArticleItemVariant.Default -> default
     ThulurArticleItemVariant.Important -> important
 }

@@ -2,10 +2,12 @@ package com.example.thulur.di
 
 import com.example.thulur.data.repository.RemoteThulurApiRepository
 import com.example.thulur.data.session.CurrentSessionProviderImpl
+import com.example.thulur.data.session.InMemoryReadArticlesCache
 import com.example.thulur.domain.auth.PasskeyAuthenticator
 import com.example.thulur.domain.auth.providePlatformPasskeyAuthenticator
 import com.example.thulur.domain.repository.ThulurApiRepository
 import com.example.thulur.domain.session.CurrentSessionProvider
+import com.example.thulur.domain.session.ReadArticlesCache
 import com.example.thulur.domain.session.SecureTokenStore
 import com.example.thulur.domain.session.providePlatformSecureTokenStore
 import com.example.thulur.domain.theme.ThemeStore
@@ -50,11 +52,18 @@ val apiModule = module {
 val dataModule = module {
     single<SecureTokenStore> { providePlatformSecureTokenStore() }
     single<ThemeStore> { providePlatformThemeStore() }
-    single<CurrentSessionProvider> { CurrentSessionProviderImpl(tokenStore = get()) }
+    single<ReadArticlesCache> { InMemoryReadArticlesCache() }
+    single<CurrentSessionProvider> {
+        CurrentSessionProviderImpl(
+            tokenStore = get(),
+            readArticlesCache = get(),
+        )
+    }
     single<PasskeyAuthenticator> { providePlatformPasskeyAuthenticator(thulurApi = get()) }
     single<ThulurApiRepository> {
         RemoteThulurApiRepository(
             thulurApi = get(),
+            readArticlesCache = get(),
         )
     }
 }

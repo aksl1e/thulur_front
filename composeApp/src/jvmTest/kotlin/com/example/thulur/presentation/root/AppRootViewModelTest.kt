@@ -1,6 +1,7 @@
 package com.example.thulur.presentation.root
 
 import com.example.thulur.data.session.CurrentSessionProviderImpl
+import com.example.thulur.data.session.InMemoryReadArticlesCache
 import com.example.thulur.data.session.InMemorySecureTokenStore
 import com.example.thulur.domain.model.ArticleParagraph
 import com.example.thulur.domain.model.AuthSession
@@ -43,14 +44,14 @@ class AppRootViewModelTest {
 
     @Test
     fun `starts in loading state before reading persisted token`() = runTest {
-        val viewModel = createViewModel(CurrentSessionProviderImpl(InMemorySecureTokenStore()))
+        val viewModel = createViewModel(createSessionProvider(InMemorySecureTokenStore()))
 
         assertEquals(AppRootUiState.Loading, viewModel.uiState.value)
     }
 
     @Test
     fun `moves to unauthenticated when no persisted token exists`() = runTest {
-        val viewModel = createViewModel(CurrentSessionProviderImpl(InMemorySecureTokenStore()))
+        val viewModel = createViewModel(createSessionProvider(InMemorySecureTokenStore()))
 
         advanceUntilIdle()
 
@@ -59,7 +60,7 @@ class AppRootViewModelTest {
 
     @Test
     fun `moves to authenticated when persisted token exists`() = runTest {
-        val sessionProvider = CurrentSessionProviderImpl(InMemorySecureTokenStore(initialToken = "token-1"))
+        val sessionProvider = createSessionProvider(InMemorySecureTokenStore(initialToken = "token-1"))
         val viewModel = createViewModel(sessionProvider)
 
         advanceUntilIdle()
@@ -69,7 +70,7 @@ class AppRootViewModelTest {
 
     @Test
     fun `moves back to unauthenticated when token is cleared`() = runTest {
-        val sessionProvider = CurrentSessionProviderImpl(InMemorySecureTokenStore(initialToken = "token-1"))
+        val sessionProvider = createSessionProvider(InMemorySecureTokenStore(initialToken = "token-1"))
         val viewModel = createViewModel(sessionProvider)
         advanceUntilIdle()
 
@@ -81,7 +82,7 @@ class AppRootViewModelTest {
 
     @Test
     fun `increments session instance id when user authenticates again after logout`() = runTest {
-        val sessionProvider = CurrentSessionProviderImpl(InMemorySecureTokenStore(initialToken = "token-1"))
+        val sessionProvider = createSessionProvider(InMemorySecureTokenStore(initialToken = "token-1"))
         val viewModel = createViewModel(sessionProvider)
         advanceUntilIdle()
 
@@ -99,7 +100,7 @@ class AppRootViewModelTest {
 
     @Test
     fun `does not increment session instance id when token changes inside active session`() = runTest {
-        val sessionProvider = CurrentSessionProviderImpl(InMemorySecureTokenStore(initialToken = "token-1"))
+        val sessionProvider = createSessionProvider(InMemorySecureTokenStore(initialToken = "token-1"))
         val viewModel = createViewModel(sessionProvider)
         advanceUntilIdle()
 
@@ -118,7 +119,7 @@ class AppRootViewModelTest {
 
     @Test
     fun `reads session instance id from current session provider`() = runTest {
-        val sessionProvider = CurrentSessionProviderImpl(InMemorySecureTokenStore())
+        val sessionProvider = createSessionProvider(InMemorySecureTokenStore())
         val viewModel = createViewModel(sessionProvider)
         advanceUntilIdle()
 
@@ -135,7 +136,7 @@ class AppRootViewModelTest {
 
     @Test
     fun `open settings switches authenticated destination`() = runTest {
-        val sessionProvider = CurrentSessionProviderImpl(InMemorySecureTokenStore(initialToken = "token-1"))
+        val sessionProvider = createSessionProvider(InMemorySecureTokenStore(initialToken = "token-1"))
         val viewModel = createViewModel(sessionProvider)
         advanceUntilIdle()
 
@@ -152,7 +153,7 @@ class AppRootViewModelTest {
 
     @Test
     fun `back to main feed returns authenticated destination to main feed`() = runTest {
-        val sessionProvider = CurrentSessionProviderImpl(InMemorySecureTokenStore(initialToken = "token-1"))
+        val sessionProvider = createSessionProvider(InMemorySecureTokenStore(initialToken = "token-1"))
         val viewModel = createViewModel(sessionProvider)
         advanceUntilIdle()
 
@@ -170,7 +171,7 @@ class AppRootViewModelTest {
 
     @Test
     fun `new authenticated session resets destination to main feed`() = runTest {
-        val sessionProvider = CurrentSessionProviderImpl(InMemorySecureTokenStore(initialToken = "token-1"))
+        val sessionProvider = createSessionProvider(InMemorySecureTokenStore(initialToken = "token-1"))
         val viewModel = createViewModel(sessionProvider)
         advanceUntilIdle()
         viewModel.openSettings()
@@ -192,6 +193,12 @@ class AppRootViewModelTest {
     private fun createViewModel(sessionProvider: CurrentSessionProviderImpl): AppRootViewModel =
         AppRootViewModel(sessionProvider, GetUserSettingsUseCase(StubSettingsRepository), InMemoryThemeStore())
 }
+
+private fun createSessionProvider(tokenStore: InMemorySecureTokenStore): CurrentSessionProviderImpl =
+    CurrentSessionProviderImpl(
+        tokenStore = tokenStore,
+        readArticlesCache = InMemoryReadArticlesCache(),
+    )
 
 private class InMemoryThemeStore : ThemeStore {
     private var darkMode: Boolean? = null

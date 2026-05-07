@@ -1,19 +1,22 @@
 package com.example.thulur.presentation.dailyfeed
 
+import com.example.thulur.data.session.InMemoryReadArticlesCache
+import com.example.thulur.domain.model.Article
 import com.example.thulur.domain.model.ArticleParagraph
+import com.example.thulur.domain.model.ArticleQuality
 import com.example.thulur.domain.model.AuthSession
 import com.example.thulur.domain.model.CurrentUser
 import com.example.thulur.domain.model.DailyFeed
-import com.example.thulur.domain.model.Feed
 import com.example.thulur.domain.model.DailyFeedThread
+import com.example.thulur.domain.model.Feed
 import com.example.thulur.domain.model.PatchUserSettings
-import com.example.thulur.domain.model.UserSettings
 import com.example.thulur.domain.model.ThreadHistory
+import com.example.thulur.domain.model.UserSettings
 import com.example.thulur.domain.repository.ThulurApiRepository
 import com.example.thulur.domain.usecase.GetDailyFeedUseCase
-import com.example.thulur.presentation.composables.TopicsViewMode
 import com.example.thulur.presentation.composables.ThulurArticleItemVariant
 import com.example.thulur.presentation.composables.ThulurThreadArticleData
+import com.example.thulur.presentation.composables.TopicsViewMode
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -53,9 +56,7 @@ class DailyFeedViewModelTest {
         val repository = TrackingRepository(
             result = Result.success(sampleDailyFeed(isDefault = true, threads = emptyList())),
         )
-        val viewModel = DailyFeedViewModel(
-            getDailyFeedUseCase = GetDailyFeedUseCase(repository),
-        )
+        val viewModel = createViewModel(repository)
 
         advanceUntilIdle()
 
@@ -76,9 +77,7 @@ class DailyFeedViewModelTest {
         val repository = TrackingRepository(
             result = Result.success(sampleDailyFeed(isDefault = false, threads = threads)),
         )
-        val viewModel = DailyFeedViewModel(
-            getDailyFeedUseCase = GetDailyFeedUseCase(repository),
-        )
+        val viewModel = createViewModel(repository)
 
         advanceUntilIdle()
 
@@ -99,9 +98,7 @@ class DailyFeedViewModelTest {
         val repository = TrackingRepository(
             result = Result.failure<DailyFeed>(IllegalStateException("Boom")),
         )
-        val viewModel = DailyFeedViewModel(
-            getDailyFeedUseCase = GetDailyFeedUseCase(repository),
-        )
+        val viewModel = createViewModel(repository)
 
         advanceUntilIdle()
 
@@ -120,9 +117,7 @@ class DailyFeedViewModelTest {
         val repository = TrackingRepository(
             result = Result.success(sampleDailyFeed()),
         )
-        val viewModel = DailyFeedViewModel(
-            getDailyFeedUseCase = GetDailyFeedUseCase(repository),
-        )
+        val viewModel = createViewModel(repository)
 
         advanceUntilIdle()
         viewModel.onBackClick()
@@ -138,9 +133,7 @@ class DailyFeedViewModelTest {
         val repository = TrackingRepository(
             result = Result.success(sampleDailyFeed()),
         )
-        val viewModel = DailyFeedViewModel(
-            getDailyFeedUseCase = GetDailyFeedUseCase(repository),
-        )
+        val viewModel = createViewModel(repository)
 
         advanceUntilIdle()
         viewModel.onBackClick()
@@ -157,9 +150,7 @@ class DailyFeedViewModelTest {
         val repository = TrackingRepository(
             result = Result.success(sampleDailyFeed()),
         )
-        val viewModel = DailyFeedViewModel(
-            getDailyFeedUseCase = GetDailyFeedUseCase(repository),
-        )
+        val viewModel = createViewModel(repository)
 
         advanceUntilIdle()
         viewModel.onForwardClick()
@@ -174,9 +165,7 @@ class DailyFeedViewModelTest {
         val repository = TrackingRepository(
             result = Result.success(sampleDailyFeed()),
         )
-        val viewModel = DailyFeedViewModel(
-            getDailyFeedUseCase = GetDailyFeedUseCase(repository),
-        )
+        val viewModel = createViewModel(repository)
 
         advanceUntilIdle()
         viewModel.onBackClick()
@@ -193,9 +182,7 @@ class DailyFeedViewModelTest {
         val repository = TrackingRepository(
             result = Result.success(sampleDailyFeed()),
         )
-        val viewModel = DailyFeedViewModel(
-            getDailyFeedUseCase = GetDailyFeedUseCase(repository),
-        )
+        val viewModel = createViewModel(repository)
 
         advanceUntilIdle()
         viewModel.onBackClick()
@@ -213,9 +200,7 @@ class DailyFeedViewModelTest {
         val repository = TrackingRepository(
             result = Result.success(sampleDailyFeed()),
         )
-        val viewModel = DailyFeedViewModel(
-            getDailyFeedUseCase = GetDailyFeedUseCase(repository),
-        )
+        val viewModel = createViewModel(repository)
 
         advanceUntilIdle()
         viewModel.onTopicsViewModeChange(TopicsViewMode.TopicsOnly)
@@ -233,9 +218,7 @@ class DailyFeedViewModelTest {
         val repository = TrackingRepository(
             result = Result.success(sampleDailyFeed()),
         )
-        val viewModel = DailyFeedViewModel(
-            getDailyFeedUseCase = GetDailyFeedUseCase(repository),
-        )
+        val viewModel = createViewModel(repository)
 
         advanceUntilIdle()
         viewModel.onTopicsViewModeChange(TopicsViewMode.TopicsOnly)
@@ -254,9 +237,7 @@ class DailyFeedViewModelTest {
                 sampleDailyFeed(threads = listOf(sampleThread("thread-1"), sampleThread("thread-2"))),
             ),
         )
-        val viewModel = DailyFeedViewModel(
-            getDailyFeedUseCase = GetDailyFeedUseCase(repository),
-        )
+        val viewModel = createViewModel(repository)
 
         advanceUntilIdle()
         viewModel.onThreadArticlesVisibilityToggle("thread-1")
@@ -280,9 +261,7 @@ class DailyFeedViewModelTest {
                 sampleDailyFeed(threads = listOf(sampleThread("thread-1"), sampleThread("thread-2"))),
             ),
         )
-        val viewModel = DailyFeedViewModel(
-            getDailyFeedUseCase = GetDailyFeedUseCase(repository),
-        )
+        val viewModel = createViewModel(repository)
 
         advanceUntilIdle()
         viewModel.onThreadArticlesVisibilityToggle("thread-1")
@@ -301,9 +280,7 @@ class DailyFeedViewModelTest {
         val repository = TrackingRepository(
             result = Result.success(sampleDailyFeed()),
         )
-        val viewModel = DailyFeedViewModel(
-            getDailyFeedUseCase = GetDailyFeedUseCase(repository),
-        )
+        val viewModel = createViewModel(repository)
 
         advanceUntilIdle()
         viewModel.onArticleClick(sampleArticleData())
@@ -313,9 +290,23 @@ class DailyFeedViewModelTest {
                 articleId = "article-1",
                 title = "Article 1",
                 url = "https://example.com/articles/1",
+                isRead = false,
             ),
             viewModel.uiState.value.openArticle,
         )
+    }
+
+    @Test
+    fun `article click keeps read state from clicked article`() = runTest {
+        val repository = TrackingRepository(
+            result = Result.success(sampleDailyFeed()),
+        )
+        val viewModel = createViewModel(repository)
+
+        advanceUntilIdle()
+        viewModel.onArticleClick(sampleArticleData(isRead = true))
+
+        assertEquals(true, viewModel.uiState.value.openArticle?.isRead)
     }
 
     @Test
@@ -323,9 +314,7 @@ class DailyFeedViewModelTest {
         val repository = TrackingRepository(
             result = Result.success(sampleDailyFeed()),
         )
-        val viewModel = DailyFeedViewModel(
-            getDailyFeedUseCase = GetDailyFeedUseCase(repository),
-        )
+        val viewModel = createViewModel(repository)
 
         advanceUntilIdle()
         viewModel.onBackClick()
@@ -348,9 +337,7 @@ class DailyFeedViewModelTest {
         val repository = TrackingRepository(
             result = Result.success(sampleDailyFeed(threads = threads)),
         )
-        val viewModel = DailyFeedViewModel(
-            getDailyFeedUseCase = GetDailyFeedUseCase(repository),
-        )
+        val viewModel = createViewModel(repository)
 
         advanceUntilIdle()
         viewModel.onShowWholeSubjectClick(threadId = "thread-1", threadName = "Thread 1")
@@ -366,9 +353,7 @@ class DailyFeedViewModelTest {
         val repository = TrackingRepository(
             result = Result.success(sampleDailyFeed(threads = threads)),
         )
-        val viewModel = DailyFeedViewModel(
-            getDailyFeedUseCase = GetDailyFeedUseCase(repository),
-        )
+        val viewModel = createViewModel(repository)
 
         advanceUntilIdle()
         viewModel.onArticleClick(sampleArticleData())
@@ -383,9 +368,7 @@ class DailyFeedViewModelTest {
         val repository = TrackingRepository(
             result = Result.success(sampleDailyFeed()),
         )
-        val viewModel = DailyFeedViewModel(
-            getDailyFeedUseCase = GetDailyFeedUseCase(repository),
-        )
+        val viewModel = createViewModel(repository)
 
         advanceUntilIdle()
         viewModel.onShowWholeSubjectClick(threadId = "thread-1", threadName = "Thread 1")
@@ -402,7 +385,40 @@ class DailyFeedViewModelTest {
             viewModel.uiState.value.openThreadHistory,
         )
     }
+
+    @Test
+    fun `read cache updates loaded feed without refetch`() = runTest {
+        val readArticlesCache = InMemoryReadArticlesCache()
+        val repository = TrackingRepository(
+            result = Result.success(
+                sampleDailyFeed(
+                    threads = listOf(
+                        sampleThread(
+                            articles = listOf(sampleDomainArticle(isRead = false)),
+                        ),
+                    ),
+                ),
+            ),
+        )
+        val viewModel = createViewModel(repository, readArticlesCache)
+
+        advanceUntilIdle()
+        readArticlesCache.markRead("article-1")
+        advanceUntilIdle()
+
+        val threads = (viewModel.uiState.value.contentState as DailyFeedContentState.Success).threads
+        assertEquals(true, threads.single().articles.single().isRead)
+        assertEquals(listOf<LocalDate?>(today), repository.requestedDays)
+    }
 }
+
+private fun createViewModel(
+    repository: TrackingRepository,
+    readArticlesCache: InMemoryReadArticlesCache = InMemoryReadArticlesCache(),
+): DailyFeedViewModel = DailyFeedViewModel(
+    getDailyFeedUseCase = GetDailyFeedUseCase(repository),
+    readArticlesCache = readArticlesCache,
+)
 
 private class TrackingRepository(
     private val result: Result<DailyFeed>,
@@ -451,7 +467,10 @@ private class TrackingRepository(
         error("Not used in this test")
 }
 
-private fun sampleThread(id: String = "thread-1") = DailyFeedThread(
+private fun sampleThread(
+    id: String = "thread-1",
+    articles: List<Article> = emptyList(),
+) = DailyFeedThread(
     id = id,
     name = "Thread 1",
     topicId = null,
@@ -459,7 +478,7 @@ private fun sampleThread(id: String = "thread-1") = DailyFeedThread(
     dailyFeedScore = 0.8,
     firstSeen = null,
     summary = null,
-    articles = emptyList(),
+    articles = articles,
 )
 
 private fun sampleDailyFeed(
@@ -472,14 +491,31 @@ private fun sampleDailyFeed(
 
 private fun visibleArticlesMap(vararg entries: Pair<String, Boolean>): Map<String, Boolean> = mapOf(*entries)
 
-private fun sampleArticleData() = ThulurThreadArticleData(
+private fun sampleArticleData(isRead: Boolean = false) = ThulurThreadArticleData(
     id = "article-1",
     url = "https://example.com/articles/1",
     imageUrl = "https://example.com/articles/1.jpg",
-    variant = ThulurArticleItemVariant.Default,
+    variant = if (isRead) ThulurArticleItemVariant.Read else ThulurArticleItemVariant.Default,
+    isRead = isRead,
     title = "Article 1",
     summary = "Summary",
     sourceLabel = "example.com",
     dateText = "17.04.2026",
     timeText = "12:00",
+)
+
+private fun sampleDomainArticle(
+    id: String = "article-1",
+    isRead: Boolean = false,
+) = Article(
+    id = id,
+    feedId = "feed-1",
+    title = "Article 1",
+    url = "https://example.com/articles/1",
+    imageUrl = "https://example.com/articles/1.jpg",
+    published = "2026-04-17T12:00:00",
+    displaySummary = "Summary",
+    isRead = isRead,
+    isSuggestion = false,
+    quality = ArticleQuality.Default,
 )

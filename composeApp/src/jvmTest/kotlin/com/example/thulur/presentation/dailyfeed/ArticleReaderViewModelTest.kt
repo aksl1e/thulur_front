@@ -1,13 +1,13 @@
 package com.example.thulur.presentation.dailyfeed
 
+import com.example.thulur.data.session.InMemoryReadArticlesCache
 import com.example.thulur.domain.model.ArticleParagraph
 import com.example.thulur.domain.model.AuthSession
 import com.example.thulur.domain.model.CurrentUser
 import com.example.thulur.domain.model.DailyFeed
 import com.example.thulur.domain.model.Feed
-import com.example.thulur.domain.model.DailyFeedThread
-import com.example.thulur.domain.model.ThreadHistory
 import com.example.thulur.domain.model.PatchUserSettings
+import com.example.thulur.domain.model.ThreadHistory
 import com.example.thulur.domain.model.UserSettings
 import com.example.thulur.domain.repository.ThulurApiRepository
 import com.example.thulur.domain.usecase.GetArticleParagraphsUseCase
@@ -44,27 +44,14 @@ class ArticleReaderViewModelTest {
 
     @Test
     fun `loads paragraphs and stays hidden until page and injection are complete`() = runTest {
-        val viewModel = ArticleReaderViewModel(
-            openArticle = OpenArticle(
-                articleId = "article-1",
-                title = "Article 1",
-                url = "https://example.com/articles/1",
-            ),
-            getArticleParagraphsUseCase = GetArticleParagraphsUseCase(
-                ParagraphRepository(
-                    paragraphsResult = Result.success(
-                        listOf(
-                            ArticleParagraph(idx = 0, text = "Novel", isNovel = true),
-                        ),
-                    ),
-                ),
-            ),
-            rateArticleUseCase = RateArticleUseCase(
-                ParagraphRepository(
-                    paragraphsResult = Result.success(emptyList()),
+        val repository = ReaderRepository(
+            paragraphsResult = Result.success(
+                listOf(
+                    ArticleParagraph(idx = 0, text = "Novel", isNovel = true),
                 ),
             ),
         )
+        val viewModel = createViewModel(repository = repository)
 
         advanceUntilIdle()
 
@@ -80,23 +67,10 @@ class ArticleReaderViewModelTest {
 
     @Test
     fun `progress is clamped and only moves upward`() = runTest {
-        val viewModel = ArticleReaderViewModel(
-            openArticle = OpenArticle(
-                articleId = "article-1",
-                title = "Article 1",
-                url = "https://example.com/articles/1",
-            ),
-            getArticleParagraphsUseCase = GetArticleParagraphsUseCase(
-                ParagraphRepository(
-                    paragraphsResult = Result.success(emptyList()),
-                ),
-            ),
-            rateArticleUseCase = RateArticleUseCase(
-                ParagraphRepository(
-                    paragraphsResult = Result.success(emptyList()),
-                ),
-            ),
+        val repository = ReaderRepository(
+            paragraphsResult = Result.success(emptyList()),
         )
+        val viewModel = createViewModel(repository = repository)
 
         advanceUntilIdle()
         viewModel.onProgressChanged(0.35f)
@@ -108,34 +82,114 @@ class ArticleReaderViewModelTest {
 
     @Test
     fun `paragraph failure turns reader into error state`() = runTest {
-        val viewModel = ArticleReaderViewModel(
-            openArticle = OpenArticle(
-                articleId = "article-1",
-                title = "Article 1",
-                url = "https://example.com/articles/1",
-            ),
-            getArticleParagraphsUseCase = GetArticleParagraphsUseCase(
-                ParagraphRepository(
-                    paragraphsResult = Result.failure(IllegalStateException("Paragraphs failed")),
-                ),
-            ),
-            rateArticleUseCase = RateArticleUseCase(
-                ParagraphRepository(
-                    paragraphsResult = Result.success(emptyList()),
-                ),
-            ),
+        val repository = ReaderRepository(
+            paragraphsResult = Result.failure(IllegalStateException("Paragraphs failed")),
         )
+        val viewModel = createViewModel(repository = repository)
 
         advanceUntilIdle()
 
         assertEquals("Paragraphs failed", viewModel.uiState.value.errorMessage)
         assertFalse(viewModel.uiState.value.isReady)
     }
+
+    @Test
+    fun `successful submit marks article as read in cache and ui state`() = runTest {
+        val readArticlesCache = InMemoryReadArticlesCache()
+        val repository = ReaderRepository(
+            paragraphsResult = Result.success(emptyList()),
+            rateResult = Result.success(Unit),
+        )
+        val viewModel = createViewModel(
+            repository = repository,
+            readArticlesCache = readArticlesCache,
+        )
+
+        advanceUntilIdle()
+        viewModel.onRateArticle(3)
+        viewModel.submitRate()
+        advanceUntilIdle()
+
+        assertEquals("article-1", repository.ratedArticleId)
+        assertEquals(3, repository.ratedValue)
+        assertTrue(readArticlesCache.isRead("article-1"))
+        assertTrue(viewModel.uiState.value.isArticleRead)
+    }
+
+    @Test
+    fun `failed submit does not update read cache`() = runTest {
+        val readArticlesCache = InMemoryReadArticlesCache()
+        val repository = ReaderRepository(
+            paragraphsResult = Result.success(emptyList()),
+            rateResult = Result.failure(IllegalStateException("Rate failed")),
+        )
+        val viewModel = createViewModel(
+            repository = repository,
+            readArticlesCache = readArticlesCache,
+        )
+
+        advanceUntilIdle()
+        viewModel.onRateArticle(4)
+        viewModel.submitRate()
+        advanceUntilIdle()
+
+        assertEquals("article-1", repository.ratedArticleId)
+        assertEquals(4, repository.ratedValue)
+        assertFalse(readArticlesCache.isRead("article-1"))
+        assertFalse(viewModel.uiState.value.isArticleRead)
+    }
+
+    @Test
+    fun `already read article skips submit`() = runTest {
+        val repository = ReaderRepository(
+            paragraphsResult = Result.success(emptyList()),
+            rateResult = Result.success(Unit),
+        )
+        val viewModel = createViewModel(
+            repository = repository,
+            openArticle = OpenArticle(
+                articleId = "article-1",
+                title = "Article 1",
+                url = "https://example.com/articles/1",
+                isRead = true,
+            ),
+        )
+
+        advanceUntilIdle()
+        viewModel.onRateArticle(5)
+        viewModel.submitRate()
+        advanceUntilIdle()
+
+        assertEquals(0, repository.rateCalls)
+    }
 }
 
-private class ParagraphRepository(
+private fun createViewModel(
+    repository: ReaderRepository,
+    readArticlesCache: InMemoryReadArticlesCache = InMemoryReadArticlesCache(),
+    openArticle: OpenArticle = OpenArticle(
+        articleId = "article-1",
+        title = "Article 1",
+        url = "https://example.com/articles/1",
+    ),
+): ArticleReaderViewModel = ArticleReaderViewModel(
+    openArticle = openArticle,
+    getArticleParagraphsUseCase = GetArticleParagraphsUseCase(repository),
+    rateArticleUseCase = RateArticleUseCase(repository),
+    readArticlesCache = readArticlesCache,
+)
+
+private class ReaderRepository(
     private val paragraphsResult: Result<List<ArticleParagraph>>,
+    private val rateResult: Result<Unit> = Result.success(Unit),
 ) : ThulurApiRepository {
+    var rateCalls = 0
+        private set
+    var ratedArticleId: String? = null
+        private set
+    var ratedValue: Int? = null
+        private set
+
     override suspend fun getDailyFeed(day: LocalDate?): DailyFeed =
         DailyFeed(isDefault = true, threads = emptyList())
 
@@ -172,6 +226,10 @@ private class ParagraphRepository(
     override suspend fun getThreadHistory(threadId: String): ThreadHistory =
         error("Not used in this test")
 
-    override suspend fun rateArticle(articleId: String, rating: Int) =
-        error("Not used in this test")
+    override suspend fun rateArticle(articleId: String, rating: Int) {
+        rateCalls += 1
+        ratedArticleId = articleId
+        ratedValue = rating
+        rateResult.getOrThrow()
+    }
 }
