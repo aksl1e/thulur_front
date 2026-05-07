@@ -134,59 +134,6 @@ fun ChatScreen(
         Row(
             modifier = Modifier.fillMaxSize(),
         ) {
-            // ---- Left rail: thread selector ----
-            Column(
-                modifier = Modifier
-                    .width(leftRailWidth)
-                    .fillMaxHeight()
-                    .background(colors.railColor),
-            ) {
-                when (val contentState = uiState.contentState) {
-                    ChatContentState.Loading -> CircularProgressIndicator(
-                        modifier = Modifier.padding(contentPadding),
-                    )
-
-                    ChatContentState.Empty -> BasicText(
-                        text = "No threads available.",
-                        modifier = Modifier.padding(contentPadding),
-                    )
-
-                    is ChatContentState.Error -> BasicText(
-                        text = contentState.message,
-                        modifier = Modifier.padding(contentPadding),
-                    )
-
-                    is ChatContentState.Success -> {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(
-                                    start = contentPadding,
-                                    top = 70.thulurDp(),
-                                )
-                        ) {
-                            // "Chats" label above the thread list — matches reference design
-                            BasicText(
-                                text = "Chats",
-                                modifier = Modifier.padding(
-                                    bottom = 20.thulurDp(),
-                                ),
-                                style = ThulurTheme.SemanticTypography.settingsSubsectionTitle.copy(
-                                    color = ThulurTheme.SemanticColors.chatScreen.chatsLabelColor,
-                                ),
-                            )
-
-                            ThreadSectionSelector(
-                                threads = contentState.threads,
-                                selectedThreadId = uiState.selectedThreadId,
-                                onThreadSelected = onThreadClick,
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                        }
-                    }
-                }
-            }
-
             // ---- Right content: chat messages + input bar ----
             Column(
                 modifier = Modifier
