@@ -91,6 +91,7 @@ data class ThulurArticleItemInteractionSemanticColors(
 @Immutable
 data class ThulurArticleItemSemanticColors(
     val linkColor: Color,
+    val imageLoadingIndicatorColor: Color,
     val interaction: ThulurArticleItemInteractionSemanticColors,
     val trash: ThulurArticleItemVariantSemanticColors,
     val default: ThulurArticleItemVariantSemanticColors,
@@ -516,10 +517,12 @@ fun rememberThulurThreadItemSemanticColors(): ThulurThreadItemSemanticColors {
 @ReadOnlyComposable
 fun rememberThulurArticleItemSemanticColors(): ThulurArticleItemSemanticColors {
     val slate = ThulurTheme.Colors.slate
+    val primary = ThulurTheme.Colors.primary
 
     return when (ThulurTheme.Mode) {
         ThemeMode.Light -> ThulurArticleItemSemanticColors(
             linkColor = slate.s900,
+            imageLoadingIndicatorColor = primary.s500,
             interaction = ThulurArticleItemInteractionSemanticColors(
                 restContainerColor = Color.Transparent,
                 hoveredContainerColor = slate.s100,
@@ -545,6 +548,7 @@ fun rememberThulurArticleItemSemanticColors(): ThulurArticleItemSemanticColors {
 
         ThemeMode.Dark -> ThulurArticleItemSemanticColors(
             linkColor = slate.s100,
+            imageLoadingIndicatorColor = primary.s500,
             interaction = ThulurArticleItemInteractionSemanticColors(
                 restContainerColor = Color.Transparent,
                 hoveredContainerColor = slate.s900,

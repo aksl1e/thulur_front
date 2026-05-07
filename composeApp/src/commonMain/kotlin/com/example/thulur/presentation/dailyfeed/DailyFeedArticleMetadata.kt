@@ -21,6 +21,7 @@ internal fun Article.toThulurThreadArticleData(): ThulurThreadArticleData {
     return ThulurThreadArticleData(
         id = id,
         url = url,
+        imageUrl = imageUrl,
         variant = quality.toThulurArticleItemVariant(),
         title = title,
         summary = displaySummary,

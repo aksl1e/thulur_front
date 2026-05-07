@@ -21,18 +21,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import coil3.compose.AsyncImage
+import coil3.compose.AsyncImagePainter
 import com.example.thulur.presentation.theme.ThulurArticleItemVariantSemanticColors
 import com.example.thulur.presentation.theme.ThulurDesignScale
 import com.example.thulur.presentation.theme.ProvideThulurDesignScale
@@ -56,17 +62,23 @@ fun ThulurArticleItem(
     timeText: String?,
     showDate: Boolean,
     modifier: Modifier = Modifier,
+    imageUrl: String?,
     imageLabel: String = "Image",
     onClick: () -> Unit = {},
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
-    val colors = ThulurTheme.SemanticColors.articleItem.colorsFor(variant)
+    val articleItemColors = ThulurTheme.SemanticColors.articleItem
+    val colors = articleItemColors.colorsFor(variant)
     val typography = ThulurTheme.SemanticTypography
     val containerShape = RoundedCornerShape(30.thulurDp())
     val imageShape = RoundedCornerShape(10.thulurDp())
+    val resolvedImageUrl = imageUrl?.takeIf(String::isNotBlank)
+    var imageState by remember(resolvedImageUrl) {
+        mutableStateOf<AsyncImagePainter.State>(AsyncImagePainter.State.Empty)
+    }
     val isHovered by interactionSource.collectIsHoveredAsState()
     val isPressed by interactionSource.collectIsPressedAsState()
-    val interactionColors = ThulurTheme.SemanticColors.articleItem.interaction
+    val interactionColors = articleItemColors.interaction
     val hoveredOverlayAlpha by animateFloatAsState(
         targetValue = if (isHovered && !isPressed) 1f else 0f,
         animationSpec = tween(durationMillis = 120),
@@ -141,19 +153,35 @@ fun ThulurArticleItem(
                 .padding(20.thulurDp()),
             verticalArrangement = Arrangement.spacedBy(15.thulurDp()),
         ) {
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(135.thulurDp())
                     .clip(imageShape)
                     .background(colors.imageContainerColor),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                BasicText(
-                    text = imageLabel,
-                    style = typography.articleItemImageLabel.copy(color = colors.imageLabelColor),
+                ArticleImagePlaceholder(
+                    imageLabel = imageLabel,
+                    labelColor = colors.imageLabelColor,
+                    modifier = Modifier.fillMaxSize(),
                 )
+
+                if (resolvedImageUrl != null) {
+                    AsyncImage(
+                        model = resolvedImageUrl,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                        onState = { state -> imageState = state },
+                    )
+                }
+
+                if (imageState is AsyncImagePainter.State.Loading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = articleItemColors.imageLoadingIndicatorColor,
+                    )
+                }
             }
 
             Column(
@@ -190,6 +218,26 @@ fun ThulurArticleItem(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun ArticleImagePlaceholder(
+    imageLabel: String,
+    labelColor: androidx.compose.ui.graphics.Color,
+    modifier: Modifier = Modifier,
+) {
+    val typography = ThulurTheme.SemanticTypography
+
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        BasicText(
+            text = imageLabel,
+            style = typography.articleItemImageLabel.copy(color = labelColor),
+        )
     }
 }
 
@@ -294,6 +342,7 @@ private fun ThulurArticleItemPreview() {
                     dateText = "27.03.2026",
                     timeText = "8:40",
                     showDate = false,
+                    imageUrl = null,
                 )
                 ThulurArticleItem(
                     variant = ThulurArticleItemVariant.Important,
@@ -303,6 +352,7 @@ private fun ThulurArticleItemPreview() {
                     dateText = "27.03.2026",
                     timeText = "8:40",
                     showDate = false,
+                    imageUrl = "https://example.com/important.jpg",
                 )
             }
         }

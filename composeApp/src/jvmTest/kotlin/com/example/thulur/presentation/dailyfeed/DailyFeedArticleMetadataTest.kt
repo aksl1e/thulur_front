@@ -1,5 +1,6 @@
 package com.example.thulur.presentation.dailyfeed
 
+import com.example.thulur.domain.model.Article
 import com.example.thulur.domain.model.ArticleQuality
 import com.example.thulur.presentation.composables.ThulurArticleItemVariant
 import com.example.thulur.presentation.composables.extractSourceLabel
@@ -59,5 +60,25 @@ class DailyFeedArticleMetadataTest {
             ThulurArticleItemVariant.Important,
             ArticleQuality.Important.toThulurArticleItemVariant(),
         )
+    }
+
+    @Test
+    fun `toThulurThreadArticleData keeps image url`() {
+        val article = Article(
+            id = "article-1",
+            feedId = "feed-1",
+            title = "Article",
+            url = "https://example.com/article-1",
+            imageUrl = "https://example.com/article-1.jpg",
+            published = "2026-03-27T08:40:00",
+            displaySummary = "Summary",
+            isRead = false,
+            isSuggestion = false,
+            quality = ArticleQuality.Default,
+        )
+
+        val result = article.toThulurThreadArticleData()
+
+        assertEquals("https://example.com/article-1.jpg", result.imageUrl)
     }
 }

@@ -344,6 +344,7 @@ private fun ThreadHistoryDayPage(
                         dateText = article.dateText,
                         timeText = article.timeText,
                         showDate = article.showDate,
+                        imageUrl = article.imageUrl,
                         modifier = Modifier.height(340.thulurDp()),
                         onClick = { onArticleClick(article) },
                     )

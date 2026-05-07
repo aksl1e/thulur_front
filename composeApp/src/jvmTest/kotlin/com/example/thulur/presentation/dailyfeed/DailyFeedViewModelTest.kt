@@ -475,6 +475,7 @@ private fun visibleArticlesMap(vararg entries: Pair<String, Boolean>): Map<Strin
 private fun sampleArticleData() = ThulurThreadArticleData(
     id = "article-1",
     url = "https://example.com/articles/1",
+    imageUrl = "https://example.com/articles/1.jpg",
     variant = ThulurArticleItemVariant.Default,
     title = "Article 1",
     summary = "Summary",
