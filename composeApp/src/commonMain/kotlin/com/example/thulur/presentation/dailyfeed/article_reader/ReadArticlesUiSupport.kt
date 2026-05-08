@@ -1,4 +1,4 @@
-ыpackage com.example.thulur.presentation.dailyfeed.article_reader
+package com.example.thulur.presentation.dailyfeed.article_reader
 
 import com.example.thulur.domain.model.Article
 import com.example.thulur.domain.model.DailyFeedThread

@@ -271,27 +271,6 @@ private fun SettingsAccountSection(
                     color = colors.bodyColor,
                 ),
             )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.thulurDp()),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                ThulurTextField(
-                    value = "",
-                    onValueChange = {},
-                    placeholder = "New Email",
-                    enabled = false,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(42.thulurDp()),
-                    stateColorsOverride = colors.inputField,
-                )
-                SettingsInlineActionButton(
-                    label = "Change Email",
-                    onClick = {},
-                    enabled = false,
-                )
-            }
         }
 
         Column(
