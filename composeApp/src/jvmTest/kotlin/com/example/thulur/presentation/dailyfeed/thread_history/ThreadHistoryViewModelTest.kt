@@ -329,6 +329,12 @@ private class TrackingRepository(
     override suspend fun terminateAuthSession(sessionId: String) =
         error("Not used in this test")
 
+    override suspend fun sendGeneralChatMessage(message: String): String =
+        error("Not used in this test")
+
+    override suspend fun sendThreadChatMessage(threadId: String, message: String): String =
+        error("Not used in this test")
+
     override suspend fun rateArticle(articleId: String, rating: Int) =
         error("Not used in this test")
 }

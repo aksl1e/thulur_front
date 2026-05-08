@@ -70,7 +70,7 @@ fun ThulurButton(
     colorRole: ThulurColorRole = ThulurColorRole.Primary,
     useContainerStates: Boolean = true,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
-    textStyle: TextStyle = ThulurTheme.Typography.bodyLarge,
+    textStyle: TextStyle = ThulurTheme.SemanticTypography.buttonLabel,
     supportingTextStyle: TextStyle? = null,
     shape: Shape = thulurDefaultShape(),
     contentPadding: PaddingValues = PaddingValues(15.thulurDp()),

@@ -34,13 +34,15 @@ fun ThulurChatFab(
     val colors = ThulurTheme.SemanticColors.chatFab
     val typography = ThulurTheme.SemanticTypography
     val shape = RoundedCornerShape(thulurDefaultChatCornerRadius())
+    val containerColor = if (enabled) colors.containerColor else colors.disabledContainerColor
+    val contentColor = if (enabled) colors.contentColor else colors.disabledContentColor
 
-    CompositionLocalProvider(LocalContentColor provides colors.contentColor) {
+    CompositionLocalProvider(LocalContentColor provides contentColor) {
         Row(
             modifier = modifier
                 .wrapContentSize()
                 .clip(shape)
-                .background(colors.containerColor)
+                .background(containerColor)
                 .clickable(enabled = enabled, onClick = onClick)
                 .padding(20.thulurDp()),
             horizontalArrangement = Arrangement.spacedBy(10.thulurDp()),
@@ -49,7 +51,7 @@ fun ThulurChatFab(
             icon?.invoke()
             BasicText(
                 text = text,
-                style = typography.chatFabLabel.copy(color = colors.contentColor),
+                style = typography.chatFabLabel.copy(color = contentColor),
             )
         }
     }

@@ -14,17 +14,21 @@ import com.example.thulur.domain.model.ThreadHistory
 import com.example.thulur.domain.model.UserSettings
 import com.example.thulur.domain.repository.ThulurApiRepository
 import com.example.thulur.domain.theme.ThemeStore
+import com.example.thulur.domain.usecase.GetCurrentUserUseCase
 import com.example.thulur.domain.usecase.GetUserSettingsUseCase
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.LocalDate
 
@@ -190,8 +194,89 @@ class AppRootViewModelTest {
         )
     }
 
-    private fun createViewModel(sessionProvider: CurrentSessionProviderImpl): AppRootViewModel =
-        AppRootViewModel(sessionProvider, GetUserSettingsUseCase(StubSettingsRepository), InMemoryThemeStore())
+    @Test
+    fun `subscription tier starts unknown and updates after current user loads`() = runTest {
+        val currentUserDeferred = CompletableDeferred<CurrentUser>()
+        val repository = TrackingRootRepository(currentUserDeferred = currentUserDeferred)
+        val sessionProvider = createSessionProvider(InMemorySecureTokenStore(initialToken = "token-1"))
+        val viewModel = createViewModel(sessionProvider, repository)
+
+        advanceUntilIdle()
+
+        assertEquals(
+            AppRootUiState.Ready(
+                sessionInstanceId = 1,
+                subscriptionTier = AppSubscriptionTier.Unknown,
+            ),
+            viewModel.uiState.value,
+        )
+
+        currentUserDeferred.complete(sampleCurrentUser(subscriptionTier = "pro"))
+        advanceUntilIdle()
+
+        assertEquals(
+            AppRootUiState.Ready(
+                sessionInstanceId = 1,
+                subscriptionTier = AppSubscriptionTier.Pro,
+            ),
+            viewModel.uiState.value,
+        )
+    }
+
+    @Test
+    fun `subscription retries with configured backoff and updates after success`() = runTest {
+        val repository = TrackingRootRepository(
+            currentUserResponses = ArrayDeque(
+                listOf(
+                    Result.failure(IllegalStateException("offline")),
+                    Result.failure(IllegalStateException("offline")),
+                    Result.success(sampleCurrentUser(subscriptionTier = "corporate")),
+                ),
+            ),
+        )
+        val sessionProvider = createSessionProvider(InMemorySecureTokenStore(initialToken = "token-1"))
+        val viewModel = createViewModel(sessionProvider, repository)
+
+        runCurrent()
+
+        assertEquals(1, repository.getCurrentUserCallCount)
+        assertEquals(AppSubscriptionTier.Unknown, (viewModel.uiState.value as AppRootUiState.Ready).subscriptionTier)
+
+        advanceTimeBy(4_999)
+        runCurrent()
+        assertEquals(1, repository.getCurrentUserCallCount)
+
+        advanceTimeBy(1)
+        runCurrent()
+        assertEquals(2, repository.getCurrentUserCallCount)
+        assertEquals(AppSubscriptionTier.Unknown, (viewModel.uiState.value as AppRootUiState.Ready).subscriptionTier)
+
+        advanceTimeBy(14_999)
+        runCurrent()
+        assertEquals(2, repository.getCurrentUserCallCount)
+
+        advanceTimeBy(1)
+        runCurrent()
+        assertEquals(3, repository.getCurrentUserCallCount)
+        assertEquals(
+            AppSubscriptionTier.Corporate,
+            (viewModel.uiState.value as AppRootUiState.Ready).subscriptionTier,
+        )
+
+        advanceTimeBy(60_000)
+        runCurrent()
+        assertEquals(3, repository.getCurrentUserCallCount)
+    }
+
+    private fun createViewModel(
+        sessionProvider: CurrentSessionProviderImpl,
+        repository: TrackingRootRepository = TrackingRootRepository(),
+    ): AppRootViewModel = AppRootViewModel(
+        sessionProvider,
+        GetUserSettingsUseCase(repository),
+        GetCurrentUserUseCase(repository),
+        InMemoryThemeStore(),
+    )
 }
 
 private fun createSessionProvider(tokenStore: InMemorySecureTokenStore): CurrentSessionProviderImpl =
@@ -206,7 +291,13 @@ private class InMemoryThemeStore : ThemeStore {
     override suspend fun writeDarkMode(darkMode: Boolean) { this.darkMode = darkMode }
 }
 
-private object StubSettingsRepository : ThulurApiRepository {
+private class TrackingRootRepository(
+    private val currentUser: CurrentUser = sampleCurrentUser(),
+    private val currentUserDeferred: CompletableDeferred<CurrentUser>? = null,
+    private val currentUserResponses: ArrayDeque<Result<CurrentUser>> = ArrayDeque(),
+) : ThulurApiRepository {
+    var getCurrentUserCallCount: Int = 0
+
     override suspend fun getUserSettings(): UserSettings = UserSettings(
         userId = "",
         darkMode = false,
@@ -226,9 +317,26 @@ private object StubSettingsRepository : ThulurApiRepository {
     override suspend fun getAllFeeds(): List<Feed> = error("not used")
     override suspend fun followFeed(identifier: String): Unit = error("not used")
     override suspend fun unfollowFeed(feedId: String): Unit = error("not used")
-    override suspend fun getCurrentUser(): CurrentUser = error("not used")
+    override suspend fun getCurrentUser(): CurrentUser {
+        getCurrentUserCallCount += 1
+        currentUserDeferred?.let { return it.await() }
+        if (currentUserResponses.isNotEmpty()) {
+            return currentUserResponses.removeFirst().getOrThrow()
+        }
+        return currentUser
+    }
     override suspend fun getAuthSessions(): List<AuthSession> = error("not used")
     override suspend fun terminateAuthSession(sessionId: String): Unit = error("not used")
     override suspend fun getThreadHistory(threadId: String): ThreadHistory = error("not used")
+    override suspend fun sendGeneralChatMessage(message: String): String = error("not used")
+    override suspend fun sendThreadChatMessage(threadId: String, message: String): String = error("not used")
     override suspend fun rateArticle(articleId: String, rating: Int): Unit = error("not used")
 }
+
+private fun sampleCurrentUser(subscriptionTier: String = "unknown"): CurrentUser = CurrentUser(
+    id = "user-1",
+    email = "user@example.com",
+    subscriptionTier = subscriptionTier,
+    subscriptionExpiresAt = null,
+    createdAt = "2026-01-01T00:00:00Z",
+)

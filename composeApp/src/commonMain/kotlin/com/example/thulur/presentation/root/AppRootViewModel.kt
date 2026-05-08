@@ -2,13 +2,14 @@ package com.example.thulur.presentation.root
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.thulur.domain.model.DailyFeedThread
 import com.example.thulur.domain.session.CurrentSessionProvider
 import com.example.thulur.domain.theme.ThemeStore
+import com.example.thulur.domain.usecase.GetCurrentUserUseCase
 import com.example.thulur.domain.usecase.GetUserSettingsUseCase
-import com.example.thulur.presentation.dailyfeed.DailyFeedContentState
 import com.example.thulur.presentation.theme.ThemeMode
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,10 +18,12 @@ import kotlinx.coroutines.launch
 class AppRootViewModel(
     currentSessionProvider: CurrentSessionProvider,
     private val getUserSettingsUseCase: GetUserSettingsUseCase,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val themeStore: ThemeStore,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<AppRootUiState>(AppRootUiState.Loading)
     val uiState: StateFlow<AppRootUiState> = _uiState.asStateFlow()
+    private var subscriptionLoadJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -37,14 +40,17 @@ class AppRootViewModel(
                     if (session != null) {
                         val previousState = _uiState.value as? AppRootUiState.Ready
                         if (previousState?.sessionInstanceId != session.instanceId) {
+                            subscriptionLoadJob?.cancel()
                             _uiState.value = AppRootUiState.Loading
                             val theme = fetchTheme()
                             _uiState.value = AppRootUiState.Ready(
                                 sessionInstanceId = session.instanceId,
                                 themeMode = theme,
                             )
+                            startSubscriptionLoad(session.instanceId)
                         }
                     } else {
+                        subscriptionLoadJob?.cancel()
                         val cached = themeStore.readDarkMode()
                         _uiState.value = AppRootUiState.Unready(
                             themeMode = if (cached == true) ThemeMode.Dark else ThemeMode.Light,
@@ -60,13 +66,6 @@ class AppRootViewModel(
 
     fun backToDailyFeed() {
         updateAuthenticatedDestination(AppRootAuthenticatedDestination.DailyFeed)
-    }
-    fun openChat(threads: List<DailyFeedThread>) {
-        val current = _uiState.value as? AppRootUiState.Ready ?: return
-        _uiState.value = current.copy(
-            destination = AppRootAuthenticatedDestination.Chat,
-            chatThreads = threads,
-        )
     }
 
     fun updateTheme(theme: ThemeMode) {
@@ -91,4 +90,31 @@ class AppRootViewModel(
         val currentState = _uiState.value as? AppRootUiState.Ready ?: return
         _uiState.value = currentState.copy(destination = destination)
     }
+
+    private fun startSubscriptionLoad(sessionInstanceId: Int) {
+        subscriptionLoadJob?.cancel()
+        subscriptionLoadJob = viewModelScope.launch {
+            if (loadSubscriptionTier(sessionInstanceId)) return@launch
+
+            for (delayMs in SUBSCRIPTION_RETRY_DELAYS_MS) {
+                delay(delayMs)
+                if (loadSubscriptionTier(sessionInstanceId)) return@launch
+            }
+        }
+    }
+
+    private suspend fun loadSubscriptionTier(sessionInstanceId: Int): Boolean = try {
+        val tier = getCurrentUserUseCase().subscriptionTier.toAppSubscriptionTier()
+        val currentState = _uiState.value as? AppRootUiState.Ready ?: return true
+        if (currentState.sessionInstanceId != sessionInstanceId) return true
+
+        _uiState.value = currentState.copy(subscriptionTier = tier)
+        true
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (_: Throwable) {
+        false
+    }
 }
+
+private val SUBSCRIPTION_RETRY_DELAYS_MS = listOf(5_000L, 15_000L, 30_000L, 60_000L)

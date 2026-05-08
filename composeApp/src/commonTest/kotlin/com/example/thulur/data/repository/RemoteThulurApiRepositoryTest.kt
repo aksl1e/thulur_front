@@ -22,6 +22,7 @@ import com.example.thulur_api.dtos.ThreadHistoryDto
 import com.example.thulur_api.dtos.UpdateUserSettingsDto
 import com.example.thulur_api.dtos.UserDto
 import com.example.thulur_api.dtos.UserSettingsDto
+import com.example.thulur_api.dtos.chat.ChatResponseDto
 import com.example.thulur_api.dtos.auth.AuthTokenDto
 import com.example.thulur_api.dtos.auth.DesktopAuthMode
 import com.example.thulur_api.dtos.auth.DesktopAuthStartDto
@@ -326,6 +327,28 @@ class RemoteThulurApiRepositoryTest {
     }
 
     @Test
+    fun `general and thread chat unwrap response strings and delegate request data`() = runTest {
+        val api = FakeThulurApi(
+            dailyFeed = dailyFeedDto(),
+            generalChatResponse = ChatResponseDto(response = "Feed reply"),
+            threadChatResponse = ChatResponseDto(response = "Thread reply"),
+        )
+        val repository = createRepository(thulurApi = api)
+
+        val generalResponse = repository.sendGeneralChatMessage(message = "Hello feed")
+        val threadResponse = repository.sendThreadChatMessage(
+            threadId = "thread-7",
+            message = "Hello thread",
+        )
+
+        assertEquals("Hello feed", api.generalChatMessage)
+        assertEquals("thread-7", api.threadChatThreadId)
+        assertEquals("Hello thread", api.threadChatMessage)
+        assertEquals("Feed reply", generalResponse)
+        assertEquals("Thread reply", threadResponse)
+    }
+
+    @Test
     fun `maps current user into app facing model`() = runTest {
         val repository = createRepository(
             thulurApi = FakeThulurApi(
@@ -535,6 +558,8 @@ private class FakeThulurApi(
     private val allFeeds: List<FeedDto> = emptyList(),
     private val currentUser: UserDto = userDto(),
     private val authSessions: List<AuthSessionDto> = emptyList(),
+    private val generalChatResponse: ChatResponseDto = ChatResponseDto(response = "General reply"),
+    private val threadChatResponse: ChatResponseDto = ChatResponseDto(response = "Thread reply"),
     private val history: ThreadHistoryDto = ThreadHistoryDto(
         threadId = "thread-1",
         threadName = "Thread 1",
@@ -549,6 +574,12 @@ private class FakeThulurApi(
         private set
     var terminatedSessionId: String? = null
         private set
+    var generalChatMessage: String? = null
+        private set
+    var threadChatThreadId: String? = null
+        private set
+    var threadChatMessage: String? = null
+        private set
 
     override suspend fun getDailyFeed(
         day: LocalDate?,
@@ -561,6 +592,20 @@ private class FakeThulurApi(
     override suspend fun getThreadHistory(
         threadId: String,
     ): ThreadHistoryDto = history
+
+    override suspend fun sendGeneralChatMessage(message: String): ChatResponseDto {
+        generalChatMessage = message
+        return generalChatResponse
+    }
+
+    override suspend fun sendThreadChatMessage(
+        threadId: String,
+        message: String,
+    ): ChatResponseDto {
+        threadChatThreadId = threadId
+        threadChatMessage = message
+        return threadChatResponse
+    }
 
     override suspend fun getUserSettings(): UserSettingsDto = settings
 

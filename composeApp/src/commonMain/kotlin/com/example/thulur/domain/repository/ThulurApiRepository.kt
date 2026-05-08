@@ -36,6 +36,16 @@ interface ThulurApiRepository {
     suspend fun getThreadHistory(threadId: String): ThreadHistory
 
     /**
+     * Sends a message to the general feed chat.
+     */
+    suspend fun sendGeneralChatMessage(message: String): String
+
+    /**
+     * Sends a message to the chat for a single thread.
+     */
+    suspend fun sendThreadChatMessage(threadId: String, message: String): String
+
+    /**
      * Loads settings for the current user.
      */
     suspend fun getUserSettings(): UserSettings

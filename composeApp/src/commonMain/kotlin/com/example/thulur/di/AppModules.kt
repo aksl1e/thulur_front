@@ -25,6 +25,8 @@ import com.example.thulur.domain.usecase.UnfollowFeedUseCase
 import com.example.thulur.domain.usecase.PatchUserSettingsUseCase
 import com.example.thulur.domain.usecase.GetThreadHistoryUseCase
 import com.example.thulur.domain.usecase.RateArticleUseCase
+import com.example.thulur.domain.usecase.SendGeneralChatMessageUseCase
+import com.example.thulur.domain.usecase.SendThreadChatMessageUseCase
 import com.example.thulur.presentation.auth.AuthViewModel
 import com.example.thulur.presentation.chat.ChatViewModel
 import com.example.thulur.presentation.dailyfeed.DailyFeedViewModel
@@ -83,6 +85,8 @@ val domainModule = module {
     factory { TerminateAuthSessionUseCase(thulurApiRepository = get()) }
     factory { GetThreadHistoryUseCase(thulurApiRepository = get()) }
     factory { RateArticleUseCase(thulurApiRepository = get()) }
+    factory { SendGeneralChatMessageUseCase(thulurApiRepository = get()) }
+    factory { SendThreadChatMessageUseCase(thulurApiRepository = get()) }
 }
 
 val presentationModule = module {

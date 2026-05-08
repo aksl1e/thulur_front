@@ -2,54 +2,98 @@ package com.example.thulur.presentation.chat
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.thulur.domain.model.DailyFeedThread
-import com.example.thulur.domain.usecase.GetDailyFeedUseCase
-import kotlinx.coroutines.CancellationException
+import com.example.thulur.domain.usecase.SendGeneralChatMessageUseCase
+import com.example.thulur.domain.usecase.SendThreadChatMessageUseCase
+import com.example.thulur.presentation.dailyfeed.OpenChat
+import com.example.thulur.presentation.dailyfeed.OpenChatMode
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.todayIn
-import kotlin.time.Clock
 
-class ChatViewModel : ViewModel() {
+class ChatViewModel(
+    private val sendGeneralChatMessageUseCase: SendGeneralChatMessageUseCase,
+    private val sendThreadChatMessageUseCase: SendThreadChatMessageUseCase,
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChatUiState())
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
 
-    fun initWithThreads(threads: List<DailyFeedThread>) {
-        if (_uiState.value.contentState != ChatContentState.Loading) return // already initialized
-        val contentState = if (threads.isEmpty()) {
-            ChatContentState.Empty
-        } else {
-            ChatContentState.Success(threads)
-        }
-        _uiState.update {
-            it.copy(
-                contentState = contentState,
-                selectedThreadId = (contentState as? ChatContentState.Success)?.threads?.firstOrNull()?.id,
-            )
-        }
-    }
+    private var initializedOpenId: Int? = null
 
-    fun onThreadClick(thread: DailyFeedThread) {
-        _uiState.update { it.copy(selectedThreadId = thread.id) }
+    fun initialize(openChat: OpenChat) {
+        if (initializedOpenId == openChat.openId) return
+
+        initializedOpenId = openChat.openId
+        _uiState.value = ChatUiState(
+            title = openChat.title,
+            mode = openChat.mode,
+        )
     }
 
     fun onInputValueChange(value: String) {
+        if (_uiState.value.isSending) return
         _uiState.update { it.copy(inputValue = value) }
     }
 
     fun onSendClick() {
-        val text = _uiState.value.inputValue.trim()
-        if (text.isBlank()) return
-        _uiState.update {
-            it.copy(
-                messages = it.messages + Message(text = text, isUser = true),
+        val currentState = _uiState.value
+        if (currentState.isSending) return
+
+        val message = currentState.inputValue.trim()
+        if (message.isBlank()) return
+
+        _uiState.update { state ->
+            state.copy(
                 inputValue = "",
+                isSending = true,
+                messages = state.messages +
+                    ChatMessage.User(text = message) +
+                    ChatMessage.AssistantPending,
             )
+        }
+
+        viewModelScope.launch {
+            val assistantMessage = try {
+                ChatMessage.Assistant(
+                    markdown = when (val mode = currentState.mode) {
+                        OpenChatMode.General -> sendGeneralChatMessageUseCase(message = message)
+                        is OpenChatMode.Thread -> sendThreadChatMessageUseCase(
+                            threadId = mode.threadId,
+                            message = message,
+                        )
+                    },
+                )
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (throwable: Throwable) {
+                ChatMessage.Assistant(
+                    markdown = throwable.message
+                        ?.takeIf { it.isNotBlank() }
+                        ?: DEFAULT_CHAT_ERROR_MESSAGE,
+                    isError = true,
+                )
+            }
+
+            _uiState.update { state ->
+                state.copy(
+                    isSending = false,
+                    messages = state.messages.replacePendingAssistantWith(assistantMessage),
+                )
+            }
         }
     }
 }
+
+private fun List<ChatMessage>.replacePendingAssistantWith(
+    replacement: ChatMessage.Assistant,
+): List<ChatMessage> = if (lastOrNull() == ChatMessage.AssistantPending) {
+    dropLast(1) + replacement
+} else {
+    this + replacement
+}
+
+private const val DEFAULT_CHAT_ERROR_MESSAGE: String =
+    "Chat failed to respond. Please try again."

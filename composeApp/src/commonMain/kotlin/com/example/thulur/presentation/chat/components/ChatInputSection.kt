@@ -12,8 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Send
-import androidx.compose.material.icons.outlined.Send
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,6 +64,7 @@ fun ChatInputSection(
                 placeholder = "Ask Chatbot",
                 enabled = enabled,
                 singleLine = false,  // allows multiline
+                onEnterKeyClick = onSendClick,
                 modifier = Modifier.fillMaxWidth(),
                 stateColorsOverride = colors.inputField,
                 shape = RoundedCornerShape(20.thulurDp()),
@@ -90,7 +90,7 @@ fun ChatInputSection(
                     contentPadding = PaddingValues(0.dp),
                     leadingIcon = {
                         Icon(
-                            imageVector = Icons.Filled.Send,
+                            imageVector = Icons.AutoMirrored.Filled.Send,
                             contentDescription = "Send",
                             modifier = Modifier.height(36.thulurDp()),
                         )

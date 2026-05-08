@@ -113,6 +113,15 @@ class RemoteThulurApiRepository(
                 },
             )
         }
+
+    override suspend fun sendGeneralChatMessage(message: String): String =
+        thulurApi.sendGeneralChatMessage(message = message).response
+
+    override suspend fun sendThreadChatMessage(threadId: String, message: String): String =
+        thulurApi.sendThreadChatMessage(
+            threadId = threadId,
+            message = message,
+        ).response
 }
 
 private fun String?.toDailyFeedDateOrNull(): LocalDate? = when (this) {

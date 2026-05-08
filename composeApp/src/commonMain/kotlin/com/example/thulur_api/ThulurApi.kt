@@ -5,6 +5,7 @@ import com.example.thulur_api.dtos.AuthSessionDto
 import com.example.thulur_api.dtos.DailyFeedDto
 import com.example.thulur_api.dtos.FeedDto
 import com.example.thulur_api.dtos.ParagraphDto
+import com.example.thulur_api.dtos.chat.ChatResponseDto
 import com.example.thulur_api.dtos.UpdateUserSettingsDto
 import com.example.thulur_api.dtos.UserDto
 import com.example.thulur_api.dtos.UserSettingsDto
@@ -18,6 +19,8 @@ import com.example.thulur_api.methods.auth.DesktopAuthExchangeMethod
 import com.example.thulur_api.methods.auth.DesktopAuthStartMethod
 import com.example.thulur_api.methods.articles.ParagraphsMethod
 import com.example.thulur_api.methods.articles.RateArticleMethod
+import com.example.thulur_api.methods.chat.GeneralChatMethod
+import com.example.thulur_api.methods.chat.ThreadChatMethod
 import com.example.thulur_api.methods.daily_feed.DailyFeedMethod
 import com.example.thulur_api.methods.thread_history.ThreadHistoryMethod
 import com.example.thulur_api.methods.feeds.FollowFeedMethod
@@ -120,6 +123,21 @@ interface ThulurApi {
         threadId: String,
     ): ThreadHistoryDto
 
+    /**
+     * Sends a message to the general feed chat.
+     */
+    suspend fun sendGeneralChatMessage(
+        message: String,
+    ): ChatResponseDto
+
+    /**
+     * Sends a message to the chat scoped to a single thread.
+     */
+    suspend fun sendThreadChatMessage(
+        threadId: String,
+        message: String,
+    ): ChatResponseDto
+
     suspend fun startDesktopAuth(
         email: String,
         mode: DesktopAuthMode,
@@ -202,6 +220,14 @@ class RemoteThulurApi(
         httpClient = httpClient,
         config = config,
     )
+    private val generalChatMethod = GeneralChatMethod(
+        httpClient = httpClient,
+        config = config,
+    )
+    private val threadChatMethod = ThreadChatMethod(
+        httpClient = httpClient,
+        config = config,
+    )
 
     override suspend fun getDailyFeed(
         day: LocalDate?,
@@ -229,6 +255,20 @@ class RemoteThulurApi(
         threadId: String,
     ): ThreadHistoryDto = threadHistoryMethod.execute(
         threadId = threadId,
+    )
+
+    override suspend fun sendGeneralChatMessage(
+        message: String,
+    ): ChatResponseDto = generalChatMethod.execute(
+        message = message,
+    )
+
+    override suspend fun sendThreadChatMessage(
+        threadId: String,
+        message: String,
+    ): ChatResponseDto = threadChatMethod.execute(
+        threadId = threadId,
+        message = message,
     )
 
     override suspend fun getUserSettings(): UserSettingsDto = getSettingsMethod.execute()

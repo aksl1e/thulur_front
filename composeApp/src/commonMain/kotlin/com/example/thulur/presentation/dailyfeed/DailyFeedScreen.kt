@@ -37,6 +37,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.thulur.domain.model.DailyFeedThread
+import com.example.thulur.presentation.chat.ChatRoute
 import com.example.thulur.presentation.composables.DesktopScrollCoordinator
 import com.example.thulur.presentation.composables.ThulurAppBar
 import com.example.thulur.presentation.composables.ThulurButton
@@ -64,9 +65,9 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun DailyFeedRoute(
     sessionInstanceId: Int,
+    canDiscussThread: Boolean,
     onOpenSettings: () -> Unit,
     viewModel: DailyFeedViewModel = koinViewModel(key = dailyFeedViewModelKey(sessionInstanceId)),
-    onOpenChat: (List<DailyFeedThread>) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = dailyFeedColors()
@@ -89,11 +90,19 @@ fun DailyFeedRoute(
                 onBackClick = viewModel::onCloseArticleReader,
             )
 
+            state.openChat != null -> ChatRoute(
+                sessionInstanceId = sessionInstanceId,
+                openChat = state.openChat,
+                onBackClick = viewModel::onCloseChat,
+            )
+
             state.openThreadHistory != null -> ThreadHistoryRoute(
                 sessionInstanceId = sessionInstanceId,
                 openThreadHistory = state.openThreadHistory,
+                canDiscussThread = canDiscussThread,
                 onBackClick = viewModel::onCloseThreadHistory,
                 onArticleClick = viewModel::onArticleClick,
+                onOpenChat = viewModel::onOpenThreadChat,
             )
 
             else -> DailyFeedScreen(
@@ -107,11 +116,7 @@ fun DailyFeedRoute(
                 onShowWholeSubjectClick = viewModel::onShowWholeSubjectClick,
                 onArticleClick = viewModel::onArticleClick,
                 onSettingsClick = onOpenSettings,
-                onChatClick = {
-                    val threads = (state.contentState as? DailyFeedContentState.Success)?.threads
-                        ?: emptyList()
-                    onOpenChat(threads)
-                },
+                onChatClick = viewModel::onOpenGeneralChat,
                 onFeedScrollStateChange = viewModel::onFeedScrollStateChange,
             )
         }
@@ -382,7 +387,7 @@ private fun DailyFeedSuccessContent(
     }
 }
 
-private fun LocalDate.toTitleAppBarLabel(today: LocalDate): String {
+internal fun LocalDate.toTitleAppBarLabel(today: LocalDate): String {
     val yesterday = today.minus(1, DateTimeUnit.DAY)
 
     return when (this) {
@@ -392,7 +397,7 @@ private fun LocalDate.toTitleAppBarLabel(today: LocalDate): String {
     }
 }
 
-private fun LocalDate.toNavigationAppBarLabel(today: LocalDate): String {
+internal fun LocalDate.toNavigationAppBarLabel(today: LocalDate): String {
     val yesterday = today.minus(1, DateTimeUnit.DAY)
 
     return when (this) {
@@ -402,7 +407,7 @@ private fun LocalDate.toNavigationAppBarLabel(today: LocalDate): String {
     }
 }
 
-private fun LocalDate.toShortDateLabel(): String {
+internal fun LocalDate.toShortDateLabel(): String {
     val shortYear = (year % 100).toString().padStart(2, '0')
     val month = month.name
         .take(3)
@@ -417,6 +422,7 @@ private fun LocalDate.toMoreArticlesDateLabel(): String = toShortDateLabel()
 
 private fun DailyFeedUiState.routeContentKey(): String = when {
     openArticle != null -> "article:${openArticle.articleId}"
+    openChat != null -> "chat:${openChat.openId}"
     openThreadHistory != null -> "history:${openThreadHistory.threadId}:${openThreadHistory.initialDay}"
     else -> "feed"
 }

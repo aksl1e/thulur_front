@@ -14,6 +14,7 @@ import com.example.thulur_api.dtos.ThreadHistoryDto
 import com.example.thulur_api.dtos.auth.AuthTokenDto
 import com.example.thulur_api.dtos.auth.DesktopAuthMode
 import com.example.thulur_api.dtos.auth.DesktopAuthStartDto
+import com.example.thulur_api.dtos.chat.ChatResponseDto
 import java.net.HttpURLConnection
 import java.net.URI
 import kotlin.test.Test
@@ -196,6 +197,14 @@ private class FakeDesktopAuthApi(
     override suspend fun getThreadHistory(
         threadId: String,
     ): ThreadHistoryDto = error("Not used in this test")
+
+    override suspend fun sendGeneralChatMessage(message: String): ChatResponseDto =
+        error("Not used in this test")
+
+    override suspend fun sendThreadChatMessage(
+        threadId: String,
+        message: String,
+    ): ChatResponseDto = error("Not used in this test")
 
     override suspend fun startDesktopAuth(
         email: String,

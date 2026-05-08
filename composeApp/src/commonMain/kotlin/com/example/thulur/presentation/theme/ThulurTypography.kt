@@ -5,6 +5,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.Font
@@ -176,7 +177,8 @@ private fun rememberLoraFontFamily(): FontFamily {
 
 @Composable
 private fun rememberPublicSansFontFamily(): FontFamily {
-    // The variable file exposes the non-italic Public Sans weight range available on Google Fonts (100-900).
+    // The project currently ships the upright variable font only. Registering matching italic
+    // styles keeps markdown emphasis inside the Public Sans family instead of falling back.
     val thin = Font(Res.font.public_sans_variable, weight = FontWeight.Thin)
     val extraLight = Font(Res.font.public_sans_variable, weight = FontWeight.ExtraLight)
     val light = Font(Res.font.public_sans_variable, weight = FontWeight.Light)
@@ -186,8 +188,91 @@ private fun rememberPublicSansFontFamily(): FontFamily {
     val bold = Font(Res.font.public_sans_variable, weight = FontWeight.Bold)
     val extraBold = Font(Res.font.public_sans_variable, weight = FontWeight.ExtraBold)
     val black = Font(Res.font.public_sans_variable, weight = FontWeight.Black)
+    val thinItalic = Font(
+        Res.font.public_sans_variable,
+        weight = FontWeight.Thin,
+        style = FontStyle.Italic,
+    )
+    val extraLightItalic = Font(
+        Res.font.public_sans_variable,
+        weight = FontWeight.ExtraLight,
+        style = FontStyle.Italic,
+    )
+    val lightItalic = Font(
+        Res.font.public_sans_variable,
+        weight = FontWeight.Light,
+        style = FontStyle.Italic,
+    )
+    val regularItalic = Font(
+        Res.font.public_sans_variable,
+        weight = FontWeight.Normal,
+        style = FontStyle.Italic,
+    )
+    val mediumItalic = Font(
+        Res.font.public_sans_variable,
+        weight = FontWeight.Medium,
+        style = FontStyle.Italic,
+    )
+    val semiBoldItalic = Font(
+        Res.font.public_sans_variable,
+        weight = FontWeight.SemiBold,
+        style = FontStyle.Italic,
+    )
+    val boldItalic = Font(
+        Res.font.public_sans_variable,
+        weight = FontWeight.Bold,
+        style = FontStyle.Italic,
+    )
+    val extraBoldItalic = Font(
+        Res.font.public_sans_variable,
+        weight = FontWeight.ExtraBold,
+        style = FontStyle.Italic,
+    )
+    val blackItalic = Font(
+        Res.font.public_sans_variable,
+        weight = FontWeight.Black,
+        style = FontStyle.Italic,
+    )
 
-    return remember(thin, extraLight, light, regular, medium, semiBold, bold, extraBold, black) {
-        FontFamily(thin, extraLight, light, regular, medium, semiBold, bold, extraBold, black)
+    return remember(
+        thin,
+        extraLight,
+        light,
+        regular,
+        medium,
+        semiBold,
+        bold,
+        extraBold,
+        black,
+        thinItalic,
+        extraLightItalic,
+        lightItalic,
+        regularItalic,
+        mediumItalic,
+        semiBoldItalic,
+        boldItalic,
+        extraBoldItalic,
+        blackItalic,
+    ) {
+        FontFamily(
+            thin,
+            extraLight,
+            light,
+            regular,
+            medium,
+            semiBold,
+            bold,
+            extraBold,
+            black,
+            thinItalic,
+            extraLightItalic,
+            lightItalic,
+            regularItalic,
+            mediumItalic,
+            semiBoldItalic,
+            boldItalic,
+            extraBoldItalic,
+            blackItalic,
+        )
     }
 }

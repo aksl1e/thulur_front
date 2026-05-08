@@ -9,7 +9,7 @@ import com.example.thulur.presentation.settings.SettingsRoute
 import com.example.thulur.presentation.theme.ThemeMode
 import com.example.thulur.presentation.theme.ThulurTheme
 import org.koin.compose.viewmodel.koinViewModel
-import com.example.thulur.presentation.chat.ChatRoute
+
 @Composable
 fun AppRootRoute(
     viewModel: AppRootViewModel = koinViewModel(),
@@ -29,19 +29,14 @@ fun AppRootRoute(
             is AppRootUiState.Ready -> when (state.destination) {
                 AppRootAuthenticatedDestination.DailyFeed -> DailyFeedRoute(
                     sessionInstanceId = state.sessionInstanceId,
+                    canDiscussThread = state.subscriptionTier.canDiscussThread(),
                     onOpenSettings = viewModel::openSettings,
-                    onOpenChat = { threads -> viewModel.openChat(threads) },
                 )
 
                 AppRootAuthenticatedDestination.Settings -> SettingsRoute(
                     sessionInstanceId = state.sessionInstanceId,
                     onBackClick = viewModel::backToDailyFeed,
                     onThemeApplied = viewModel::updateTheme,
-                )
-                AppRootAuthenticatedDestination.Chat -> ChatRoute(
-                    sessionInstanceId = state.sessionInstanceId,
-                    threads = state.chatThreads,
-                    onBackClick = viewModel::backToDailyFeed,
                 )
             }
         }

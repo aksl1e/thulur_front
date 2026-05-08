@@ -332,6 +332,74 @@ class DailyFeedViewModelTest {
     }
 
     @Test
+    fun `open general chat uses current daily feed title`() = runTest {
+        val repository = TrackingRepository(
+            result = Result.success(sampleDailyFeed()),
+        )
+        val viewModel = createViewModel(repository)
+
+        advanceUntilIdle()
+        viewModel.onOpenGeneralChat()
+
+        assertEquals(
+            OpenChat(
+                openId = 0,
+                title = "Today",
+                mode = OpenChatMode.General,
+            ),
+            viewModel.uiState.value.openChat,
+        )
+    }
+
+    @Test
+    fun `reopening chat creates a new open id`() = runTest {
+        val repository = TrackingRepository(
+            result = Result.success(sampleDailyFeed()),
+        )
+        val viewModel = createViewModel(repository)
+
+        advanceUntilIdle()
+        viewModel.onOpenGeneralChat()
+        viewModel.onCloseChat()
+        viewModel.onOpenGeneralChat()
+
+        assertEquals(1, viewModel.uiState.value.openChat?.openId)
+    }
+
+    @Test
+    fun `closing thread chat preserves open thread history`() = runTest {
+        val repository = TrackingRepository(
+            result = Result.success(sampleDailyFeed()),
+        )
+        val viewModel = createViewModel(repository)
+
+        advanceUntilIdle()
+        viewModel.onShowWholeSubjectClick(threadId = "thread-1", threadName = "Thread 1")
+        viewModel.onOpenThreadChat(threadId = "thread-1", threadName = "Thread 1")
+
+        assertEquals(
+            OpenChat(
+                openId = 0,
+                title = "Thread 1",
+                mode = OpenChatMode.Thread(threadId = "thread-1"),
+            ),
+            viewModel.uiState.value.openChat,
+        )
+
+        viewModel.onCloseChat()
+
+        assertEquals(null, viewModel.uiState.value.openChat)
+        assertEquals(
+            OpenThreadHistory(
+                threadId = "thread-1",
+                threadName = "Thread 1",
+                initialDay = today,
+            ),
+            viewModel.uiState.value.openThreadHistory,
+        )
+    }
+
+    @Test
     fun `closing history clears open thread history without affecting content`() = runTest {
         val threads = listOf(sampleThread())
         val repository = TrackingRepository(
@@ -461,6 +529,12 @@ private class TrackingRepository(
         error("Not used in this test")
 
     override suspend fun getThreadHistory(threadId: String): ThreadHistory =
+        error("Not used in this test")
+
+    override suspend fun sendGeneralChatMessage(message: String): String =
+        error("Not used in this test")
+
+    override suspend fun sendThreadChatMessage(threadId: String, message: String): String =
         error("Not used in this test")
 
     override suspend fun rateArticle(articleId: String, rating: Int) =

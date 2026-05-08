@@ -70,8 +70,10 @@ import org.koin.compose.koinInject
 fun ThreadHistoryRoute(
     sessionInstanceId: Int,
     openThreadHistory: OpenThreadHistory,
+    canDiscussThread: Boolean,
     onBackClick: () -> Unit,
     onArticleClick: (ThulurThreadArticleData) -> Unit,
+    onOpenChat: (String, String) -> Unit,
 ) {
     val getThreadHistoryUseCase = koinInject<GetThreadHistoryUseCase>()
     val readArticlesCache = koinInject<ReadArticlesCache>()
@@ -94,11 +96,17 @@ fun ThreadHistoryRoute(
 
     ThreadHistoryScreen(
         uiState = uiState,
+        canDiscussThread = canDiscussThread,
         onBackClick = onBackClick,
         onRetry = viewModel::retry,
         onPreviousDayClick = viewModel::onPreviousDayClick,
         onNextDayClick = viewModel::onNextDayClick,
         onArticleClick = onArticleClick,
+        onDiscussClick = {
+            if (canDiscussThread) {
+                onOpenChat(openThreadHistory.threadId, openThreadHistory.threadName)
+            }
+        },
     )
 }
 
@@ -111,11 +119,13 @@ internal fun threadHistoryViewModelKey(
 @Composable
 private fun ThreadHistoryScreen(
     uiState: ThreadHistoryUiState,
+    canDiscussThread: Boolean,
     onBackClick: () -> Unit,
     onRetry: () -> Unit,
     onPreviousDayClick: () -> Boolean,
     onNextDayClick: () -> Boolean,
     onArticleClick: (ThulurThreadArticleData) -> Unit,
+    onDiscussClick: () -> Unit,
 ) {
     val colors = dailyFeedColors()
     val loadingColors = ThulurTheme.SemanticColors.rootLoadingScreen
@@ -187,9 +197,11 @@ private fun ThreadHistoryScreen(
 
                 is ThreadHistoryContentState.Success -> ThreadHistorySuccessContent(
                     contentState = contentState,
+                    canDiscussThread = canDiscussThread,
                     onPreviousDayClick = onPreviousDayClick,
                     onNextDayClick = onNextDayClick,
                     onArticleClick = onArticleClick,
+                    onDiscussClick = onDiscussClick,
                     leadingLaneWidth = leftRailWidth,
                     contentStartPadding = contentStartPadding,
                     bottomActionInset = bottomActionInset,
@@ -199,8 +211,9 @@ private fun ThreadHistoryScreen(
 
             if (uiState.contentState !is ThreadHistoryContentState.Success) {
                 ThulurChatFab(
-                    text = "Discuss",
-                    onClick = {},
+                    text = "Discuss Thread",
+                    onClick = onDiscussClick,
+                    enabled = canDiscussThread,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(bottom = bottomActionPadding),
@@ -213,9 +226,11 @@ private fun ThreadHistoryScreen(
 @Composable
 private fun ThreadHistorySuccessContent(
     contentState: ThreadHistoryContentState.Success,
+    canDiscussThread: Boolean,
     onPreviousDayClick: () -> Boolean,
     onNextDayClick: () -> Boolean,
     onArticleClick: (ThulurThreadArticleData) -> Unit,
+    onDiscussClick: () -> Unit,
     leadingLaneWidth: Dp,
     contentStartPadding: Dp,
     bottomActionInset: Dp,
@@ -260,6 +275,8 @@ private fun ThreadHistorySuccessContent(
                         isPageTransitionRunning = true
                     }
                 },
+                canDiscussThread = canDiscussThread,
+                onDiscussClick = onDiscussClick,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = bottomActionPadding),
@@ -360,8 +377,10 @@ private fun ThreadHistoryDayPage(
 private fun ThreadHistoryBottomActionRow(
     canGoToPreviousDay: Boolean,
     canGoToNextDay: Boolean,
+    canDiscussThread: Boolean,
     onPreviousDayClick: () -> Unit,
     onNextDayClick: () -> Unit,
+    onDiscussClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -386,8 +405,9 @@ private fun ThreadHistoryBottomActionRow(
         )
 
         ThulurChatFab(
-            text = "Discuss",
-            onClick = {},
+            text = "Discuss Thread",
+            onClick = onDiscussClick,
+            enabled = canDiscussThread,
         )
 
         ThulurButton(

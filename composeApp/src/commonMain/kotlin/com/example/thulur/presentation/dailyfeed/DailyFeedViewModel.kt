@@ -32,6 +32,7 @@ class DailyFeedViewModel(
 ) : ViewModel() {
     private val initialDay = currentDay()
     private var loadJob: Job? = null
+    private var nextChatOpenId: Int = 0
 
     private val _uiState = MutableStateFlow(
         DailyFeedUiState(
@@ -73,6 +74,30 @@ class DailyFeedViewModel(
         }
     }
 
+    fun onOpenGeneralChat() {
+        _uiState.update { state ->
+            state.copy(
+                openChat = OpenChat(
+                    openId = nextChatOpenId++,
+                    title = state.selectedDay.toTitleAppBarLabel(today = currentDay()),
+                    mode = OpenChatMode.General,
+                ),
+            )
+        }
+    }
+
+    fun onOpenThreadChat(threadId: String, threadName: String) {
+        _uiState.update { state ->
+            state.copy(
+                openChat = OpenChat(
+                    openId = nextChatOpenId++,
+                    title = threadName,
+                    mode = OpenChatMode.Thread(threadId = threadId),
+                ),
+            )
+        }
+    }
+
     fun onArticleClick(article: ThulurThreadArticleData) {
         _uiState.update { state ->
             state.copy(
@@ -89,6 +114,12 @@ class DailyFeedViewModel(
     fun onCloseThreadHistory() {
         _uiState.update { state ->
             state.copy(openThreadHistory = null)
+        }
+    }
+
+    fun onCloseChat() {
+        _uiState.update { state ->
+            state.copy(openChat = null)
         }
     }
 

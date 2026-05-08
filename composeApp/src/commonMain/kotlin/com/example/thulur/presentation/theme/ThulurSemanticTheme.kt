@@ -5,6 +5,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 
@@ -33,6 +34,10 @@ data class ThulurChatScreenSemanticColors(
     val aiBubbleContainer: Color,
     // Text color inside the AI's message bubble
     val aiBubbleContent: Color,
+    // Error text color inside assistant bubbles
+    val assistantErrorContent: Color,
+    // Inline code background inside assistant markdown
+    val markdownCodeBackground: Color,
     // Background of the icon placeholder square
     // Input field colors
     val inputField: ThulurTextFieldStateSemanticColors,
@@ -47,6 +52,7 @@ data class ThulurChatScreenSemanticColors(
 fun rememberThulurChatScreenSemanticColors(): ThulurChatScreenSemanticColors {
     val slate = ThulurTheme.Colors.slate
     val primary = ThulurTheme.Colors.primary
+    val error = ThulurTheme.Colors.error
 
     return when (ThulurTheme.Mode) {
         ThemeMode.Light -> ThulurChatScreenSemanticColors(
@@ -55,6 +61,8 @@ fun rememberThulurChatScreenSemanticColors(): ThulurChatScreenSemanticColors {
             userBubbleContent = slate.s50,
             aiBubbleContainer = slate.s100,
             aiBubbleContent = slate.s900,
+            assistantErrorContent = error.s500,
+            markdownCodeBackground = slate.s300,
             chatsLabelColor = slate.s700,
             inputField = ThulurTextFieldStateSemanticColors(
                 rest = ThulurTextFieldSemanticColors(
@@ -108,6 +116,8 @@ fun rememberThulurChatScreenSemanticColors(): ThulurChatScreenSemanticColors {
             userBubbleContent = slate.s950,
             aiBubbleContainer = slate.s900,
             aiBubbleContent = slate.s100,
+            assistantErrorContent = error.s500,
+            markdownCodeBackground = slate.s700,
             chatsLabelColor = slate.s300,
             inputField = ThulurTextFieldStateSemanticColors(
                 rest = ThulurTextFieldSemanticColors(
@@ -243,6 +253,8 @@ data class ThulurDateTimeSemanticColors(
 data class ThulurChatFabSemanticColors(
     val containerColor: Color,
     val contentColor: Color,
+    val disabledContainerColor: Color,
+    val disabledContentColor: Color,
 )
 
 @Immutable
@@ -342,6 +354,7 @@ data class ThulurSemanticColors(
 @Immutable
 data class ThulurSemanticTypography(
     val buttonTooltip: TextStyle,
+    val buttonLabel: TextStyle,
     val appBarBackLabel: TextStyle,
     val appBarTitle: TextStyle,
     val appBarBrand: TextStyle,
@@ -358,6 +371,7 @@ data class ThulurSemanticTypography(
     val dateTimeDate: TextStyle,
     val dateTimeTime: TextStyle,
     val chatFabLabel: TextStyle,
+    val chatAppBarContext: TextStyle,
     val snackBarMessage: TextStyle,
     val authTitle: TextStyle,
     val authSubtitle: TextStyle,
@@ -372,6 +386,8 @@ data class ThulurSemanticTypography(
     val settingsMeta: TextStyle,
     val settingsAction: TextStyle,
     val settingsTimeValue: TextStyle,
+    val chatMarkdownBody: TextStyle,
+    val chatMarkdownCode: TextStyle,
 )
 @Composable
 @ReadOnlyComposable
@@ -764,11 +780,15 @@ fun rememberThulurChatFabSemanticColors(): ThulurChatFabSemanticColors {
         ThemeMode.Light -> ThulurChatFabSemanticColors(
             containerColor = primary.s500,
             contentColor = slate.s50,
+            disabledContainerColor = slate.s300,
+            disabledContentColor = slate.s100,
         )
 
         ThemeMode.Dark -> ThulurChatFabSemanticColors(
             containerColor = primary.s500,
             contentColor = slate.s50,
+            disabledContainerColor = slate.s700,
+            disabledContentColor = slate.s500,
         )
     }
 }
@@ -1372,6 +1392,11 @@ fun rememberThulurSemanticTypography(): ThulurSemanticTypography = ThulurSemanti
         fontSize = 12.thulurSp(),
         lineHeight = 12.thulurSp(),
     ),
+    buttonLabel = ThulurTheme.Typography.bodyLarge.copy(
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.thulurSp(),
+        lineHeight = 28.thulurSp(),
+    ),
     appBarBackLabel = ThulurTheme.Typography.bodyLarge.copy(
         fontWeight = FontWeight.ExtraLight,
         fontSize = 24.thulurSp(),
@@ -1452,6 +1477,11 @@ fun rememberThulurSemanticTypography(): ThulurSemanticTypography = ThulurSemanti
         fontSize = 20.thulurSp(),
         lineHeight = 20.thulurSp(),
     ),
+    chatAppBarContext = ThulurTheme.Typography.headlineMedium.copy(
+        fontWeight = FontWeight.Medium,
+        fontSize = 24.thulurSp(),
+        lineHeight = 32.thulurSp(),
+    ),
     snackBarMessage = ThulurTheme.Typography.bodyMedium.copy(
         fontWeight = FontWeight.Normal,
         fontSize = 14.thulurSp(),
@@ -1522,6 +1552,17 @@ fun rememberThulurSemanticTypography(): ThulurSemanticTypography = ThulurSemanti
         fontWeight = FontWeight.Normal,
         fontSize = 20.thulurSp(),
         lineHeight = 20.thulurSp(),
+    ),
+    chatMarkdownBody = ThulurTheme.Typography.bodyLarge.copy(
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.thulurSp(),
+        lineHeight = 24.thulurSp(),
+    ),
+    chatMarkdownCode = ThulurTheme.Typography.bodyMedium.copy(
+        fontFamily = FontFamily.Monospace,
+        fontWeight = FontWeight.Normal,
+        fontSize = 14.thulurSp(),
+        lineHeight = 22.thulurSp(),
     ),
 )
 

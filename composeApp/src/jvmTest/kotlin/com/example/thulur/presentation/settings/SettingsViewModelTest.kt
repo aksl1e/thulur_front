@@ -673,6 +673,12 @@ private class FakeSettingsRepository(
     override suspend fun getThreadHistory(threadId: String) =
         error("Not used in this test")
 
+    override suspend fun sendGeneralChatMessage(message: String): String =
+        error("Not used in this test")
+
+    override suspend fun sendThreadChatMessage(threadId: String, message: String): String =
+        error("Not used in this test")
+
     override suspend fun rateArticle(articleId: String, rating: Int) =
         error("Not used in this test")
 }

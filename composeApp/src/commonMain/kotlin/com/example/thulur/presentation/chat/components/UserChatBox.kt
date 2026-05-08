@@ -37,7 +37,7 @@ fun UserChatBox(
                         bottomEnd = 18.thulurDp(),
                     )
                 )
-                .background(colors.aiBubbleContainer)
+                .background(colors.userBubbleContainer)
                 .padding(
                     horizontal = 16.thulurDp(),
                     vertical = 11.thulurDp(),
@@ -45,8 +45,8 @@ fun UserChatBox(
         ) {
             BasicText(
                 text = message,
-                style = typography.settingsBody.copy(
-                    color = colors.aiBubbleContent,
+                style = typography.chatMarkdownBody.copy(
+                    color = colors.userBubbleContent,
                 ),
             )
         }
