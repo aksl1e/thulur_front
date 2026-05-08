@@ -66,6 +66,7 @@ fun DailyFeedRoute(
     sessionInstanceId: Int,
     onOpenSettings: () -> Unit,
     viewModel: DailyFeedViewModel = koinViewModel(key = dailyFeedViewModelKey(sessionInstanceId)),
+    onOpenChat: (List<DailyFeedThread>) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = dailyFeedColors()
@@ -106,6 +107,11 @@ fun DailyFeedRoute(
                 onShowWholeSubjectClick = viewModel::onShowWholeSubjectClick,
                 onArticleClick = viewModel::onArticleClick,
                 onSettingsClick = onOpenSettings,
+                onChatClick = {
+                    val threads = (state.contentState as? DailyFeedContentState.Success)?.threads
+                        ?: emptyList()
+                    onOpenChat(threads)
+                },
                 onFeedScrollStateChange = viewModel::onFeedScrollStateChange,
             )
         }
@@ -123,6 +129,7 @@ fun DailyFeedScreen(
     onBackClick: () -> Unit,
     onForwardClick: () -> Unit,
     onSettingsClick: () -> Unit,
+    onChatClick: () -> Unit,
     onTopicsViewModeChange: (TopicsViewMode) -> Unit,
     onThreadArticlesVisibilityToggle: (String) -> Unit,
     onShowWholeSubjectClick: (String, String) -> Unit,
@@ -276,7 +283,7 @@ fun DailyFeedScreen(
 
             ThulurChatFab(
                 text = "Discuss",
-                onClick = {},
+                onClick = onChatClick, // Change the screen here
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = fabBottomPadding),
