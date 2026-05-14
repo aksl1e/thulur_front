@@ -19,6 +19,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -270,6 +271,161 @@ class DailyFeedViewModelTest {
     }
 
     @Test
+    fun `more articles on another day loads target day expands thread and emits focus request`() = runTest {
+        val targetDay = today.minus(2, DateTimeUnit.DAY)
+        val repository = TrackingRepository { day ->
+            when (day) {
+                today -> Result.success(
+                    sampleDailyFeed(
+                        threads = listOf(
+                            sampleThread(id = "thread-1", firstSeen = targetDay),
+                            sampleThread(id = "thread-2", firstSeen = null),
+                        ),
+                    ),
+                )
+
+                targetDay -> Result.success(
+                    sampleDailyFeed(
+                        threads = listOf(
+                            sampleThread(id = "thread-1"),
+                            sampleThread(id = "thread-2"),
+                        ),
+                    ),
+                )
+
+                else -> error("Unexpected requested day: $day")
+            }
+        }
+        val viewModel = createViewModel(repository)
+
+        advanceUntilIdle()
+        viewModel.onTopicsViewModeChange(TopicsViewMode.TopicsOnly)
+        viewModel.onMoreArticlesClick(threadId = "thread-1", targetDay = targetDay)
+        advanceUntilIdle()
+
+        assertEquals(listOf<LocalDate?>(today, targetDay), repository.requestedDays)
+        assertEquals(targetDay, viewModel.uiState.value.selectedDay)
+        assertEquals(
+            visibleArticlesMap("thread-1" to true, "thread-2" to false),
+            viewModel.uiState.value.articleVisibilityByThreadId,
+        )
+        assertEquals("thread-1", viewModel.uiState.value.focusRequest?.threadId)
+    }
+
+    @Test
+    fun `same day more articles does not refetch and still emits focus request`() = runTest {
+        val repository = TrackingRepository(
+            result = Result.success(
+                sampleDailyFeed(
+                    threads = listOf(
+                        sampleThread(id = "thread-1", firstSeen = today),
+                        sampleThread(id = "thread-2", firstSeen = null),
+                    ),
+                ),
+            ),
+        )
+        val viewModel = createViewModel(repository)
+
+        advanceUntilIdle()
+        viewModel.onTopicsViewModeChange(TopicsViewMode.TopicsOnly)
+        viewModel.onMoreArticlesClick(threadId = "thread-1", targetDay = today)
+
+        assertEquals(listOf<LocalDate?>(today), repository.requestedDays)
+        assertEquals(
+            visibleArticlesMap("thread-1" to true, "thread-2" to false),
+            viewModel.uiState.value.articleVisibilityByThreadId,
+        )
+        assertEquals("thread-1", viewModel.uiState.value.focusRequest?.threadId)
+    }
+
+    @Test
+    fun `missing target thread changes day without focus request`() = runTest {
+        val targetDay = today.minus(2, DateTimeUnit.DAY)
+        val repository = TrackingRepository { day ->
+            when (day) {
+                today -> Result.success(
+                    sampleDailyFeed(
+                        threads = listOf(sampleThread(id = "thread-1", firstSeen = targetDay)),
+                    ),
+                )
+
+                targetDay -> Result.success(
+                    sampleDailyFeed(
+                        threads = listOf(sampleThread(id = "thread-2")),
+                    ),
+                )
+
+                else -> error("Unexpected requested day: $day")
+            }
+        }
+        val viewModel = createViewModel(repository)
+
+        advanceUntilIdle()
+        viewModel.onMoreArticlesClick(threadId = "thread-1", targetDay = targetDay)
+        advanceUntilIdle()
+
+        assertEquals(targetDay, viewModel.uiState.value.selectedDay)
+        assertNull(viewModel.uiState.value.focusRequest)
+        assertEquals(listOf<LocalDate?>(today, targetDay), repository.requestedDays)
+    }
+
+    @Test
+    fun `empty target day clears pending focus request`() = runTest {
+        val targetDay = today.minus(2, DateTimeUnit.DAY)
+        val repository = TrackingRepository { day ->
+            when (day) {
+                today -> Result.success(
+                    sampleDailyFeed(
+                        threads = listOf(sampleThread(id = "thread-1", firstSeen = today)),
+                    ),
+                )
+
+                targetDay -> Result.success(sampleDailyFeed(threads = emptyList()))
+                else -> error("Unexpected requested day: $day")
+            }
+        }
+        val viewModel = createViewModel(repository)
+
+        advanceUntilIdle()
+        viewModel.onMoreArticlesClick(threadId = "thread-1", targetDay = today)
+        assertEquals("thread-1", viewModel.uiState.value.focusRequest?.threadId)
+
+        viewModel.onMoreArticlesClick(threadId = "thread-1", targetDay = targetDay)
+        advanceUntilIdle()
+
+        assertEquals(DailyFeedContentState.Empty, viewModel.uiState.value.contentState)
+        assertNull(viewModel.uiState.value.focusRequest)
+    }
+
+    @Test
+    fun `error target day clears pending focus request`() = runTest {
+        val targetDay = today.minus(2, DateTimeUnit.DAY)
+        val repository = TrackingRepository { day ->
+            when (day) {
+                today -> Result.success(
+                    sampleDailyFeed(
+                        threads = listOf(sampleThread(id = "thread-1", firstSeen = today)),
+                    ),
+                )
+
+                targetDay -> Result.failure(IllegalStateException("Boom"))
+                else -> error("Unexpected requested day: $day")
+            }
+        }
+        val viewModel = createViewModel(repository)
+
+        advanceUntilIdle()
+        viewModel.onMoreArticlesClick(threadId = "thread-1", targetDay = today)
+        assertEquals("thread-1", viewModel.uiState.value.focusRequest?.threadId)
+
+        viewModel.onMoreArticlesClick(threadId = "thread-1", targetDay = targetDay)
+        advanceUntilIdle()
+
+        assertEquals(DailyFeedContentState.Error("Boom"), viewModel.uiState.value.contentState)
+        assertNull(viewModel.uiState.value.focusRequest)
+    }
+
+    @Test
     fun `read cache updates loaded feed without refetch`() = runTest {
         val readArticlesCache = InMemoryReadArticlesCache()
         val repository = TrackingRepository(
@@ -304,13 +460,15 @@ private fun createViewModel(
 )
 
 private class TrackingRepository(
-    private val result: Result<DailyFeed>,
+    private val responder: (LocalDate?) -> Result<DailyFeed>,
 ) : ThulurApiRepository {
+    constructor(result: Result<DailyFeed>) : this(responder = { result })
+
     val requestedDays = mutableListOf<LocalDate?>()
 
     override suspend fun getDailyFeed(day: LocalDate?): DailyFeed {
         requestedDays += day
-        return result.getOrThrow()
+        return responder(day).getOrThrow()
     }
 
     override suspend fun getArticleParagraphs(articleId: String): List<ArticleParagraph> =
@@ -358,6 +516,7 @@ private class TrackingRepository(
 
 private fun sampleThread(
     id: String = "thread-1",
+    firstSeen: LocalDate? = null,
     articles: List<Article> = emptyList(),
 ) = DailyFeedThread(
     id = id,
@@ -365,7 +524,7 @@ private fun sampleThread(
     topicId = null,
     topicName = null,
     dailyFeedScore = 0.8,
-    firstSeen = null,
+    firstSeen = firstSeen,
     summary = null,
     articles = articles,
 )

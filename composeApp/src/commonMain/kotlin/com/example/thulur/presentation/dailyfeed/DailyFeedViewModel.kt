@@ -31,6 +31,7 @@ class DailyFeedViewModel(
 ) : ScreenModel {
     private val initialDay = currentDay()
     private var loadJob: Job? = null
+    private var nextFocusRequestId: Long = 0L
 
     private val _uiState = MutableStateFlow(
         DailyFeedUiState(
@@ -60,9 +61,29 @@ class DailyFeedViewModel(
         loadDay(_uiState.value.selectedDay)
     }
 
+    fun onMoreArticlesClick(threadId: String, targetDay: LocalDate) {
+        val selectedDay = _uiState.value.selectedDay
+        if (targetDay == selectedDay) {
+            focusThreadInCurrentDay(threadId)
+            return
+        }
+
+        loadDay(day = targetDay, focusThreadId = threadId)
+    }
+
     fun onFeedScrollStateChange(index: Int, offset: Int) {
         _uiState.update { state ->
             state.copy(feedScrollIndex = index, feedScrollOffset = offset)
+        }
+    }
+
+    fun onFeedFocusConsumed(requestId: Long) {
+        _uiState.update { state ->
+            if (state.focusRequest?.requestId != requestId) {
+                state
+            } else {
+                state.copy(focusRequest = null)
+            }
         }
     }
 
@@ -103,7 +124,23 @@ class DailyFeedViewModel(
         }
     }
 
-    private fun loadDay(day: LocalDate) {
+    private fun focusThreadInCurrentDay(threadId: String) {
+        _uiState.update { state ->
+            val contentState = state.contentState as? DailyFeedContentState.Success ?: return@update state
+            if (contentState.threads.none { it.id == threadId }) {
+                return@update state.copy(focusRequest = null)
+            }
+
+            state.copy(
+                articleVisibilityByThreadId = state.articleVisibilityByThreadId.withCurrentThreadVisible(
+                    threadId = threadId,
+                ),
+                focusRequest = nextFocusRequest(threadId),
+            )
+        }
+    }
+
+    private fun loadDay(day: LocalDate, focusThreadId: String? = null) {
         loadJob?.cancel()
         loadJob = screenModelScope.launch {
             _uiState.update { state ->
@@ -114,6 +151,7 @@ class DailyFeedViewModel(
                     contentState = DailyFeedContentState.Loading,
                     feedScrollIndex = 0,
                     feedScrollOffset = 0,
+                    focusRequest = null,
                 )
             }
 
@@ -135,14 +173,15 @@ class DailyFeedViewModel(
             }
 
             _uiState.update { state ->
-                val articleVisibilityByThreadId = when (contentState) {
-                    is DailyFeedContentState.Success -> contentState.threads.associate { thread ->
-                        thread.id to state.topicsViewMode.defaultArticlesVisible()
-                    }
-
-                    DailyFeedContentState.Empty,
-                    DailyFeedContentState.Loading,
-                    is DailyFeedContentState.Error -> emptyMap()
+                val successState = contentState as? DailyFeedContentState.Success
+                val hasFocusedThread = successState?.threads?.any { it.id == focusThreadId } == true
+                val articleVisibilityByThreadId = when (successState) {
+                    null -> emptyMap()
+                    else -> buildArticleVisibilityByThreadId(
+                        threadId = focusThreadId,
+                        threads = successState.threads,
+                        defaultVisible = state.topicsViewMode.defaultArticlesVisible(),
+                    )
                 }
 
                 state.copy(
@@ -150,12 +189,23 @@ class DailyFeedViewModel(
                     isDefault = loadedFeed?.isDefault,
                     articleVisibilityByThreadId = articleVisibilityByThreadId,
                     contentState = contentState,
+                    focusRequest = if (hasFocusedThread && focusThreadId != null) {
+                        nextFocusRequest(focusThreadId)
+                    } else {
+                        null
+                    },
                 )
             }
         }
     }
 
     private fun currentDay(): LocalDate = Clock.System.todayIn(TimeZone.currentSystemDefault())
+
+    private fun nextFocusRequest(threadId: String): FeedFocusRequest =
+        FeedFocusRequest(
+            requestId = nextFocusRequestId++,
+            threadId = threadId,
+        )
 }
 
 private fun DailyFeedUiState.applyCachedReadArticles(
@@ -178,4 +228,23 @@ private fun DailyFeedUiState.applyCachedReadArticles(
             DailyFeedContentState.Success(updatedThreads)
         },
     )
+}
+
+private fun Map<String, Boolean>.withCurrentThreadVisible(
+    threadId: String,
+): Map<String, Boolean> = this + (threadId to true)
+
+private fun buildArticleVisibilityByThreadId(
+    threadId: String?,
+    threads: List<com.example.thulur.domain.model.DailyFeedThread>,
+    defaultVisible: Boolean,
+): Map<String, Boolean> {
+    val visibilityByThreadId = threads.associate { thread ->
+        thread.id to defaultVisible
+    }
+    if (threadId == null || threads.none { it.id == threadId }) {
+        return visibilityByThreadId
+    }
+
+    return visibilityByThreadId + (threadId to true)
 }

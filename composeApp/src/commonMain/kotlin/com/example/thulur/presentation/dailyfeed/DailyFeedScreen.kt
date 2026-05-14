@@ -1,9 +1,5 @@
 package com.example.thulur.presentation.dailyfeed
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,7 +16,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.LaunchedEffect
-import kotlinx.coroutines.flow.distinctUntilChanged
 import androidx.compose.material.Icon
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
@@ -29,10 +24,9 @@ import androidx.compose.material.icons.outlined.ArrowCircleRight
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.animation.core.tween
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.unit.dp
 import com.example.thulur.domain.model.DailyFeedThread
 import com.example.thulur.presentation.composables.DesktopScrollCoordinator
@@ -49,6 +43,7 @@ import com.example.thulur.presentation.theme.ThulurColorRole
 import com.example.thulur.presentation.theme.ThulurTheme
 import com.example.thulur.presentation.theme.thulurDp
 import kotlin.time.Clock
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -68,8 +63,10 @@ fun DailyFeedScreen(
     onTopicsViewModeChange: (TopicsViewMode) -> Unit,
     onThreadArticlesVisibilityToggle: (String) -> Unit,
     onShowWholeSubjectClick: (String, String) -> Unit,
+    onMoreArticlesClick: (String, LocalDate) -> Unit,
     onArticleClick: (ThulurThreadArticleData) -> Unit,
     onFeedScrollStateChange: (Int, Int) -> Unit = { _, _ -> },
+    onFeedFocusConsumed: (Long) -> Unit = {},
 ) {
     val appBarColors = ThulurTheme.SemanticColors.appBar
     val semanticTypography = ThulurTheme.SemanticTypography
@@ -206,13 +203,16 @@ fun DailyFeedScreen(
                     threads = contentState.threads,
                     onThreadArticlesVisibilityToggle = onThreadArticlesVisibilityToggle,
                     onShowWholeSubjectClick = onShowWholeSubjectClick,
+                    onMoreArticlesClick = onMoreArticlesClick,
                     onArticleClick = onArticleClick,
                     leadingLaneWidth = leftRailWidth,
                     contentStartPadding = contentStartPadding,
                     fabBottomInset = fabBottomInset,
                     scrollIndex = uiState.feedScrollIndex,
                     scrollOffset = uiState.feedScrollOffset,
+                    focusRequest = uiState.focusRequest,
                     onScrollStateChange = onFeedScrollStateChange,
+                    onFocusRequestConsumed = onFeedFocusConsumed,
                 )
             }
 
@@ -234,13 +234,16 @@ private fun DailyFeedSuccessContent(
     threads: List<DailyFeedThread>,
     onThreadArticlesVisibilityToggle: (String) -> Unit,
     onShowWholeSubjectClick: (String, String) -> Unit,
+    onMoreArticlesClick: (String, LocalDate) -> Unit,
     onArticleClick: (ThulurThreadArticleData) -> Unit,
     leadingLaneWidth: androidx.compose.ui.unit.Dp,
     contentStartPadding: androidx.compose.ui.unit.Dp,
     fabBottomInset: androidx.compose.ui.unit.Dp,
     scrollIndex: Int = 0,
     scrollOffset: Int = 0,
+    focusRequest: FeedFocusRequest? = null,
     onScrollStateChange: (Int, Int) -> Unit = { _, _ -> },
+    onFocusRequestConsumed: (Long) -> Unit = {},
 ) {
     val typography = ThulurTheme.SemanticTypography
     val moreArticlesColors = ThulurTheme.SemanticColors.threadItem.moreArticlesButton
@@ -254,6 +257,15 @@ private fun DailyFeedSuccessContent(
         snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
             .distinctUntilChanged()
             .collect { (index, offset) -> onScrollStateChange(index, offset) }
+    }
+
+    LaunchedEffect(focusRequest?.requestId) {
+        val request = focusRequest ?: return@LaunchedEffect
+        val threadIndex = threads.indexOfFirst { it.id == request.threadId }
+        if (threadIndex >= 0) {
+            listState.animateScrollToItem(index = threadIndex)
+        }
+        onFocusRequestConsumed(request.requestId)
     }
 
     LazyColumn(
@@ -270,7 +282,7 @@ private fun DailyFeedSuccessContent(
         items(threads, key = { it.id }) { thread ->
             val areArticlesVisible = articleVisibilityByThreadId[thread.id]
                 ?: topicsViewMode.defaultArticlesVisible()
-            val moreArticlesLabel = thread.firstSeen?.toMoreArticlesDateLabel()
+            val moreArticlesDay = thread.firstSeen
 
             ThulurThreadItem(
                 threadId = thread.id,
@@ -286,12 +298,14 @@ private fun DailyFeedSuccessContent(
                 leadingLaneWidth = leadingLaneWidth,
                 contentStartPadding = contentStartPadding,
                 desktopScrollCoordinator = desktopScrollCoordinator,
-                articlesLeadingContent = if (areArticlesVisible && moreArticlesLabel != null) {
+                articlesLeadingContent = if (areArticlesVisible && moreArticlesDay != null) {
                     {
                         ThulurButton(
                             text = "More articles",
-                            supportingText = moreArticlesLabel,
-                            onClick = {},
+                            supportingText = moreArticlesDay.toMoreArticlesDateLabel(),
+                            onClick = {
+                                onMoreArticlesClick(thread.id, moreArticlesDay)
+                            },
                             colorRole = ThulurColorRole.Slate,
                             useContainerStates = false,
                             leadingIcon = {

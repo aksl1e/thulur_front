@@ -15,6 +15,12 @@ data class DailyFeedUiState(
     val contentState: DailyFeedContentState = DailyFeedContentState.Loading,
     val feedScrollIndex: Int = 0,
     val feedScrollOffset: Int = 0,
+    val focusRequest: FeedFocusRequest? = null,
+)
+
+data class FeedFocusRequest(
+    val requestId: Long,
+    val threadId: String,
 )
 
 sealed interface DailyFeedContentState {

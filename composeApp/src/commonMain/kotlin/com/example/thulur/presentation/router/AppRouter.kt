@@ -156,6 +156,7 @@ data class DailyFeedScreen(
                     ),
                 )
             },
+            onMoreArticlesClick = screenModel::onMoreArticlesClick,
             onArticleClick = { article ->
                 navigator.push(
                     ArticleReaderScreen(
@@ -183,6 +184,7 @@ data class DailyFeedScreen(
                 )
             },
             onFeedScrollStateChange = screenModel::onFeedScrollStateChange,
+            onFeedFocusConsumed = screenModel::onFeedFocusConsumed,
         )
     }
 }
