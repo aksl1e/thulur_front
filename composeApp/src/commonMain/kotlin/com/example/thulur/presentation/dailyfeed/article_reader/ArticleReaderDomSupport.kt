@@ -242,6 +242,24 @@ internal fun buildArticleReaderInjectionScript(
             return m ? [parseInt(m[1]), parseInt(m[2]), parseInt(m[3])] : null;
           };
 
+          const computeMutedTextColor = function(element) {
+            var textRgb = parseRgb(window.getComputedStyle(element).color);
+            var pageBgRgb = parseRgb(getPageBackground());
+
+            if (textRgb && pageBgRgb) {
+              var r = Math.round(textRgb[0] * 0.45 + pageBgRgb[0] * 0.55);
+              var g = Math.round(textRgb[1] * 0.45 + pageBgRgb[1] * 0.55);
+              var b = Math.round(textRgb[2] * 0.45 + pageBgRgb[2] * 0.55);
+              return 'rgb(' + r + ', ' + g + ', ' + b + ')';
+            }
+
+            if (textRgb) {
+              return 'rgba(' + textRgb[0] + ', ' + textRgb[1] + ', ' + textRgb[2] + ', 0.45)';
+            }
+
+            return 'rgb(128, 128, 128)';
+          };
+
           const applyHighlight = function(element) {
             var textColor = window.getComputedStyle(element).color;
             var pageBgRgb = parseRgb(getPageBackground());
@@ -273,9 +291,15 @@ internal fun buildArticleReaderInjectionScript(
             element.style.backgroundColor = bgColor;
           };
 
+          const applyMutedText = function(element) {
+            element.style.color = computeMutedTextColor(element);
+          };
+
           matchedElements.forEach(function(match) {
             if (match.isNovel) {
               applyHighlight(match.element);
+            } else {
+              applyMutedText(match.element);
             }
           });
 

@@ -113,7 +113,7 @@ fun rememberThulurChatScreenSemanticColors(): ThulurChatScreenSemanticColors {
         ThemeMode.Dark -> ThulurChatScreenSemanticColors(
             contentBackground = slate.s950,
             userBubbleContainer = primary.s500,
-            userBubbleContent = slate.s950,
+            userBubbleContent = slate.s100,
             aiBubbleContainer = slate.s900,
             aiBubbleContent = slate.s100,
             assistantErrorContent = error.s500,

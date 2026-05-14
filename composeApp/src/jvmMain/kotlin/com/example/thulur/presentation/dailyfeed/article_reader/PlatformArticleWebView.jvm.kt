@@ -247,22 +247,20 @@ private class JcefArticleWebViewController(
 
         injectionRequested = true
 
-        if (isArticleRead) {
-            // Skip JS for already-read articles; signal ready immediately so no spinner shows.
-            onInjectionSucceeded()
-            return
-        }
-
         SwingUtilities.invokeLater {
             if (disposed.get()) return@invokeLater
 
             runCatching {
                 val browserUrl = browser.url.ifBlank { resolvedInitialUrl ?: initialUrl }
+                val includeRateTracker = !isArticleRead
                 articleReaderDebugLog(
-                    "injectScript url=$browserUrl paragraphs=${paragraphs.size} areParagraphsReady=$areParagraphsReady has novel=${paragraphs.count { it.isNovel }}"
+                    "injectScript url=$browserUrl paragraphs=${paragraphs.size} areParagraphsReady=$areParagraphsReady isArticleRead=$isArticleRead includeRateTracker=$includeRateTracker has novel=${paragraphs.count { it.isNovel }}"
                 )
                 browser.executeJavaScript(
-                    buildArticleReaderInjectionScript(paragraphs, includeRateTracker = true),
+                    buildArticleReaderInjectionScript(
+                        paragraphs = paragraphs,
+                        includeRateTracker = includeRateTracker,
+                    ),
                     browserUrl,
                     0,
                 )
