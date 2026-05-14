@@ -169,8 +169,8 @@ fun DailyFeedScreen(
                 )
 
                 DailyFeedContentState.Empty -> DailyFeedStatusCard(
-                    title = "Daily Feed Is Empty",
-                    body = "The backend returned an empty list. This is expected while the database is still empty.",
+                    title = "Daily Feed Is Not Ready",
+                    body = "Your daily feed will be available upon it's next generation",
                     colors = colors,
                     modifier = Modifier
                         .fillMaxWidth()
