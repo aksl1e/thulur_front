@@ -8,6 +8,8 @@ import androidx.compose.ui.platform.LocalWindowInfo
 internal enum class DesktopScaleBucket(
     val factor: Float,
 ) {
+    XSmall(0.5f),
+    Small(0.625f),
     Compact(0.75f),
     Medium(0.875f),
     Base(1f),
@@ -22,8 +24,9 @@ actual fun rememberPlatformDesignScale(): ThulurDesignScale {
 
     val bucket = remember(widthDp) {
         when {
-            widthDp <= 0f -> DesktopScaleBucket.Base
-            widthDp <= 1365f -> DesktopScaleBucket.Compact
+            widthDp <= 720f -> DesktopScaleBucket.XSmall
+            widthDp <= 1024f -> DesktopScaleBucket.Small
+            widthDp <= 1280f -> DesktopScaleBucket.Compact
             widthDp <= 1599f -> DesktopScaleBucket.Medium
             widthDp <= 2239f -> DesktopScaleBucket.Base
             else -> DesktopScaleBucket.Wide
