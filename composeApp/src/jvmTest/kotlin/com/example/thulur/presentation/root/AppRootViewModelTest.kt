@@ -7,8 +7,8 @@ import com.example.thulur.domain.model.ArticleParagraph
 import com.example.thulur.domain.model.AuthSession
 import com.example.thulur.domain.model.CurrentUser
 import com.example.thulur.domain.model.DailyFeed
-import com.example.thulur.domain.model.Feed
 import com.example.thulur.domain.model.DailyFeedThread
+import com.example.thulur.domain.model.Feed
 import com.example.thulur.domain.model.PatchUserSettings
 import com.example.thulur.domain.model.ThreadHistory
 import com.example.thulur.domain.model.UserSettings
@@ -16,6 +16,7 @@ import com.example.thulur.domain.repository.ThulurApiRepository
 import com.example.thulur.domain.theme.ThemeStore
 import com.example.thulur.domain.usecase.GetCurrentUserUseCase
 import com.example.thulur.domain.usecase.GetUserSettingsUseCase
+import com.example.thulur.presentation.theme.ThemeMode
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -48,150 +49,110 @@ class AppRootViewModelTest {
 
     @Test
     fun `starts in loading state before reading persisted token`() = runTest {
-        val viewModel = createViewModel(createSessionProvider(InMemorySecureTokenStore()))
+        val screenModel = createScreenModel(createSessionProvider(InMemorySecureTokenStore()))
 
-        assertEquals(AppRootUiState.Loading, viewModel.uiState.value)
+        assertEquals(AppRootUiState.Loading, screenModel.uiState.value)
     }
 
     @Test
     fun `moves to unauthenticated when no persisted token exists`() = runTest {
-        val viewModel = createViewModel(createSessionProvider(InMemorySecureTokenStore()))
+        val screenModel = createScreenModel(createSessionProvider(InMemorySecureTokenStore()))
 
         advanceUntilIdle()
 
-        assertEquals(AppRootUiState.Unready(), viewModel.uiState.value)
+        assertEquals(AppRootUiState.Unready(), screenModel.uiState.value)
     }
 
     @Test
     fun `moves to authenticated when persisted token exists`() = runTest {
         val sessionProvider = createSessionProvider(InMemorySecureTokenStore(initialToken = "token-1"))
-        val viewModel = createViewModel(sessionProvider)
+        val screenModel = createScreenModel(sessionProvider)
 
         advanceUntilIdle()
 
-        assertEquals(AppRootUiState.Ready(sessionInstanceId = 1), viewModel.uiState.value)
+        assertEquals(AppRootUiState.Ready(sessionInstanceId = 1), screenModel.uiState.value)
     }
 
     @Test
     fun `moves back to unauthenticated when token is cleared`() = runTest {
         val sessionProvider = createSessionProvider(InMemorySecureTokenStore(initialToken = "token-1"))
-        val viewModel = createViewModel(sessionProvider)
+        val screenModel = createScreenModel(sessionProvider)
         advanceUntilIdle()
 
         sessionProvider.clearToken()
         advanceUntilIdle()
 
-        assertEquals(AppRootUiState.Unready(), viewModel.uiState.value)
+        assertEquals(AppRootUiState.Unready(), screenModel.uiState.value)
     }
 
     @Test
     fun `increments session instance id when user authenticates again after logout`() = runTest {
         val sessionProvider = createSessionProvider(InMemorySecureTokenStore(initialToken = "token-1"))
-        val viewModel = createViewModel(sessionProvider)
+        val screenModel = createScreenModel(sessionProvider)
         advanceUntilIdle()
 
-        assertEquals(AppRootUiState.Ready(sessionInstanceId = 1), viewModel.uiState.value)
+        assertEquals(AppRootUiState.Ready(sessionInstanceId = 1), screenModel.uiState.value)
 
         sessionProvider.clearToken()
         advanceUntilIdle()
-        assertEquals(AppRootUiState.Unready(), viewModel.uiState.value)
+        assertEquals(AppRootUiState.Unready(), screenModel.uiState.value)
 
         sessionProvider.updateToken("token-2")
         advanceUntilIdle()
 
-        assertEquals(AppRootUiState.Ready(sessionInstanceId = 2), viewModel.uiState.value)
+        assertEquals(AppRootUiState.Ready(sessionInstanceId = 2), screenModel.uiState.value)
     }
 
     @Test
     fun `does not increment session instance id when token changes inside active session`() = runTest {
         val sessionProvider = createSessionProvider(InMemorySecureTokenStore(initialToken = "token-1"))
-        val viewModel = createViewModel(sessionProvider)
+        val screenModel = createScreenModel(sessionProvider)
         advanceUntilIdle()
 
-        viewModel.openSettings()
         sessionProvider.updateToken("token-2")
         advanceUntilIdle()
 
         assertEquals(
-            AppRootUiState.Ready(
-                sessionInstanceId = 1,
-                destination = AppRootAuthenticatedDestination.Settings,
-            ),
-            viewModel.uiState.value,
+            AppRootUiState.Ready(sessionInstanceId = 1),
+            screenModel.uiState.value,
         )
     }
 
     @Test
     fun `reads session instance id from current session provider`() = runTest {
         val sessionProvider = createSessionProvider(InMemorySecureTokenStore())
-        val viewModel = createViewModel(sessionProvider)
+        val screenModel = createScreenModel(sessionProvider)
         advanceUntilIdle()
 
         sessionProvider.updateToken("token-1")
         advanceUntilIdle()
-        assertEquals(AppRootUiState.Ready(sessionInstanceId = 1), viewModel.uiState.value)
+        assertEquals(AppRootUiState.Ready(sessionInstanceId = 1), screenModel.uiState.value)
 
         sessionProvider.clearToken()
         sessionProvider.updateToken("token-2")
         advanceUntilIdle()
 
-        assertEquals(AppRootUiState.Ready(sessionInstanceId = 2), viewModel.uiState.value)
+        assertEquals(AppRootUiState.Ready(sessionInstanceId = 2), screenModel.uiState.value)
     }
 
     @Test
-    fun `open settings switches authenticated destination`() = runTest {
+    fun `update theme switches current ready theme and persists it`() = runTest {
         val sessionProvider = createSessionProvider(InMemorySecureTokenStore(initialToken = "token-1"))
-        val viewModel = createViewModel(sessionProvider)
+        val themeStore = InMemoryThemeStore()
+        val screenModel = createScreenModel(sessionProvider, themeStore = themeStore)
         advanceUntilIdle()
 
-        viewModel.openSettings()
+        screenModel.updateTheme(ThemeMode.Dark)
+        advanceUntilIdle()
 
         assertEquals(
             AppRootUiState.Ready(
                 sessionInstanceId = 1,
-                destination = AppRootAuthenticatedDestination.Settings,
+                themeMode = ThemeMode.Dark,
             ),
-            viewModel.uiState.value,
+            screenModel.uiState.value,
         )
-    }
-
-    @Test
-    fun `back to main feed returns authenticated destination to main feed`() = runTest {
-        val sessionProvider = createSessionProvider(InMemorySecureTokenStore(initialToken = "token-1"))
-        val viewModel = createViewModel(sessionProvider)
-        advanceUntilIdle()
-
-        viewModel.openSettings()
-        viewModel.backToDailyFeed()
-
-        assertEquals(
-            AppRootUiState.Ready(
-                sessionInstanceId = 1,
-                destination = AppRootAuthenticatedDestination.DailyFeed,
-            ),
-            viewModel.uiState.value,
-        )
-    }
-
-    @Test
-    fun `new authenticated session resets destination to main feed`() = runTest {
-        val sessionProvider = createSessionProvider(InMemorySecureTokenStore(initialToken = "token-1"))
-        val viewModel = createViewModel(sessionProvider)
-        advanceUntilIdle()
-        viewModel.openSettings()
-
-        sessionProvider.clearToken()
-        advanceUntilIdle()
-        sessionProvider.updateToken("token-2")
-        advanceUntilIdle()
-
-        assertEquals(
-            AppRootUiState.Ready(
-                sessionInstanceId = 2,
-                destination = AppRootAuthenticatedDestination.DailyFeed,
-            ),
-            viewModel.uiState.value,
-        )
+        assertEquals(true, themeStore.readDarkMode())
     }
 
     @Test
@@ -199,7 +160,7 @@ class AppRootViewModelTest {
         val currentUserDeferred = CompletableDeferred<CurrentUser>()
         val repository = TrackingRootRepository(currentUserDeferred = currentUserDeferred)
         val sessionProvider = createSessionProvider(InMemorySecureTokenStore(initialToken = "token-1"))
-        val viewModel = createViewModel(sessionProvider, repository)
+        val screenModel = createScreenModel(sessionProvider, repository)
 
         advanceUntilIdle()
 
@@ -208,7 +169,7 @@ class AppRootViewModelTest {
                 sessionInstanceId = 1,
                 subscriptionTier = AppSubscriptionTier.Unknown,
             ),
-            viewModel.uiState.value,
+            screenModel.uiState.value,
         )
 
         currentUserDeferred.complete(sampleCurrentUser(subscriptionTier = "pro"))
@@ -219,7 +180,7 @@ class AppRootViewModelTest {
                 sessionInstanceId = 1,
                 subscriptionTier = AppSubscriptionTier.Pro,
             ),
-            viewModel.uiState.value,
+            screenModel.uiState.value,
         )
     }
 
@@ -235,12 +196,12 @@ class AppRootViewModelTest {
             ),
         )
         val sessionProvider = createSessionProvider(InMemorySecureTokenStore(initialToken = "token-1"))
-        val viewModel = createViewModel(sessionProvider, repository)
+        val screenModel = createScreenModel(sessionProvider, repository)
 
         runCurrent()
 
         assertEquals(1, repository.getCurrentUserCallCount)
-        assertEquals(AppSubscriptionTier.Unknown, (viewModel.uiState.value as AppRootUiState.Ready).subscriptionTier)
+        assertEquals(AppSubscriptionTier.Unknown, (screenModel.uiState.value as AppRootUiState.Ready).subscriptionTier)
 
         advanceTimeBy(4_999)
         runCurrent()
@@ -249,7 +210,7 @@ class AppRootViewModelTest {
         advanceTimeBy(1)
         runCurrent()
         assertEquals(2, repository.getCurrentUserCallCount)
-        assertEquals(AppSubscriptionTier.Unknown, (viewModel.uiState.value as AppRootUiState.Ready).subscriptionTier)
+        assertEquals(AppSubscriptionTier.Unknown, (screenModel.uiState.value as AppRootUiState.Ready).subscriptionTier)
 
         advanceTimeBy(14_999)
         runCurrent()
@@ -260,7 +221,7 @@ class AppRootViewModelTest {
         assertEquals(3, repository.getCurrentUserCallCount)
         assertEquals(
             AppSubscriptionTier.Corporate,
-            (viewModel.uiState.value as AppRootUiState.Ready).subscriptionTier,
+            (screenModel.uiState.value as AppRootUiState.Ready).subscriptionTier,
         )
 
         advanceTimeBy(60_000)
@@ -268,14 +229,15 @@ class AppRootViewModelTest {
         assertEquals(3, repository.getCurrentUserCallCount)
     }
 
-    private fun createViewModel(
+    private fun createScreenModel(
         sessionProvider: CurrentSessionProviderImpl,
         repository: TrackingRootRepository = TrackingRootRepository(),
-    ): AppRootViewModel = AppRootViewModel(
+        themeStore: InMemoryThemeStore = InMemoryThemeStore(),
+    ): AppRootScreenModel = AppRootScreenModel(
         sessionProvider,
         GetUserSettingsUseCase(repository),
         GetCurrentUserUseCase(repository),
-        InMemoryThemeStore(),
+        themeStore,
     )
 }
 

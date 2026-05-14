@@ -38,14 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.CreationExtras
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.ViewModelProvider
 import com.example.thulur.domain.model.ThreadHistoryDay
-import com.example.thulur.domain.session.ReadArticlesCache
-import com.example.thulur.domain.usecase.GetThreadHistoryUseCase
 import com.example.thulur.presentation.composables.ThulurAppBar
 import com.example.thulur.presentation.composables.ThulurButton
 import com.example.thulur.presentation.composables.ThulurChatFab
@@ -54,7 +47,6 @@ import com.example.thulur.presentation.composables.ThulurArticleItem
 import com.example.thulur.presentation.composables.desktopHorizontalWheelScroll
 import com.example.thulur.presentation.dailyfeed.DailyFeedErrorCard
 import com.example.thulur.presentation.dailyfeed.DailyFeedStatusCard
-import com.example.thulur.presentation.dailyfeed.OpenThreadHistory
 import com.example.thulur.presentation.dailyfeed.dailyFeedColors
 import com.example.thulur.presentation.dailyfeed.toThulurThreadArticleData
 import com.example.thulur.presentation.theme.ThulurColorRole
@@ -64,60 +56,9 @@ import com.example.thulur.presentation.theme.thulurDp
 import kotlinx.coroutines.delay
 import kotlinx.datetime.LocalDate
 import androidx.compose.foundation.text.BasicText
-import org.koin.compose.koinInject
 
 @Composable
-fun ThreadHistoryRoute(
-    sessionInstanceId: Int,
-    openThreadHistory: OpenThreadHistory,
-    canDiscussThread: Boolean,
-    onBackClick: () -> Unit,
-    onArticleClick: (ThulurThreadArticleData) -> Unit,
-    onOpenChat: (String, String) -> Unit,
-) {
-    val getThreadHistoryUseCase = koinInject<GetThreadHistoryUseCase>()
-    val readArticlesCache = koinInject<ReadArticlesCache>()
-    val factory = remember(openThreadHistory, getThreadHistoryUseCase, readArticlesCache) {
-        threadHistoryViewModelFactory(
-            openThreadHistory = openThreadHistory,
-            getThreadHistoryUseCase = getThreadHistoryUseCase,
-            readArticlesCache = readArticlesCache,
-        )
-    }
-    val viewModel: ThreadHistoryViewModel = viewModel(
-        key = threadHistoryViewModelKey(
-            sessionInstanceId = sessionInstanceId,
-            threadId = openThreadHistory.threadId,
-            initialDay = openThreadHistory.initialDay,
-        ),
-        factory = factory,
-    )
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    ThreadHistoryScreen(
-        uiState = uiState,
-        canDiscussThread = canDiscussThread,
-        onBackClick = onBackClick,
-        onRetry = viewModel::retry,
-        onPreviousDayClick = viewModel::onPreviousDayClick,
-        onNextDayClick = viewModel::onNextDayClick,
-        onArticleClick = onArticleClick,
-        onDiscussClick = {
-            if (canDiscussThread) {
-                onOpenChat(openThreadHistory.threadId, openThreadHistory.threadName)
-            }
-        },
-    )
-}
-
-internal fun threadHistoryViewModelKey(
-    sessionInstanceId: Int,
-    threadId: String,
-    initialDay: LocalDate,
-): String = "thread-history-session-$sessionInstanceId-thread-$threadId-day-$initialDay"
-
-@Composable
-private fun ThreadHistoryScreen(
+fun ThreadHistoryScreen(
     uiState: ThreadHistoryUiState,
     canDiscussThread: Boolean,
     onBackClick: () -> Unit,
@@ -436,22 +377,6 @@ internal fun LocalDate.toThreadHistoryDayLabel(): String {
         .replaceFirstChar(Char::uppercaseChar)
 
     return "$day/$month/$year"
-}
-
-private fun threadHistoryViewModelFactory(
-    openThreadHistory: OpenThreadHistory,
-    getThreadHistoryUseCase: GetThreadHistoryUseCase,
-    readArticlesCache: ReadArticlesCache,
-): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(
-        modelClass: kotlin.reflect.KClass<T>,
-        extras: CreationExtras,
-    ): T = ThreadHistoryViewModel(
-        openThreadHistory = openThreadHistory,
-        getThreadHistoryUseCase = getThreadHistoryUseCase,
-        readArticlesCache = readArticlesCache,
-    ) as T
 }
 
 private const val PAGE_FADE_DURATION_MS: Int = 220

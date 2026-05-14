@@ -13,54 +13,21 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.thulur.presentation.chat.components.AiChatBox
 import com.example.thulur.presentation.chat.components.AiTypingChatBox
 import com.example.thulur.presentation.chat.components.ChatInputSection
 import com.example.thulur.presentation.chat.components.UserChatBox
 import com.example.thulur.presentation.composables.ThulurAppBar
-import com.example.thulur.presentation.dailyfeed.OpenChat
-import com.example.thulur.presentation.dailyfeed.OpenChatMode
+import com.example.thulur.presentation.router.ChatMode
 import com.example.thulur.presentation.theme.ProvideThulurDesignScale
 import com.example.thulur.presentation.theme.ThulurDesignScale
 import com.example.thulur.presentation.theme.ThemeMode
 import com.example.thulur.presentation.theme.ThulurTheme
 import com.example.thulur.presentation.theme.thulurDp
-import org.koin.compose.viewmodel.koinViewModel
-
-@Composable
-fun ChatRoute(
-    sessionInstanceId: Int,
-    openChat: OpenChat,
-    onBackClick: () -> Unit,
-    viewModel: ChatViewModel = koinViewModel(
-        key = chatViewModelKey(
-            sessionInstanceId = sessionInstanceId,
-            openId = openChat.openId,
-        ),
-    ),
-) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    LaunchedEffect(openChat.openId) {
-        viewModel.initialize(openChat)
-    }
-
-    ChatScreen(
-        uiState = uiState,
-        onBackClick = onBackClick,
-        onInputValueChange = viewModel::onInputValueChange,
-        onSendClick = viewModel::onSendClick,
-    )
-}
-
-internal fun chatViewModelKey(sessionInstanceId: Int, openId: Int): String =
-    "chat-session-$sessionInstanceId-open-$openId"
 
 @Composable
 fun ChatScreen(
@@ -91,8 +58,8 @@ fun ChatScreen(
         ThulurAppBar(
             title = "Chat",
             backLabel = when (uiState.mode) {
-                OpenChatMode.General -> "Main Feed"
-                is OpenChatMode.Thread -> "Back"
+                ChatMode.General -> "Main Feed"
+                is ChatMode.Thread -> "Back"
             },
             onBackClick = onBackClick,
             chatNameContent = {

@@ -1,11 +1,10 @@
 package com.example.thulur.presentation.chat
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
 import com.example.thulur.domain.usecase.SendGeneralChatMessageUseCase
 import com.example.thulur.domain.usecase.SendThreadChatMessageUseCase
-import com.example.thulur.presentation.dailyfeed.OpenChat
-import com.example.thulur.presentation.dailyfeed.OpenChatMode
+import com.example.thulur.presentation.router.ChatMode
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,24 +13,19 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class ChatViewModel(
+    title: String,
+    mode: ChatMode,
     private val sendGeneralChatMessageUseCase: SendGeneralChatMessageUseCase,
     private val sendThreadChatMessageUseCase: SendThreadChatMessageUseCase,
-) : ViewModel() {
+) : ScreenModel {
 
-    private val _uiState = MutableStateFlow(ChatUiState())
+    private val _uiState = MutableStateFlow(
+        ChatUiState(
+            title = title,
+            mode = mode,
+        ),
+    )
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
-
-    private var initializedOpenId: Int? = null
-
-    fun initialize(openChat: OpenChat) {
-        if (initializedOpenId == openChat.openId) return
-
-        initializedOpenId = openChat.openId
-        _uiState.value = ChatUiState(
-            title = openChat.title,
-            mode = openChat.mode,
-        )
-    }
 
     fun onInputValueChange(value: String) {
         if (_uiState.value.isSending) return
@@ -55,13 +49,13 @@ class ChatViewModel(
             )
         }
 
-        viewModelScope.launch {
+        screenModelScope.launch {
             val assistantMessage = try {
                 ChatMessage.Assistant(
-                    markdown = when (val mode = currentState.mode) {
-                        OpenChatMode.General -> sendGeneralChatMessageUseCase(message = message)
-                        is OpenChatMode.Thread -> sendThreadChatMessageUseCase(
-                            threadId = mode.threadId,
+                    markdown = when (val chatMode = currentState.mode) {
+                        ChatMode.General -> sendGeneralChatMessageUseCase(message = message)
+                        is ChatMode.Thread -> sendThreadChatMessageUseCase(
+                            threadId = chatMode.threadId,
                             message = message,
                         )
                     },

@@ -1,7 +1,7 @@
 package com.example.thulur.presentation.auth
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
 import com.example.thulur.domain.auth.PasskeyAuthenticationErrorCode
 import com.example.thulur.domain.auth.PasskeyAuthenticationException
 import com.example.thulur.domain.auth.PasskeyAuthenticator
@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 class AuthViewModel(
     private val passkeyAuthenticator: PasskeyAuthenticator,
     private val currentSessionProvider: CurrentSessionProvider,
-) : ViewModel() {
+) : ScreenModel {
     private var submitJob: Job? = null
 
     private val _uiState = MutableStateFlow(AuthUiState())
@@ -43,7 +43,7 @@ class AuthViewModel(
             return
         }
 
-        submitJob = viewModelScope.launch {
+        submitJob = screenModelScope.launch {
             _uiState.update { state ->
                 state.copy(
                     email = email,

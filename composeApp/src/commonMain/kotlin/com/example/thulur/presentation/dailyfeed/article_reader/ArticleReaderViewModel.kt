@@ -1,11 +1,10 @@
 package com.example.thulur.presentation.dailyfeed.article_reader
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
 import com.example.thulur.domain.session.ReadArticlesCache
 import com.example.thulur.domain.usecase.GetArticleParagraphsUseCase
 import com.example.thulur.domain.usecase.RateArticleUseCase
-import com.example.thulur.presentation.dailyfeed.OpenArticle
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,23 +13,26 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class ArticleReaderViewModel(
-    openArticle: OpenArticle,
+    articleId: String,
+    title: String,
+    url: String,
+    isRead: Boolean,
     private val getArticleParagraphsUseCase: GetArticleParagraphsUseCase,
     private val rateArticleUseCase: RateArticleUseCase,
     private val readArticlesCache: ReadArticlesCache,
-) : ViewModel() {
+) : ScreenModel {
     private val _uiState = MutableStateFlow(
         ArticleReaderUiState(
-            articleId = openArticle.articleId,
-            title = openArticle.title,
-            url = openArticle.url,
-            isArticleRead = openArticle.isRead,
+            articleId = articleId,
+            title = title,
+            url = url,
+            isArticleRead = isRead,
         ),
     )
     val uiState: StateFlow<ArticleReaderUiState> = _uiState.asStateFlow()
 
     init {
-        loadParagraphs(articleId = openArticle.articleId)
+        loadParagraphs(articleId = articleId)
     }
 
     fun onInitialPageLoaded() {
@@ -62,7 +64,7 @@ class ArticleReaderViewModel(
         val state = _uiState.value
         if (state.rate > 0 && !state.isArticleRead) {
             println("[ThulurArticleReader] submitRate articleId=${state.articleId} rate=${state.rate}")
-            viewModelScope.launch {
+            screenModelScope.launch {
                 runCatching { rateArticleUseCase(articleId = state.articleId, rating = state.rate) }
                     .onSuccess {
                         readArticlesCache.markRead(state.articleId)
@@ -85,7 +87,7 @@ class ArticleReaderViewModel(
     }
 
     private fun loadParagraphs(articleId: String) {
-        viewModelScope.launch {
+        screenModelScope.launch {
             val result = try {
                 Result.success(getArticleParagraphsUseCase(articleId))
             } catch (exception: CancellationException) {

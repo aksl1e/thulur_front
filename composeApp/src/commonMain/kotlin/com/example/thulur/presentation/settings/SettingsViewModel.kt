@@ -1,7 +1,7 @@
 package com.example.thulur.presentation.settings
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
 import com.example.thulur.domain.model.AuthSession
 import com.example.thulur.domain.model.CurrentUser
 import com.example.thulur.domain.model.Feed
@@ -49,7 +49,7 @@ class SettingsViewModel(
     private val getAllFeedsUseCase: GetAllFeedsUseCase,
     private val followFeedUseCase: FollowFeedUseCase,
     private val unfollowFeedUseCase: UnfollowFeedUseCase,
-) : ViewModel() {
+) : ScreenModel {
     private var appLoadJob: Job? = null
     private var accountLoadJob: Job? = null
     private var feedsLoadJob: Job? = null
@@ -105,7 +105,7 @@ class SettingsViewModel(
             )
         }
 
-        viewModelScope.launch {
+        screenModelScope.launch {
             try {
                 followFeedUseCase(identifier = identifier)
                 _uiState.update { state ->
@@ -146,7 +146,7 @@ class SettingsViewModel(
             )
         }
 
-        viewModelScope.launch {
+        screenModelScope.launch {
             try {
                 unfollowFeedUseCase(feedId = feedId)
                 _uiState.update { state ->
@@ -183,7 +183,7 @@ class SettingsViewModel(
             )
         }
 
-        viewModelScope.launch {
+        screenModelScope.launch {
             try {
                 terminateAuthSessionUseCase(sessionId = sessionId)
                 val refreshedSessions = getAuthSessionsUseCase().map(AuthSession::toSettingsSessionState)
@@ -284,7 +284,7 @@ class SettingsViewModel(
 
     private fun loadAppSettings() {
         appLoadJob?.cancel()
-        appLoadJob = viewModelScope.launch {
+        appLoadJob = screenModelScope.launch {
             _uiState.update { state ->
                 state.copy(
                     contentState = SettingsContentState.Loading,
@@ -326,7 +326,7 @@ class SettingsViewModel(
 
     private fun loadAccountData() {
         accountLoadJob?.cancel()
-        accountLoadJob = viewModelScope.launch {
+        accountLoadJob = screenModelScope.launch {
             _uiState.update { state ->
                 state.copy(
                     accountState = state.accountState.copy(
@@ -367,7 +367,7 @@ class SettingsViewModel(
 
     private fun loadFeeds() {
         feedsLoadJob?.cancel()
-        feedsLoadJob = viewModelScope.launch {
+        feedsLoadJob = screenModelScope.launch {
             _uiState.update { state ->
                 state.copy(
                     feedsState = state.feedsState.copy(
@@ -430,7 +430,7 @@ class SettingsViewModel(
             )
         }
 
-        viewModelScope.launch {
+        screenModelScope.launch {
             try {
                 val updatedSettings = patchUserSettingsUseCase(update = update)
                 confirmedAppValues = updatedSettings.toAppValues()
@@ -511,9 +511,6 @@ class SettingsViewModel(
         Result.failure(throwable)
     }
 }
-
-internal fun settingsViewModelKey(sessionInstanceId: Int): String =
-    "settings-session-$sessionInstanceId"
 
 private fun SettingsAppValues.copyFieldFrom(
     field: SettingsAppField,

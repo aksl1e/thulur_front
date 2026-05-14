@@ -28,16 +28,13 @@ import androidx.compose.material.icons.outlined.ArrowCircleLeft
 import androidx.compose.material.icons.outlined.ArrowCircleRight
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.thulur.domain.model.DailyFeedThread
-import com.example.thulur.presentation.chat.ChatRoute
 import com.example.thulur.presentation.composables.DesktopScrollCoordinator
 import com.example.thulur.presentation.composables.ThulurAppBar
 import com.example.thulur.presentation.composables.ThulurButton
@@ -48,8 +45,6 @@ import com.example.thulur.presentation.composables.ThulurThreadItem
 import com.example.thulur.presentation.composables.TopicsViewMode
 import com.example.thulur.presentation.composables.TopicsSwitch
 import com.example.thulur.presentation.composables.desktopScrollRootObserver
-import com.example.thulur.presentation.dailyfeed.article_reader.ArticleReaderRoute
-import com.example.thulur.presentation.dailyfeed.thread_history.ThreadHistoryRoute
 import com.example.thulur.presentation.theme.ThulurColorRole
 import com.example.thulur.presentation.theme.ThulurTheme
 import com.example.thulur.presentation.theme.thulurDp
@@ -60,71 +55,6 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
-import org.koin.compose.viewmodel.koinViewModel
-
-@Composable
-fun DailyFeedRoute(
-    sessionInstanceId: Int,
-    canDiscussThread: Boolean,
-    onOpenSettings: () -> Unit,
-    viewModel: DailyFeedViewModel = koinViewModel(key = dailyFeedViewModelKey(sessionInstanceId)),
-) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val colors = dailyFeedColors()
-
-    AnimatedContent(
-        targetState = uiState,
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colors.surface),
-        transitionSpec = {
-            fadeIn(animationSpec = tween(durationMillis = 220)) togetherWith
-                fadeOut(animationSpec = tween(durationMillis = 220))
-        },
-        contentKey = { state -> state.routeContentKey() },
-    ) { state ->
-        when {
-            state.openArticle != null -> ArticleReaderRoute(
-                sessionInstanceId = sessionInstanceId,
-                openArticle = state.openArticle,
-                onBackClick = viewModel::onCloseArticleReader,
-            )
-
-            state.openChat != null -> ChatRoute(
-                sessionInstanceId = sessionInstanceId,
-                openChat = state.openChat,
-                onBackClick = viewModel::onCloseChat,
-            )
-
-            state.openThreadHistory != null -> ThreadHistoryRoute(
-                sessionInstanceId = sessionInstanceId,
-                openThreadHistory = state.openThreadHistory,
-                canDiscussThread = canDiscussThread,
-                onBackClick = viewModel::onCloseThreadHistory,
-                onArticleClick = viewModel::onArticleClick,
-                onOpenChat = viewModel::onOpenThreadChat,
-            )
-
-            else -> DailyFeedScreen(
-                uiState = state,
-                colors = colors,
-                onRetry = viewModel::retry,
-                onBackClick = viewModel::onBackClick,
-                onForwardClick = viewModel::onForwardClick,
-                onTopicsViewModeChange = viewModel::onTopicsViewModeChange,
-                onThreadArticlesVisibilityToggle = viewModel::onThreadArticlesVisibilityToggle,
-                onShowWholeSubjectClick = viewModel::onShowWholeSubjectClick,
-                onArticleClick = viewModel::onArticleClick,
-                onSettingsClick = onOpenSettings,
-                onChatClick = viewModel::onOpenGeneralChat,
-                onFeedScrollStateChange = viewModel::onFeedScrollStateChange,
-            )
-        }
-    }
-}
-
-internal fun dailyFeedViewModelKey(sessionInstanceId: Int): String =
-    "daily-feed-session-$sessionInstanceId"
 
 @Composable
 fun DailyFeedScreen(
@@ -419,10 +349,3 @@ internal fun LocalDate.toShortDateLabel(): String {
 }
 
 private fun LocalDate.toMoreArticlesDateLabel(): String = toShortDateLabel()
-
-private fun DailyFeedUiState.routeContentKey(): String = when {
-    openArticle != null -> "article:${openArticle.articleId}"
-    openChat != null -> "chat:${openChat.openId}"
-    openThreadHistory != null -> "history:${openThreadHistory.threadId}:${openThreadHistory.initialDay}"
-    else -> "feed"
-}

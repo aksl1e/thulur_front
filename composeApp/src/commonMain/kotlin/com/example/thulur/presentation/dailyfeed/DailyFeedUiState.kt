@@ -13,36 +13,8 @@ data class DailyFeedUiState(
     val topicsViewMode: TopicsViewMode = TopicsViewMode.TopicsAndArticles,
     val articleVisibilityByThreadId: Map<String, Boolean> = emptyMap(),
     val contentState: DailyFeedContentState = DailyFeedContentState.Loading,
-    val openChat: OpenChat? = null,
-    val openThreadHistory: OpenThreadHistory? = null,
-    val openArticle: OpenArticle? = null,
     val feedScrollIndex: Int = 0,
     val feedScrollOffset: Int = 0,
-)
-
-data class OpenChat(
-    val openId: Int,
-    val title: String,
-    val mode: OpenChatMode,
-)
-
-sealed interface OpenChatMode {
-    data object General : OpenChatMode
-
-    data class Thread(val threadId: String) : OpenChatMode
-}
-
-data class OpenThreadHistory(
-    val threadId: String,
-    val threadName: String,
-    val initialDay: LocalDate,
-)
-
-data class OpenArticle(
-    val articleId: String,
-    val title: String,
-    val url: String,
-    val isRead: Boolean = false,
 )
 
 sealed interface DailyFeedContentState {

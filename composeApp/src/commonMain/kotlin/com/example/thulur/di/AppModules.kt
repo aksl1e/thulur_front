@@ -30,14 +30,15 @@ import com.example.thulur.domain.usecase.SendThreadChatMessageUseCase
 import com.example.thulur.presentation.auth.AuthViewModel
 import com.example.thulur.presentation.chat.ChatViewModel
 import com.example.thulur.presentation.dailyfeed.DailyFeedViewModel
-import com.example.thulur.presentation.root.AppRootViewModel
+import com.example.thulur.presentation.dailyfeed.article_reader.ArticleReaderViewModel
+import com.example.thulur.presentation.dailyfeed.thread_history.ThreadHistoryViewModel
+import com.example.thulur.presentation.root.AppRootScreenModel
 import com.example.thulur.presentation.settings.SettingsViewModel
 import com.example.thulur_api.RemoteThulurApi
 import com.example.thulur_api.ThulurApi
 import com.example.thulur_api.client.createThulurHttpClient
 import com.example.thulur_api.config.ThulurApiConfig
 import io.ktor.client.HttpClient
-import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 val apiModule = module {
@@ -90,11 +91,33 @@ val domainModule = module {
 }
 
 val presentationModule = module {
-    viewModelOf(::AppRootViewModel)
-    viewModelOf(::AuthViewModel)
-    viewModelOf(::DailyFeedViewModel)
-    viewModelOf(::SettingsViewModel)
-    viewModelOf(::ChatViewModel)
+    factory { AppRootScreenModel(get(), get(), get(), get()) }
+    factory { AuthViewModel(get(), get()) }
+    factory { DailyFeedViewModel(get(), get()) }
+    factory { SettingsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    factory { (title: String, mode: com.example.thulur.presentation.router.ChatMode) ->
+        ChatViewModel(title = title, mode = mode, sendGeneralChatMessageUseCase = get(), sendThreadChatMessageUseCase = get())
+    }
+    factory { (threadId: String, threadName: String, initialDay: kotlinx.datetime.LocalDate) ->
+        ThreadHistoryViewModel(
+            threadId = threadId,
+            threadName = threadName,
+            initialDay = initialDay,
+            getThreadHistoryUseCase = get(),
+            readArticlesCache = get(),
+        )
+    }
+    factory { (articleId: String, title: String, url: String, isRead: Boolean) ->
+        ArticleReaderViewModel(
+            articleId = articleId,
+            title = title,
+            url = url,
+            isRead = isRead,
+            getArticleParagraphsUseCase = get(),
+            rateArticleUseCase = get(),
+            readArticlesCache = get(),
+        )
+    }
 }
 
 val appModules = listOf(

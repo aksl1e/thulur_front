@@ -11,8 +11,7 @@ import com.example.thulur.domain.model.UserSettings
 import com.example.thulur.domain.repository.ThulurApiRepository
 import com.example.thulur.domain.usecase.SendGeneralChatMessageUseCase
 import com.example.thulur.domain.usecase.SendThreadChatMessageUseCase
-import com.example.thulur.presentation.dailyfeed.OpenChat
-import com.example.thulur.presentation.dailyfeed.OpenChatMode
+import com.example.thulur.presentation.router.ChatMode
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -43,19 +42,30 @@ class ChatViewModelTest {
     }
 
     @Test
+    fun `constructor seeds title and mode`() = runTest {
+        val repository = TrackingChatRepository()
+        val viewModel = createViewModel(
+            repository = repository,
+            title = "Thread 1",
+            mode = ChatMode.Thread(threadId = "thread-1"),
+        )
+
+        assertEquals(
+            ChatUiState(
+                title = "Thread 1",
+                mode = ChatMode.Thread(threadId = "thread-1"),
+            ),
+            viewModel.uiState.value,
+        )
+    }
+
+    @Test
     fun `general mode sends message and replaces pending assistant`() = runTest {
         val repository = TrackingChatRepository()
         val viewModel = createViewModel(repository)
         val response = CompletableDeferred<String>()
         repository.generalResponder = { response.await() }
 
-        viewModel.initialize(
-            OpenChat(
-                openId = 1,
-                title = "Today",
-                mode = OpenChatMode.General,
-            ),
-        )
         viewModel.onInputValueChange("  Hello there  ")
         viewModel.onSendClick()
         runCurrent()
@@ -87,17 +97,14 @@ class ChatViewModelTest {
     @Test
     fun `thread mode sends thread scoped message`() = runTest {
         val repository = TrackingChatRepository()
-        val viewModel = createViewModel(repository)
+        val viewModel = createViewModel(
+            repository = repository,
+            title = "Thread 1",
+            mode = ChatMode.Thread(threadId = "thread-1"),
+        )
         val response = CompletableDeferred<String>()
         repository.threadResponder = { _, _ -> response.await() }
 
-        viewModel.initialize(
-            OpenChat(
-                openId = 2,
-                title = "Thread 1",
-                mode = OpenChatMode.Thread(threadId = "thread-1"),
-            ),
-        )
         viewModel.onInputValueChange("Question")
         viewModel.onSendClick()
         runCurrent()
@@ -123,13 +130,6 @@ class ChatViewModelTest {
         val response = CompletableDeferred<String>()
         repository.generalResponder = { response.await() }
 
-        viewModel.initialize(
-            OpenChat(
-                openId = 3,
-                title = "Today",
-                mode = OpenChatMode.General,
-            ),
-        )
         viewModel.onInputValueChange("First")
         viewModel.onSendClick()
         runCurrent()
@@ -156,13 +156,6 @@ class ChatViewModelTest {
         val viewModel = createViewModel(repository)
         repository.generalResponder = { throw IllegalStateException("Boom") }
 
-        viewModel.initialize(
-            OpenChat(
-                openId = 4,
-                title = "Today",
-                mode = OpenChatMode.General,
-            ),
-        )
         viewModel.onInputValueChange("First")
         viewModel.onSendClick()
         advanceUntilIdle()
@@ -176,40 +169,15 @@ class ChatViewModelTest {
         )
         assertEquals(false, viewModel.uiState.value.isSending)
     }
-
-    @Test
-    fun `new open id reinitializes chat session state`() = runTest {
-        val repository = TrackingChatRepository()
-        val viewModel = createViewModel(repository)
-
-        viewModel.initialize(
-            OpenChat(
-                openId = 5,
-                title = "Today",
-                mode = OpenChatMode.General,
-            ),
-        )
-        viewModel.onInputValueChange("Draft")
-
-        viewModel.initialize(
-            OpenChat(
-                openId = 6,
-                title = "Thread 1",
-                mode = OpenChatMode.Thread(threadId = "thread-1"),
-            ),
-        )
-
-        assertEquals(
-            ChatUiState(
-                title = "Thread 1",
-                mode = OpenChatMode.Thread(threadId = "thread-1"),
-            ),
-            viewModel.uiState.value,
-        )
-    }
 }
 
-private fun createViewModel(repository: TrackingChatRepository): ChatViewModel = ChatViewModel(
+private fun createViewModel(
+    repository: TrackingChatRepository,
+    title: String = "Today",
+    mode: ChatMode = ChatMode.General,
+): ChatViewModel = ChatViewModel(
+    title = title,
+    mode = mode,
     sendGeneralChatMessageUseCase = SendGeneralChatMessageUseCase(repository),
     sendThreadChatMessageUseCase = SendThreadChatMessageUseCase(repository),
 )

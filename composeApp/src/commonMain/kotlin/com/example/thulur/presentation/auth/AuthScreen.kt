@@ -17,13 +17,11 @@ import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.thulur.presentation.composables.ThulurButton
 import com.example.thulur.presentation.composables.ThulurTextField
 import com.example.thulur.presentation.root.RootLoadingScreen
@@ -33,21 +31,6 @@ import com.example.thulur.presentation.theme.ThulurDesignScale
 import com.example.thulur.presentation.theme.ThulurTheme
 import com.example.thulur.presentation.theme.thulurDp
 import com.example.thulur.presentation.theme.thulurDefaultShape
-import org.koin.compose.viewmodel.koinViewModel
-
-@Composable
-fun AuthRoute(
-    viewModel: AuthViewModel = koinViewModel(),
-) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    AuthScreen(
-        uiState = uiState,
-        onEmailChange = viewModel::onEmailChange,
-        onContinueClick = viewModel::onContinueClick,
-        onTroubleSigningInClick = viewModel::onTroubleSigningInClick,
-    )
-}
 
 @Composable
 fun AuthScreen(

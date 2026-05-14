@@ -10,12 +10,6 @@ sealed interface AppRootUiState {
     data class Ready(
         val sessionInstanceId: Int,
         val themeMode: ThemeMode = ThemeMode.Light,
-        val destination: AppRootAuthenticatedDestination = AppRootAuthenticatedDestination.DailyFeed,
         val subscriptionTier: AppSubscriptionTier = AppSubscriptionTier.Unknown,
     ) : AppRootUiState
-}
-
-enum class AppRootAuthenticatedDestination {
-    DailyFeed,
-    Settings,
 }

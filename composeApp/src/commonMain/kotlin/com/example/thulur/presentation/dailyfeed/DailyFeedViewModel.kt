@@ -1,11 +1,10 @@
 package com.example.thulur.presentation.dailyfeed
 
 import com.example.thulur.domain.model.DailyFeed
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
 import com.example.thulur.domain.usecase.GetDailyFeedUseCase
 import com.example.thulur.domain.session.ReadArticlesCache
-import com.example.thulur.presentation.composables.ThulurThreadArticleData
 import com.example.thulur.presentation.composables.TopicsViewMode
 import com.example.thulur.presentation.dailyfeed.article_reader.applyCachedReadArticlesToThreads
 import kotlinx.coroutines.CancellationException
@@ -29,10 +28,9 @@ import kotlin.time.Clock
 class DailyFeedViewModel(
     private val getDailyFeedUseCase: GetDailyFeedUseCase,
     private val readArticlesCache: ReadArticlesCache,
-) : ViewModel() {
+) : ScreenModel {
     private val initialDay = currentDay()
     private var loadJob: Job? = null
-    private var nextChatOpenId: Int = 0
 
     private val _uiState = MutableStateFlow(
         DailyFeedUiState(
@@ -60,73 +58,6 @@ class DailyFeedViewModel(
 
     fun retry() {
         loadDay(_uiState.value.selectedDay)
-    }
-
-    fun onShowWholeSubjectClick(threadId: String, threadName: String) {
-        _uiState.update { state ->
-            state.copy(
-                openThreadHistory = OpenThreadHistory(
-                    threadId = threadId,
-                    threadName = threadName,
-                    initialDay = state.selectedDay,
-                ),
-            )
-        }
-    }
-
-    fun onOpenGeneralChat() {
-        _uiState.update { state ->
-            state.copy(
-                openChat = OpenChat(
-                    openId = nextChatOpenId++,
-                    title = state.selectedDay.toTitleAppBarLabel(today = currentDay()),
-                    mode = OpenChatMode.General,
-                ),
-            )
-        }
-    }
-
-    fun onOpenThreadChat(threadId: String, threadName: String) {
-        _uiState.update { state ->
-            state.copy(
-                openChat = OpenChat(
-                    openId = nextChatOpenId++,
-                    title = threadName,
-                    mode = OpenChatMode.Thread(threadId = threadId),
-                ),
-            )
-        }
-    }
-
-    fun onArticleClick(article: ThulurThreadArticleData) {
-        _uiState.update { state ->
-            state.copy(
-                openArticle = OpenArticle(
-                    articleId = article.id,
-                    title = article.title,
-                    url = article.url,
-                    isRead = article.isRead,
-                ),
-            )
-        }
-    }
-
-    fun onCloseThreadHistory() {
-        _uiState.update { state ->
-            state.copy(openThreadHistory = null)
-        }
-    }
-
-    fun onCloseChat() {
-        _uiState.update { state ->
-            state.copy(openChat = null)
-        }
-    }
-
-    fun onCloseArticleReader() {
-        _uiState.update { state ->
-            state.copy(openArticle = null)
-        }
     }
 
     fun onFeedScrollStateChange(index: Int, offset: Int) {
@@ -165,7 +96,7 @@ class DailyFeedViewModel(
     }
 
     private fun observeReadArticles() {
-        viewModelScope.launch {
+        screenModelScope.launch {
             readArticlesCache.readArticles.collect { readArticles ->
                 _uiState.update { state -> state.applyCachedReadArticles(readArticles) }
             }
@@ -174,7 +105,7 @@ class DailyFeedViewModel(
 
     private fun loadDay(day: LocalDate) {
         loadJob?.cancel()
-        loadJob = viewModelScope.launch {
+        loadJob = screenModelScope.launch {
             _uiState.update { state ->
                 state.copy(
                     selectedDay = day,
@@ -230,21 +161,13 @@ class DailyFeedViewModel(
 private fun DailyFeedUiState.applyCachedReadArticles(
     readArticles: Map<String, Boolean>,
 ): DailyFeedUiState {
-    val updatedOpenArticle = openArticle?.takeIf { readArticles[it.articleId] == true && !it.isRead }
-        ?.copy(isRead = true)
-        ?: openArticle
-
     val successState = contentState as? DailyFeedContentState.Success
     if (successState == null) {
-        return if (updatedOpenArticle != openArticle) {
-            copy(openArticle = updatedOpenArticle)
-        } else {
-            this
-        }
+        return this
     }
 
     val updatedThreads = successState.threads.applyCachedReadArticlesToThreads(readArticles)
-    if (updatedThreads === successState.threads && updatedOpenArticle == openArticle) {
+    if (updatedThreads === successState.threads) {
         return this
     }
 
@@ -254,6 +177,5 @@ private fun DailyFeedUiState.applyCachedReadArticles(
         } else {
             DailyFeedContentState.Success(updatedThreads)
         },
-        openArticle = updatedOpenArticle,
     )
 }

@@ -1,6 +1,5 @@
 package com.example.thulur.presentation.dailyfeed.thread_history
 
-import androidx.lifecycle.ViewModel
 import com.example.thulur.data.session.InMemoryReadArticlesCache
 import com.example.thulur.domain.model.Article
 import com.example.thulur.domain.model.ArticleParagraph
@@ -16,7 +15,6 @@ import com.example.thulur.domain.model.ThreadHistoryDay
 import com.example.thulur.domain.model.UserSettings
 import com.example.thulur.domain.repository.ThulurApiRepository
 import com.example.thulur.domain.usecase.GetThreadHistoryUseCase
-import com.example.thulur.presentation.dailyfeed.OpenThreadHistory
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -277,11 +275,9 @@ private fun createViewModel(
     initialDay: LocalDate,
     readArticlesCache: InMemoryReadArticlesCache = InMemoryReadArticlesCache(),
 ): ThreadHistoryViewModel = ThreadHistoryViewModel(
-    openThreadHistory = OpenThreadHistory(
-        threadId = "thread-1",
-        threadName = "Thread 1",
-        initialDay = initialDay,
-    ),
+    threadId = "thread-1",
+    threadName = "Thread 1",
+    initialDay = initialDay,
     getThreadHistoryUseCase = GetThreadHistoryUseCase(repository),
     readArticlesCache = readArticlesCache,
 )

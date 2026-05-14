@@ -1,13 +1,12 @@
 package com.example.thulur.presentation.dailyfeed.thread_history
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
 import com.example.thulur.domain.model.ThreadHistory
 import com.example.thulur.domain.model.ThreadHistoryDay
 import com.example.thulur.domain.session.ReadArticlesCache
 import com.example.thulur.domain.usecase.GetThreadHistoryUseCase
 import com.example.thulur.presentation.dailyfeed.article_reader.applyCachedReadArticles
-import com.example.thulur.presentation.dailyfeed.OpenThreadHistory
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,15 +17,17 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 
 class ThreadHistoryViewModel(
-    private val openThreadHistory: OpenThreadHistory,
+    private val threadId: String,
+    private val threadName: String,
+    private val initialDay: LocalDate,
     private val getThreadHistoryUseCase: GetThreadHistoryUseCase,
     private val readArticlesCache: ReadArticlesCache,
-) : ViewModel() {
+) : ScreenModel {
     private var loadJob: Job? = null
 
     private val _uiState = MutableStateFlow(
         ThreadHistoryUiState(
-            threadName = openThreadHistory.threadName,
+            threadName = threadName,
         ),
     )
     val uiState: StateFlow<ThreadHistoryUiState> = _uiState.asStateFlow()
@@ -45,7 +46,7 @@ class ThreadHistoryViewModel(
     fun onNextDayClick(): Boolean = changeVisibleDayBy(delta = -1)
 
     private fun observeReadArticles() {
-        viewModelScope.launch {
+        screenModelScope.launch {
             readArticlesCache.readArticles.collect { readArticles ->
                 _uiState.update { state ->
                     val contentState = state.contentState as? ThreadHistoryContentState.Success ?: return@update state
@@ -64,28 +65,28 @@ class ThreadHistoryViewModel(
 
     private fun load() {
         loadJob?.cancel()
-        loadJob = viewModelScope.launch {
+        loadJob = screenModelScope.launch {
             _uiState.update { state ->
                 state.copy(contentState = ThreadHistoryContentState.Loading)
             }
 
             val nextState = try {
-                val history = getThreadHistoryUseCase(threadId = openThreadHistory.threadId)
+                val history = getThreadHistoryUseCase(threadId = threadId)
                     .sortedByDescendingDay()
 
                 if (history.days.isEmpty()) {
                     ThreadHistoryUiState(
-                        threadName = history.threadName.ifBlank { openThreadHistory.threadName },
+                        threadName = history.threadName.ifBlank { threadName },
                         contentState = ThreadHistoryContentState.Empty,
                     )
                 } else {
                     ThreadHistoryUiState(
-                        threadName = history.threadName.ifBlank { openThreadHistory.threadName },
+                        threadName = history.threadName.ifBlank { threadName },
                         contentState = ThreadHistoryContentState.Success(
                             history = history,
                             visibleDayIndex = resolveInitialDayIndex(
                                 days = history.days,
-                                initialDay = openThreadHistory.initialDay,
+                                initialDay = initialDay,
                             ),
                         ),
                     )
@@ -94,7 +95,7 @@ class ThreadHistoryViewModel(
                 throw exception
             } catch (throwable: Throwable) {
                 ThreadHistoryUiState(
-                    threadName = openThreadHistory.threadName,
+                    threadName = threadName,
                     contentState = ThreadHistoryContentState.Error(
                         message = throwable.message ?: "Failed to load thread history.",
                     ),

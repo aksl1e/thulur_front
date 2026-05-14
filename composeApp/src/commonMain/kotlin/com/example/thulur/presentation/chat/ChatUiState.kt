@@ -1,10 +1,10 @@
 package com.example.thulur.presentation.chat
 
-import com.example.thulur.presentation.dailyfeed.OpenChatMode
+import com.example.thulur.presentation.router.ChatMode
 
 data class ChatUiState(
     val title: String = "",
-    val mode: OpenChatMode = OpenChatMode.General,
+    val mode: ChatMode = ChatMode.General,
     val inputValue: String = "",
     val messages: List<ChatMessage> = emptyList(),
     val isSending: Boolean = false,

@@ -20,10 +20,7 @@ import androidx.compose.material.Switch
 import androidx.compose.material.SwitchDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -32,11 +29,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.thulur.presentation.composables.ThulurAppBar
 import com.example.thulur.presentation.composables.ThulurButton
-import com.example.thulur.presentation.composables.ThulurSnackBar
-import com.example.thulur.presentation.composables.ThulurSnackBarState
 import com.example.thulur.presentation.composables.ThulurTextField
 import com.example.thulur.presentation.composables.ThulurTimeSelector
 import com.example.thulur.presentation.settings.components.AppSettingItem
@@ -50,75 +44,6 @@ import com.example.thulur.presentation.theme.ProvideThulurDesignScale
 import com.example.thulur.presentation.theme.ThemeMode
 import com.example.thulur.presentation.theme.ThulurTheme
 import com.example.thulur.presentation.theme.thulurDp
-import org.koin.compose.viewmodel.koinViewModel
-
-@Composable
-fun SettingsRoute(
-    sessionInstanceId: Int,
-    onBackClick: () -> Unit,
-    onThemeApplied: (ThemeMode) -> Unit,
-    viewModel: SettingsViewModel = koinViewModel(key = settingsViewModelKey(sessionInstanceId)),
-) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    // Propagate theme changes (including optimistic updates and rollbacks) to the root
-    // without firing on the first composition.
-    var prevTheme by remember { mutableStateOf(uiState.appState.values.theme) }
-    val currentTheme = uiState.appState.values.theme
-    SideEffect {
-        if (prevTheme != currentTheme) {
-            onThemeApplied(currentTheme)
-            prevTheme = currentTheme
-        }
-    }
-
-    var snackBarId by remember { mutableLongStateOf(0L) }
-    var snackBarMessage by remember { mutableStateOf("") }
-    var showSnackBar by remember { mutableStateOf(false) }
-
-    LaunchedEffect(viewModel) {
-        viewModel.snackBarEvents.collect { event ->
-            snackBarId++
-            showSnackBar = true
-            when (event) {
-                is SettingsSnackBarEvent.Error -> {
-                    snackBarMessage = event.message
-                }
-            }
-        }
-    }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        SettingsScreen(
-            uiState = uiState,
-            onBackClick = onBackClick,
-            onRetryLoad = viewModel::retryLoad,
-            onSectionSelected = viewModel::onSectionSelected,
-            onTerminateSessionClick = viewModel::onTerminateSessionClick,
-            onRetryFeedsLoad = viewModel::retryFeedsLoad,
-            onFeedSearchQueryChanged = viewModel::onFeedSearchQueryChanged,
-            onFollowFeedClick = viewModel::onFollowFeedClick,
-            onUnfollowFeedClick = viewModel::onUnfollowFeedClick,
-            onThemeSelected = viewModel::onThemeSelected,
-            onLanguageSelected = viewModel::onLanguageSelected,
-            onNotificationsEnabledChanged = viewModel::onNotificationsEnabledChanged,
-            onSuggestionsOutsideChanged = viewModel::onSuggestionsOutsideChanged,
-            onFeedScheduleChanged = viewModel::onFeedScheduleChanged,
-        )
-
-        if (showSnackBar) {
-            key(snackBarId) {
-                ThulurSnackBar(
-                    message = snackBarMessage,
-                    state = ThulurSnackBarState.Error,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(horizontal = 24.thulurDp(), vertical = 24.thulurDp()),
-                )
-            }
-        }
-    }
-}
 
 @Composable
 fun SettingsScreen(

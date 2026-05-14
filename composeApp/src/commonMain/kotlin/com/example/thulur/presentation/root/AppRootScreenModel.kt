@@ -1,7 +1,7 @@
 package com.example.thulur.presentation.root
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
 import com.example.thulur.domain.session.CurrentSessionProvider
 import com.example.thulur.domain.theme.ThemeStore
 import com.example.thulur.domain.usecase.GetCurrentUserUseCase
@@ -15,18 +15,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class AppRootViewModel(
+class AppRootScreenModel(
     currentSessionProvider: CurrentSessionProvider,
     private val getUserSettingsUseCase: GetUserSettingsUseCase,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val themeStore: ThemeStore,
-) : ViewModel() {
+) : ScreenModel {
     private val _uiState = MutableStateFlow<AppRootUiState>(AppRootUiState.Loading)
     val uiState: StateFlow<AppRootUiState> = _uiState.asStateFlow()
     private var subscriptionLoadJob: Job? = null
 
     init {
-        viewModelScope.launch {
+        screenModelScope.launch {
             try {
                 currentSessionProvider.loadPersistedToken()
             } catch (exception: CancellationException) {
@@ -60,19 +60,11 @@ class AppRootViewModel(
         }
     }
 
-    fun openSettings() {
-        updateAuthenticatedDestination(AppRootAuthenticatedDestination.Settings)
-    }
-
-    fun backToDailyFeed() {
-        updateAuthenticatedDestination(AppRootAuthenticatedDestination.DailyFeed)
-    }
-
     fun updateTheme(theme: ThemeMode) {
         val current = _uiState.value as? AppRootUiState.Ready ?: return
         if (current.themeMode == theme) return
         _uiState.value = current.copy(themeMode = theme)
-        viewModelScope.launch { themeStore.writeDarkMode(theme == ThemeMode.Dark) }
+        screenModelScope.launch { themeStore.writeDarkMode(theme == ThemeMode.Dark) }
     }
 
     private suspend fun fetchTheme(): ThemeMode {
@@ -86,14 +78,9 @@ class AppRootViewModel(
             .getOrElse { ThemeMode.Light }
     }
 
-    private fun updateAuthenticatedDestination(destination: AppRootAuthenticatedDestination) {
-        val currentState = _uiState.value as? AppRootUiState.Ready ?: return
-        _uiState.value = currentState.copy(destination = destination)
-    }
-
     private fun startSubscriptionLoad(sessionInstanceId: Int) {
         subscriptionLoadJob?.cancel()
-        subscriptionLoadJob = viewModelScope.launch {
+        subscriptionLoadJob = screenModelScope.launch {
             if (loadSubscriptionTier(sessionInstanceId)) return@launch
 
             for (delayMs in SUBSCRIPTION_RETRY_DELAYS_MS) {

@@ -11,73 +11,15 @@ import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.CreationExtras
-import androidx.lifecycle.ViewModelProvider
-import com.example.thulur.domain.session.ReadArticlesCache
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.thulur.domain.usecase.GetArticleParagraphsUseCase
-import com.example.thulur.domain.usecase.RateArticleUseCase
 import com.example.thulur.presentation.composables.ThulurAppBar
-import com.example.thulur.presentation.dailyfeed.OpenArticle
 import com.example.thulur.presentation.theme.ThulurTheme
 import com.example.thulur.presentation.theme.thulurDefaultShape
-import org.koin.compose.koinInject
-import kotlin.reflect.KClass
 
 @Composable
-fun ArticleReaderRoute(
-    sessionInstanceId: Int,
-    openArticle: OpenArticle,
-    onBackClick: () -> Unit,
-) {
-    val getArticleParagraphsUseCase = koinInject<GetArticleParagraphsUseCase>()
-    val rateArticleUseCase = koinInject<RateArticleUseCase>()
-    val readArticlesCache = koinInject<ReadArticlesCache>()
-    val factory = remember(openArticle, getArticleParagraphsUseCase, rateArticleUseCase, readArticlesCache) {
-        articleReaderViewModelFactory(
-            openArticle = openArticle,
-            getArticleParagraphsUseCase = getArticleParagraphsUseCase,
-            rateArticleUseCase = rateArticleUseCase,
-            readArticlesCache = readArticlesCache,
-        )
-    }
-    val viewModel: ArticleReaderViewModel = viewModel(
-        key = articleReaderViewModelKey(
-            sessionInstanceId = sessionInstanceId,
-            articleId = openArticle.articleId,
-        ),
-        factory = factory,
-    )
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    ArticleReaderScreen(
-        uiState = uiState,
-        onBackClick = {
-            viewModel.submitRate()
-            onBackClick()
-        },
-        onInitialPageLoaded = viewModel::onInitialPageLoaded,
-        onInjectionSucceeded = viewModel::onInjectionSucceeded,
-        onProgressChanged = viewModel::onProgressChanged,
-        onRateArticle = viewModel::onRateArticle,
-        onError = viewModel::onBrowserError,
-    )
-}
-
-internal fun articleReaderViewModelKey(
-    sessionInstanceId: Int,
-    articleId: String,
-): String = "article-reader-session-$sessionInstanceId-article-$articleId"
-
-@Composable
-private fun ArticleReaderScreen(
+fun ArticleReaderScreen(
     uiState: ArticleReaderUiState,
     onBackClick: () -> Unit,
     onInitialPageLoaded: () -> Unit,
@@ -163,22 +105,4 @@ private fun ArticleReaderErrorState(
             style = ThulurTheme.Typography.bodyLarge.copy(color = colors.slate.s700),
         )
     }
-}
-
-private fun articleReaderViewModelFactory(
-    openArticle: OpenArticle,
-    getArticleParagraphsUseCase: GetArticleParagraphsUseCase,
-    rateArticleUseCase: RateArticleUseCase,
-    readArticlesCache: ReadArticlesCache,
-): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(
-        modelClass: KClass<T>,
-        extras: CreationExtras,
-    ): T = ArticleReaderViewModel(
-        openArticle = openArticle,
-        getArticleParagraphsUseCase = getArticleParagraphsUseCase,
-        rateArticleUseCase = rateArticleUseCase,
-        readArticlesCache = readArticlesCache,
-    ) as T
 }

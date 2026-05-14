@@ -14,8 +14,6 @@ import com.example.thulur.domain.model.ThreadHistory
 import com.example.thulur.domain.model.UserSettings
 import com.example.thulur.domain.repository.ThulurApiRepository
 import com.example.thulur.domain.usecase.GetDailyFeedUseCase
-import com.example.thulur.presentation.composables.ThulurArticleItemVariant
-import com.example.thulur.presentation.composables.ThulurThreadArticleData
 import com.example.thulur.presentation.composables.TopicsViewMode
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -178,24 +176,6 @@ class DailyFeedViewModelTest {
     }
 
     @Test
-    fun `retry reloads the currently selected day after forward navigation`() = runTest {
-        val repository = TrackingRepository(
-            result = Result.success(sampleDailyFeed()),
-        )
-        val viewModel = createViewModel(repository)
-
-        advanceUntilIdle()
-        viewModel.onBackClick()
-        advanceUntilIdle()
-        viewModel.onForwardClick()
-        advanceUntilIdle()
-        viewModel.retry()
-        advanceUntilIdle()
-
-        assertEquals(listOf<LocalDate?>(today, today.minus(1, DateTimeUnit.DAY), today, today), repository.requestedDays)
-    }
-
-    @Test
     fun `topics mode updates locally without reloading data`() = runTest {
         val repository = TrackingRepository(
             result = Result.success(sampleDailyFeed()),
@@ -276,182 +256,17 @@ class DailyFeedViewModelTest {
     }
 
     @Test
-    fun `article click opens reader destination`() = runTest {
+    fun `feed scroll state updates locally`() = runTest {
         val repository = TrackingRepository(
             result = Result.success(sampleDailyFeed()),
         )
         val viewModel = createViewModel(repository)
 
         advanceUntilIdle()
-        viewModel.onArticleClick(sampleArticleData())
+        viewModel.onFeedScrollStateChange(index = 4, offset = 128)
 
-        assertEquals(
-            OpenArticle(
-                articleId = "article-1",
-                title = "Article 1",
-                url = "https://example.com/articles/1",
-                isRead = false,
-            ),
-            viewModel.uiState.value.openArticle,
-        )
-    }
-
-    @Test
-    fun `article click keeps read state from clicked article`() = runTest {
-        val repository = TrackingRepository(
-            result = Result.success(sampleDailyFeed()),
-        )
-        val viewModel = createViewModel(repository)
-
-        advanceUntilIdle()
-        viewModel.onArticleClick(sampleArticleData(isRead = true))
-
-        assertEquals(true, viewModel.uiState.value.openArticle?.isRead)
-    }
-
-    @Test
-    fun `show whole subject opens history destination with current selected day`() = runTest {
-        val repository = TrackingRepository(
-            result = Result.success(sampleDailyFeed()),
-        )
-        val viewModel = createViewModel(repository)
-
-        advanceUntilIdle()
-        viewModel.onBackClick()
-        advanceUntilIdle()
-        viewModel.onShowWholeSubjectClick(threadId = "thread-1", threadName = "Thread 1")
-
-        assertEquals(
-            OpenThreadHistory(
-                threadId = "thread-1",
-                threadName = "Thread 1",
-                initialDay = today.minus(1, DateTimeUnit.DAY),
-            ),
-            viewModel.uiState.value.openThreadHistory,
-        )
-    }
-
-    @Test
-    fun `open general chat uses current daily feed title`() = runTest {
-        val repository = TrackingRepository(
-            result = Result.success(sampleDailyFeed()),
-        )
-        val viewModel = createViewModel(repository)
-
-        advanceUntilIdle()
-        viewModel.onOpenGeneralChat()
-
-        assertEquals(
-            OpenChat(
-                openId = 0,
-                title = "Today",
-                mode = OpenChatMode.General,
-            ),
-            viewModel.uiState.value.openChat,
-        )
-    }
-
-    @Test
-    fun `reopening chat creates a new open id`() = runTest {
-        val repository = TrackingRepository(
-            result = Result.success(sampleDailyFeed()),
-        )
-        val viewModel = createViewModel(repository)
-
-        advanceUntilIdle()
-        viewModel.onOpenGeneralChat()
-        viewModel.onCloseChat()
-        viewModel.onOpenGeneralChat()
-
-        assertEquals(1, viewModel.uiState.value.openChat?.openId)
-    }
-
-    @Test
-    fun `closing thread chat preserves open thread history`() = runTest {
-        val repository = TrackingRepository(
-            result = Result.success(sampleDailyFeed()),
-        )
-        val viewModel = createViewModel(repository)
-
-        advanceUntilIdle()
-        viewModel.onShowWholeSubjectClick(threadId = "thread-1", threadName = "Thread 1")
-        viewModel.onOpenThreadChat(threadId = "thread-1", threadName = "Thread 1")
-
-        assertEquals(
-            OpenChat(
-                openId = 0,
-                title = "Thread 1",
-                mode = OpenChatMode.Thread(threadId = "thread-1"),
-            ),
-            viewModel.uiState.value.openChat,
-        )
-
-        viewModel.onCloseChat()
-
-        assertEquals(null, viewModel.uiState.value.openChat)
-        assertEquals(
-            OpenThreadHistory(
-                threadId = "thread-1",
-                threadName = "Thread 1",
-                initialDay = today,
-            ),
-            viewModel.uiState.value.openThreadHistory,
-        )
-    }
-
-    @Test
-    fun `closing history clears open thread history without affecting content`() = runTest {
-        val threads = listOf(sampleThread())
-        val repository = TrackingRepository(
-            result = Result.success(sampleDailyFeed(threads = threads)),
-        )
-        val viewModel = createViewModel(repository)
-
-        advanceUntilIdle()
-        viewModel.onShowWholeSubjectClick(threadId = "thread-1", threadName = "Thread 1")
-        viewModel.onCloseThreadHistory()
-
-        assertEquals(null, viewModel.uiState.value.openThreadHistory)
-        assertEquals(DailyFeedContentState.Success(threads), viewModel.uiState.value.contentState)
-    }
-
-    @Test
-    fun `closing reader clears open article without affecting feed content`() = runTest {
-        val threads = listOf(sampleThread())
-        val repository = TrackingRepository(
-            result = Result.success(sampleDailyFeed(threads = threads)),
-        )
-        val viewModel = createViewModel(repository)
-
-        advanceUntilIdle()
-        viewModel.onArticleClick(sampleArticleData())
-        viewModel.onCloseArticleReader()
-
-        assertEquals(null, viewModel.uiState.value.openArticle)
-        assertEquals(DailyFeedContentState.Success(threads), viewModel.uiState.value.contentState)
-    }
-
-    @Test
-    fun `closing reader returns to whole subject when history is still open`() = runTest {
-        val repository = TrackingRepository(
-            result = Result.success(sampleDailyFeed()),
-        )
-        val viewModel = createViewModel(repository)
-
-        advanceUntilIdle()
-        viewModel.onShowWholeSubjectClick(threadId = "thread-1", threadName = "Thread 1")
-        viewModel.onArticleClick(sampleArticleData())
-        viewModel.onCloseArticleReader()
-
-        assertEquals(null, viewModel.uiState.value.openArticle)
-        assertEquals(
-            OpenThreadHistory(
-                threadId = "thread-1",
-                threadName = "Thread 1",
-                initialDay = today,
-            ),
-            viewModel.uiState.value.openThreadHistory,
-        )
+        assertEquals(4, viewModel.uiState.value.feedScrollIndex)
+        assertEquals(128, viewModel.uiState.value.feedScrollOffset)
     }
 
     @Test
@@ -564,19 +379,6 @@ private fun sampleDailyFeed(
 )
 
 private fun visibleArticlesMap(vararg entries: Pair<String, Boolean>): Map<String, Boolean> = mapOf(*entries)
-
-private fun sampleArticleData(isRead: Boolean = false) = ThulurThreadArticleData(
-    id = "article-1",
-    url = "https://example.com/articles/1",
-    imageUrl = "https://example.com/articles/1.jpg",
-    variant = if (isRead) ThulurArticleItemVariant.Read else ThulurArticleItemVariant.Default,
-    isRead = isRead,
-    title = "Article 1",
-    summary = "Summary",
-    sourceLabel = "example.com",
-    dateText = "17.04.2026",
-    timeText = "12:00",
-)
 
 private fun sampleDomainArticle(
     id: String = "article-1",

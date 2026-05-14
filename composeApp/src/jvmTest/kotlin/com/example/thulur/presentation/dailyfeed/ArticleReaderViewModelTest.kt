@@ -147,12 +147,7 @@ class ArticleReaderViewModelTest {
         )
         val viewModel = createViewModel(
             repository = repository,
-            openArticle = OpenArticle(
-                articleId = "article-1",
-                title = "Article 1",
-                url = "https://example.com/articles/1",
-                isRead = true,
-            ),
+            isRead = true,
         )
 
         advanceUntilIdle()
@@ -167,13 +162,15 @@ class ArticleReaderViewModelTest {
 private fun createViewModel(
     repository: ReaderRepository,
     readArticlesCache: InMemoryReadArticlesCache = InMemoryReadArticlesCache(),
-    openArticle: OpenArticle = OpenArticle(
-        articleId = "article-1",
-        title = "Article 1",
-        url = "https://example.com/articles/1",
-    ),
+    articleId: String = "article-1",
+    title: String = "Article 1",
+    url: String = "https://example.com/articles/1",
+    isRead: Boolean = false,
 ): ArticleReaderViewModel = ArticleReaderViewModel(
-    openArticle = openArticle,
+    articleId = articleId,
+    title = title,
+    url = url,
+    isRead = isRead,
     getArticleParagraphsUseCase = GetArticleParagraphsUseCase(repository),
     rateArticleUseCase = RateArticleUseCase(repository),
     readArticlesCache = readArticlesCache,
