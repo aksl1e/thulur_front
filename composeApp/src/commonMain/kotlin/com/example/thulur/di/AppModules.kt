@@ -46,6 +46,7 @@ val apiModule = module {
     single<HttpClient> {
         val sessionProvider = get<CurrentSessionProvider>()
         createThulurHttpClient(
+            config = get(),
             currentTokenProvider = sessionProvider::currentToken,
             onUnauthorized = sessionProvider::clearToken,
         )

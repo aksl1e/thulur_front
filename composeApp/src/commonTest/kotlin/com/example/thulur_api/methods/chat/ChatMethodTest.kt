@@ -5,6 +5,8 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.HttpTimeoutCapability
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
@@ -16,6 +18,7 @@ import io.ktor.http.content.OutgoingContent
 import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
+import kotlin.time.Duration.Companion.seconds
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.test.runTest
@@ -27,7 +30,7 @@ import kotlinx.serialization.json.put
 
 class ChatMethodTest {
     @Test
-    fun `general chat uses post json body and deserializes response`() = runTest {
+    fun `general chat uses post json body chat timeout and deserializes response`() = runTest {
         var capturedRequest: HttpRequestData? = null
         val client = createTestClient {
             capturedRequest = it
@@ -46,6 +49,7 @@ class ChatMethodTest {
         assertEquals(HttpMethod.Post, capturedRequest?.method)
         assertEquals("/users/me/chat", capturedRequest?.url?.encodedPath)
         assertEquals(ContentType.Application.Json, requestBodyContentType(capturedRequest))
+        assertEquals(60.seconds.inWholeMilliseconds, requestTimeoutMillis(capturedRequest))
         assertEquals(
             buildJsonObject {
                 put("message", "Hello feed")
@@ -56,7 +60,7 @@ class ChatMethodTest {
     }
 
     @Test
-    fun `thread chat uses thread path json body and deserializes response`() = runTest {
+    fun `thread chat uses thread path chat timeout json body and deserializes response`() = runTest {
         var capturedRequest: HttpRequestData? = null
         val client = createTestClient {
             capturedRequest = it
@@ -78,6 +82,7 @@ class ChatMethodTest {
         assertEquals(HttpMethod.Post, capturedRequest?.method)
         assertEquals("/users/me/threads/thread-1/chat", capturedRequest?.url?.encodedPath)
         assertEquals(ContentType.Application.Json, requestBodyContentType(capturedRequest))
+        assertEquals(60.seconds.inWholeMilliseconds, requestTimeoutMillis(capturedRequest))
         assertEquals(
             buildJsonObject {
                 put("message", "Hello thread")
@@ -94,6 +99,10 @@ private fun createTestClient(
     engine = MockEngine(handler),
 ) {
     expectSuccess = true
+
+    install(HttpTimeout) {
+        requestTimeoutMillis = 15.seconds.inWholeMilliseconds
+    }
 
     install(ContentNegotiation) {
         json(testJson)
@@ -113,6 +122,9 @@ private fun requestBodyAsJsonObject(request: HttpRequestData?): JsonObject {
 
 private fun requestBodyContentType(request: HttpRequestData?): ContentType? =
     checkNotNull(request).body.contentType
+
+private fun requestTimeoutMillis(request: HttpRequestData?): Long? =
+    checkNotNull(request).getCapabilityOrNull(HttpTimeoutCapability)?.requestTimeoutMillis
 
 private val testJson = Json {
     ignoreUnknownKeys = true

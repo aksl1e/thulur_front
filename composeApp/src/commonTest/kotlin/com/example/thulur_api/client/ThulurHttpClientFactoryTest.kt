@@ -1,11 +1,14 @@
 package com.example.thulur_api.client
 
+import com.example.thulur_api.config.ThulurApiConfig
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.plugins.HttpTimeoutCapability
 import io.ktor.client.request.get
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import kotlin.time.Duration.Companion.seconds
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -19,6 +22,7 @@ class ThulurHttpClientFactoryTest {
     fun `adds bearer header when token is available`() = runTest {
         var authorizationHeader: String? = null
         val client = createThulurHttpClient(
+            config = ThulurApiConfig(),
             engine = MockEngine { request ->
                 authorizationHeader = request.headers[HttpHeaders.Authorization]
                 respond(
@@ -38,6 +42,7 @@ class ThulurHttpClientFactoryTest {
     fun `omits bearer header when token is absent`() = runTest {
         var authorizationHeader: String? = "unexpected"
         val client = createThulurHttpClient(
+            config = ThulurApiConfig(),
             engine = MockEngine { request ->
                 authorizationHeader = request.headers[HttpHeaders.Authorization]
                 respond(
@@ -57,6 +62,7 @@ class ThulurHttpClientFactoryTest {
     fun `401 response calls unauthorized callback and still throws`() = runTest {
         var unauthorizedCalled = false
         val client = createThulurHttpClient(
+            config = ThulurApiConfig(),
             engine = MockEngine {
                 respond(
                     content = "",
@@ -79,6 +85,7 @@ class ThulurHttpClientFactoryTest {
     fun `200 response does not call unauthorized callback`() = runTest {
         var unauthorizedCalled = false
         val client = createThulurHttpClient(
+            config = ThulurApiConfig(),
             engine = MockEngine {
                 respond(
                     content = "",
@@ -99,6 +106,7 @@ class ThulurHttpClientFactoryTest {
     fun `403 response does not call unauthorized callback`() = runTest {
         var unauthorizedCalled = false
         val client = createThulurHttpClient(
+            config = ThulurApiConfig(),
             engine = MockEngine {
                 respond(
                     content = "",
@@ -115,5 +123,25 @@ class ThulurHttpClientFactoryTest {
         }
 
         assertFalse(unauthorizedCalled)
+    }
+
+    @Test
+    fun `uses default timeout for ordinary requests`() = runTest {
+        val config = ThulurApiConfig(defaultTimeout = 23.seconds)
+        var requestTimeoutMillis: Long? = null
+        val client = createThulurHttpClient(
+            config = config,
+            engine = MockEngine { request ->
+                requestTimeoutMillis = request.getCapabilityOrNull(HttpTimeoutCapability)?.requestTimeoutMillis
+                respond(
+                    content = "",
+                    status = HttpStatusCode.OK,
+                )
+            },
+        )
+
+        client.get("https://example.com/test")
+
+        assertEquals(config.defaultTimeout.inWholeMilliseconds, requestTimeoutMillis)
     }
 }

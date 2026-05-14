@@ -1,11 +1,13 @@
 package com.example.thulur_api.client
 
+import com.example.thulur_api.config.ThulurApiConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.HttpClientEngineFactory
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.HttpResponseValidator
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.header
@@ -20,32 +22,41 @@ import kotlinx.serialization.json.Json
  * The client ignores unknown keys on purpose so the app can keep working
  */
 fun createThulurHttpClient(
+    config: ThulurApiConfig,
     engineFactory: HttpClientEngineFactory<*> = providePlatformThulurHttpClientEngineFactory(),
     currentTokenProvider: () -> String? = { null },
     onUnauthorized: suspend () -> Unit = {},
 ): HttpClient = HttpClient(engineFactory) {
     configureThulurHttpClient(
+        config = config,
         currentTokenProvider = currentTokenProvider,
         onUnauthorized = onUnauthorized,
     )
 }
 
 internal fun createThulurHttpClient(
+    config: ThulurApiConfig,
     engine: HttpClientEngine,
     currentTokenProvider: () -> String? = { null },
     onUnauthorized: suspend () -> Unit = {},
 ): HttpClient = HttpClient(engine) {
     configureThulurHttpClient(
+        config = config,
         currentTokenProvider = currentTokenProvider,
         onUnauthorized = onUnauthorized,
     )
 }
 
 private fun HttpClientConfig<*>.configureThulurHttpClient(
+    config: ThulurApiConfig,
     currentTokenProvider: () -> String?,
     onUnauthorized: suspend () -> Unit,
 ) {
     expectSuccess = true
+
+    install(HttpTimeout) {
+        requestTimeoutMillis = config.defaultTimeout.inWholeMilliseconds
+    }
 
     defaultRequest {
         currentTokenProvider()
