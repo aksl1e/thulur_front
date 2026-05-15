@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinNavigatorScreenModel
 import cafe.adriel.voyager.koin.koinScreenModel
@@ -46,6 +47,7 @@ import com.example.thulur.presentation.theme.ThulurTheme
 import com.example.thulur.presentation.theme.thulurDp
 import com.example.thulur.presentation.composables.ThulurSnackBar
 import com.example.thulur.presentation.composables.ThulurSnackBarState
+import kotlinx.coroutines.launch
 import kotlin.time.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
@@ -365,8 +367,10 @@ data class ArticleReaderScreen(
         ArticleReaderContent(
             uiState = uiState,
             onBackClick = {
-                screenModel.submitRate()
-                navigator.pop()
+                screenModel.screenModelScope.launch {
+                    screenModel.submitRate()
+                    navigator.pop()
+                }
             },
             onInitialPageLoaded = screenModel::onInitialPageLoaded,
             onInjectionSucceeded = screenModel::onInjectionSucceeded,

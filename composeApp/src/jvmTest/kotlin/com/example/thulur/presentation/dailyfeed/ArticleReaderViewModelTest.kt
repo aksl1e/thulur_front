@@ -108,12 +108,12 @@ class ArticleReaderViewModelTest {
         advanceUntilIdle()
         viewModel.onRateArticle(3)
         viewModel.submitRate()
-        advanceUntilIdle()
 
         assertEquals("article-1", repository.ratedArticleId)
         assertEquals(3, repository.ratedValue)
         assertTrue(readArticlesCache.isRead("article-1"))
         assertTrue(viewModel.uiState.value.isArticleRead)
+        assertFalse(viewModel.uiState.value.isSubmittingRate)
     }
 
     @Test
@@ -131,12 +131,12 @@ class ArticleReaderViewModelTest {
         advanceUntilIdle()
         viewModel.onRateArticle(4)
         viewModel.submitRate()
-        advanceUntilIdle()
 
         assertEquals("article-1", repository.ratedArticleId)
         assertEquals(4, repository.ratedValue)
         assertFalse(readArticlesCache.isRead("article-1"))
         assertFalse(viewModel.uiState.value.isArticleRead)
+        assertFalse(viewModel.uiState.value.isSubmittingRate)
     }
 
     @Test
@@ -153,7 +153,6 @@ class ArticleReaderViewModelTest {
         advanceUntilIdle()
         viewModel.onRateArticle(5)
         viewModel.submitRate()
-        advanceUntilIdle()
 
         assertEquals(0, repository.rateCalls)
     }

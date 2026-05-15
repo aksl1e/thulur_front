@@ -60,23 +60,43 @@ class ArticleReaderViewModel(
         }
     }
 
-    fun submitRate() {
+    suspend fun submitRate() {
         val state = _uiState.value
-        if (state.rate > 0 && !state.isArticleRead) {
-            println("[ThulurArticleReader] submitRate articleId=${state.articleId} rate=${state.rate}")
-            screenModelScope.launch {
-                runCatching { rateArticleUseCase(articleId = state.articleId, rating = state.rate) }
-                    .onSuccess {
-                        readArticlesCache.markRead(state.articleId)
-                        _uiState.update { currentState ->
-                            currentState.copy(isArticleRead = true)
-                        }
-                        println("[ThulurArticleReader] submitRate SUCCESS articleId=${state.articleId} rate=${state.rate}")
-                    }
-                    .onFailure { println("[ThulurArticleReader] submitRate FAILURE articleId=${state.articleId} rate=${state.rate} error=${it.message}") }
-            }
-        } else {
+        if (state.isSubmittingRate) {
+            println("[ThulurArticleReader] submitRate skipped articleId=${state.articleId} reason=already_submitting")
+            return
+        }
+
+        if (state.rate <= 0 || state.isArticleRead) {
             println("[ThulurArticleReader] submitRate skipped articleId=${state.articleId} rate=${state.rate} isRead=${state.isArticleRead}")
+            return
+        }
+
+        println("[ThulurArticleReader] submitRate articleId=${state.articleId} rate=${state.rate}")
+        _uiState.update { currentState ->
+            currentState.copy(isSubmittingRate = true)
+        }
+
+        try {
+            rateArticleUseCase(articleId = state.articleId, rating = state.rate)
+            readArticlesCache.markRead(state.articleId)
+            _uiState.update { currentState ->
+                currentState.copy(
+                    isArticleRead = true,
+                    isSubmittingRate = false,
+                )
+            }
+            println("[ThulurArticleReader] submitRate SUCCESS articleId=${state.articleId} rate=${state.rate}")
+        } catch (exception: CancellationException) {
+            _uiState.update { currentState ->
+                currentState.copy(isSubmittingRate = false)
+            }
+            throw exception
+        } catch (throwable: Throwable) {
+            _uiState.update { currentState ->
+                currentState.copy(isSubmittingRate = false)
+            }
+            println("[ThulurArticleReader] submitRate FAILURE articleId=${state.articleId} rate=${state.rate} error=${throwable.message}")
         }
     }
 

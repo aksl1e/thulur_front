@@ -7,6 +7,7 @@ data class ArticleReaderUiState(
     val title: String,
     val url: String,
     val isArticleRead: Boolean = false,
+    val isSubmittingRate: Boolean = false,
     val paragraphs: List<ArticleParagraph> = emptyList(),
     val areParagraphsLoaded: Boolean = false,
     val isInitialPageLoaded: Boolean = false,
